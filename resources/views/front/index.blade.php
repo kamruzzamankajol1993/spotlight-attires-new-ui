@@ -145,11 +145,18 @@
             }
         @endphp
 
-        <img srcset="{{ $mobileImage }} 800w, 
-            {{ $desktopImage }} 1200w"
-    sizes="(min-width: 992px) 1200px, 800px"
-    src="{{ $mobileImage }}" 
-    alt="{{ $product->name }}" class="card-img-top">
+        {{-- Picture element for responsive images --}}
+    <picture>
+        {{-- Desktop and laptop (≥992px) --}}
+        <source media="(min-width: 992px)" srcset="{{ $desktopImage }}">
+        {{-- Tablet and mobile (<992px) --}}
+        <source media="(max-width: 991px)" srcset="{{ $mobileImage }}">
+        {{-- Fallback for browsers without <picture> support --}}
+        <img src="{{ $mobileImage }}" 
+             alt="{{ $product->name }}" 
+             class="card-img-top img-fluid">
+    </picture>
+
         <div class="product-details-body">
             <h5 class="product-title mb-1">{{ Str::limit($product->name, 25) }}</h5>
             <p class="product-meta mb-1">Category: {{ $product->category->name ?? 'N/A' }}</p>
@@ -227,11 +234,17 @@
             }
         @endphp
 
-        <img srcset="{{ $mobileImage }} 800w, 
-            {{ $desktopImage }} 1200w"
-    sizes="(min-width: 992px) 1200px, 800px"
-    src="{{ $mobileImage }}" 
-    alt="{{ $product->name }}" class="card-img-top">
+        {{-- Picture element for responsive images --}}
+    <picture>
+        {{-- Desktop and laptop (≥992px) --}}
+        <source media="(min-width: 992px)" srcset="{{ $desktopImage }}">
+        {{-- Tablet and mobile (<992px) --}}
+        <source media="(max-width: 991px)" srcset="{{ $mobileImage }}">
+        {{-- Fallback for browsers without <picture> support --}}
+        <img src="{{ $mobileImage }}" 
+             alt="{{ $product->name }}" 
+             class="card-img-top img-fluid">
+    </picture>
         <div class="product-details-body">
             <h5 class="product-title mb-1">{{ Str::limit($product->name, 25) }}</h5>
             <p class="product-meta mb-1">Category: {{ $product->category->name ?? 'N/A' }}</p>
@@ -312,11 +325,17 @@
             }
         @endphp
 
-        <img srcset="{{ $mobileImage }} 800w, 
-            {{ $desktopImage }} 1200w"
-    sizes="(min-width: 992px) 1200px, 800px"
-    src="{{ $mobileImage }}" 
-    alt="{{ $product->name }}" class="card-img-top">
+        {{-- Picture element for responsive images --}}
+    <picture>
+        {{-- Desktop and laptop (≥992px) --}}
+        <source media="(min-width: 992px)" srcset="{{ $desktopImage }}">
+        {{-- Tablet and mobile (<992px) --}}
+        <source media="(max-width: 991px)" srcset="{{ $mobileImage }}">
+        {{-- Fallback for browsers without <picture> support --}}
+        <img src="{{ $mobileImage }}" 
+             alt="{{ $product->name }}" 
+             class="card-img-top img-fluid">
+    </picture>
         <div class="product-details-body">
             <h5 class="product-title mb-1">{{ Str::limit($product->name, 25) }}</h5>
             <p class="product-meta mb-1">Category: {{ $product->category->name ?? 'N/A' }}</p>
