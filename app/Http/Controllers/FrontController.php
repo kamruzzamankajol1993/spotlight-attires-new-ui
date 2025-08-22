@@ -113,6 +113,64 @@ class FrontController extends Controller
         return view('front.category.category', compact('category', 'products', 'categoryList'));
     }
 
+    public function shop()
+    {
+        $products = Product::where('status', 1)
+            ->with(['category', 'variants'])
+            ->latest()
+            ->paginate(12);
+
+        // Fetch all filter groups for the sidebar
+        $categoryList = Category::where('status', 1)->with('subcategories')->get();
+        $animationCategoryList = AnimationCategory::where('status', 1)->get();
+
+        return view('front.main.shop', compact('products', 'categoryList', 'animationCategoryList'));
+    }
+
+     /**
+     * NEW dedicated function to handle AJAX filter requests for the shop page.
+     */
+    public function ajaxShopFilter(Request $request)
+    {
+        $query = Product::where('status', 1);
+
+        // Filter by Category or Subcategory
+        if ($request->filled('category_id')) {
+            $query->where('category_id', $request->category_id);
+        } elseif ($request->filled('subcategory_id')) {
+            $query->where('subcategory_id', $request->subcategory_id);
+        }
+        
+        // Filter by Animation Category
+        if ($request->filled('animation_category_id')) {
+            $productIds = AssignCategory::where('category_id', $request->animation_category_id)->pluck('product_id');
+            $query->whereIn('id', $productIds);
+        }
+
+        // Filter by Price Range
+        if ($request->filled('min_price') && $request->filled('max_price')) {
+            $query->whereBetween('base_price', [(float)$request->min_price, (float)$request->max_price]);
+        }
+
+        // Filter by Stock Status
+        if ($request->filled('stock_status')) {
+            if ($request->stock_status === 'on_sale') {
+                $query->whereNotNull('discount_price')->where('discount_price', '>', 0);
+            } elseif ($request->stock_status === 'in_stock') {
+                $query->whereHas('variants', fn($q) => $q->whereJsonLength('sizes', '>', 0));
+            }
+        }
+
+        $products = $query->with(['category', 'variants'])->latest()->paginate(12);
+
+        $html = view('front.category.product_card_partial', compact('products'))->render();
+
+        return response()->json([
+            'html' => $html,
+            'hasMorePages' => $products->hasMorePages(),
+        ]);
+    }
+
         public function subcategory($slug)
     {
         $subcategory = Subcategory::where('slug', $slug)->firstOrFail();

@@ -409,24 +409,35 @@
                                 </div>
                             </div>
                         </div>
+                        @php
+                            
+                            $newGlobalCat = \App\Models\BundleOfferProduct::where('bundle_offer_id', $offerSectionSetting->bundleOffer->id)
+                            ->get();
+                            //dd($newGlobalCat);
+                        @endphp
                         <!-- Product Slider Section -->
                         <div class="col-12 product-offer-slider-wrapper">
                             <div class="product-offer-slider">
 
-                                  @forelse ($offerDeals as $deal)
+                                  @forelse ($newGlobalCat as $deal)
             
             @php
+
+            //dd($deal->product_id);
                 // Get the first product in the deal to use its image
                 $firstProductId = $deal->product_id[0] ?? null;
-                $firstProduct = $firstProductId ? $products->get($firstProductId) : null;
-
+                //dd($firstProductId);
+                $firstProduct = \App\Models\Product::find($firstProductId) ?? null;
+//dd($firstProduct);
                 // Calculate the original total price by summing up the base prices of all products in the deal
                 $originalTotalPrice = 0;
                 foreach ($deal->product_id as $productId) {
-                    if ($product = $products->get($productId)) {
+                    if ($product = \App\Models\Product::find($productId)) {
                         $originalTotalPrice += $product->base_price;
                     }
                 }
+
+               // dd($originalTotalPrice);
             @endphp
 
             <!-- Product Card -->

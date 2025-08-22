@@ -16,6 +16,8 @@ Route::controller(FrontController::class)->group(function () {
     Route::get('/animation-category/{slug}', 'animationCategory')->name('animation.category.show');
     Route::get('/animation-category-filter', 'filterAnimationCategory')->name('animation.category.filter');
 
+    Route::get('/shop', 'shop')->name('shop.show');
+    Route::get('/shop-filter', 'ajaxShopFilter')->name('shop.ajax_filter');
     Route::get('products-filter', 'filterProducts')->name('products.filter');
 
 });

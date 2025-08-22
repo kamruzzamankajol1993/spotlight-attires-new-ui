@@ -58,12 +58,12 @@ class ViewServiceProvider extends ServiceProvider
            View::composer('front.*', function ($view) {
             $offerSectionSetting = OffersectionSetting::with('bundleOffer')->first();
             
-            $offerDeals = collect();
+            $offerDealsGlobal = collect();
             $products = collect();
 
             if ($offerSectionSetting && $offerSectionSetting->bundleOffer) {
-                $offerDeals = BundleOfferProduct::where('bundle_offer_id', $offerSectionSetting->bundleOffer->id)->get();
-                $allProductIds = $offerDeals->pluck('product_id')->flatten()->unique()->all();
+                $offerDealsGlobal = BundleOfferProduct::where('bundle_offer_id', $offerSectionSetting->bundleOffer->id)->get();
+                $allProductIds = $offerDealsGlobal->pluck('product_id')->flatten()->unique()->all();
                 $products = Product::whereIn('id', $allProductIds)->get()->keyBy('id');
             }
 
@@ -101,7 +101,7 @@ class ViewServiceProvider extends ServiceProvider
  //dd($remaining['days'], $remaining['hours'], $remaining['minutes'], $remaining['seconds']);
             $view->with('remaining', $remaining);
             $view->with('offerSectionSetting', $offerSectionSetting);
-            $view->with('offerDeals', $offerDeals);
+            $view->with('offerDealsGlobal', $offerDealsGlobal);
             $view->with('offerProducts', $products); // Pass products with a different name to avoid conflicts
         });
     }

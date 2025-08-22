@@ -369,7 +369,7 @@
 
     <!-- Sticky Mobile Bottom Navigation -->
     <nav class="mobile-bottom-nav d-lg-none">
-        <a href="#" class="nav-link text-dark">
+        <a href="{{ route('shop.show') }}" class="nav-link text-dark">
             <i class="bi bi-shop"></i>
             <span>Shop</span>
         </a>

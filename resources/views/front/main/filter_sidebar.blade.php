@@ -1,0 +1,56 @@
+<div class="filter-section">
+    <h5 class="fw-bold mb-3 filter_title">Product Categories</h5>
+    <ul class="list-unstyled mb-4 filter_listing">
+        @foreach($categoryList as $cat)
+            <li class="mb-2">
+                <div class="d-flex justify-content-between align-items-center"
+                     @if($cat->subcategories->isNotEmpty()) data-bs-toggle="collapse" data-bs-target="#collapse-{{ $cat->slug }}" role="button" @endif>
+                    <a href="#" class="text-dark text-decoration-none main-category-filter" data-id="{{ $cat->id }}">{{ $cat->name }}</a>
+                    @if($cat->subcategories->isNotEmpty()) <i class="bi bi-chevron-down"></i> @endif
+                </div>
+                @if($cat->subcategories->isNotEmpty())
+                    <div class="collapse" id="collapse-{{ $cat->slug }}">
+                        <ul class="list-unstyled ms-3 mt-2">
+                            @foreach($cat->subcategories as $subcat)
+                                <li><a class="d-block py-1 text-dark text-decoration-none subcategory-filter" href="#" data-id="{{ $subcat->id }}">{{ $subcat->name }}</a></li>
+                            @endforeach
+                        </ul>
+                    </div>
+                @endif
+            </li>
+        @endforeach
+    </ul>
+    <hr>
+    <h5 class="fw-bold my-3 filter_title">Animation Categories</h5>
+    <ul class="list-unstyled mb-4 filter_listing">
+        @foreach($animationCategoryList as $item)
+            <li class="mb-2">
+                <a href="#" class="text-dark text-decoration-none animation-category-filter" data-id="{{ $item->id }}">{{ $item->name }}</a>
+            </li>
+        @endforeach
+    </ul>
+    <hr>
+    <h5 class="fw-bold my-3 filter_title">Filter by Price</h5>
+    <div class="range-slider-container mb-3">
+        <input type="range" class="form-range" id="min-price-slider" min="0" max="10000" value="0">
+        <input type="range" class="form-range" id="max-price-slider" min="0" max="10000" value="10000">
+    </div>
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <span class="text-muted" id="price-range-display">Price: ৳0 - ৳10000</span>
+        <button class="btn btn-sm btn-primary" id="price-filter-btn">Filter</button>
+    </div>
+    <hr>
+    <h5 class="fw-bold my-3 filter_title">Stock Status</h5>
+    <div class="form-check mb-2">
+        <input class="form-check-input stock-status-filter" type="radio" name="stock-status" id="all-stock" value="" checked>
+        <label class="form-check-label" for="all-stock">All</label>
+    </div>
+    <div class="form-check mb-2">
+        <input class="form-check-input stock-status-filter" type="radio" name="stock-status" id="on-sale" value="on_sale">
+        <label class="form-check-label" for="on-sale">On Sale</label>
+    </div>
+    <div class="form-check">
+        <input class="form-check-input stock-status-filter" type="radio" name="stock-status" id="in-stock" value="in_stock">
+        <label class="form-check-label" for="in-stock">In Stock</label>
+    </div>
+</div>
