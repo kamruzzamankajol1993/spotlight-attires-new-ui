@@ -7,6 +7,11 @@ use App\Models\Product;
 use App\Models\AnimationCategory;
 use App\Models\BundleOfferProduct;
 use App\Models\SliderControl;
+use Illuminate\Support\Facades\DB;
+use App\Models\Category;
+use App\Models\Subcategory;
+use App\Models\BundleOffer;
+use App\Models\AssignCategory;
 class FrontController extends Controller
 {
     public function index()
@@ -85,4 +90,203 @@ class FrontController extends Controller
 
         return view('front.index', compact('productsbun','offerDeals','latestProducts', 'topBannerProduct', 'bottomBannerProducts', 'products', 'randomLatestProducts', 'randomProducts', 'featuredCategories'));
     }
+
+
+    
+/**
+     * Display the initial category page with the first set of products.
+     */
+    public function category($slug)
+    {
+        $category = Category::where('slug', $slug)->firstOrFail();
+        
+        // Load the initial batch of products (first page)
+        $products = Product::where('category_id', $category->id)
+            ->where('status', 1)
+            ->with(['variants'])
+            ->latest()
+            ->paginate(12); // Use pagination
+
+        // Fetch all categories and their subcategories for the filter sidebar
+        $categoryList = Category::where('status', 1)->with('subcategories')->get();
+
+        return view('front.category.category', compact('category', 'products', 'categoryList'));
+    }
+
+        public function subcategory($slug)
+    {
+        $subcategory = Subcategory::where('slug', $slug)->firstOrFail();
+        
+        // Load the initial batch of products for this subcategory
+        $products = Product::where('subcategory_id', $subcategory->id)
+            ->where('status', 1)
+            ->with(['variants'])
+            ->latest()
+            ->paginate(12);
+
+        // Fetch all categories for the filter sidebar
+        // We pass the parent category to the view to help expand the sidebar correctly
+        $category = $subcategory->category;
+        $categoryList = Category::where('status', 1)->with('subcategories')->get();
+
+        return view('front.category.subcategory', compact('subcategory', 'category', 'products', 'categoryList'));
+    }
+
+
+/**
+     * MODIFIED: Display the initial offer page with its bundle deals.
+     */
+    public function offer($slug)
+    {
+        $offer = BundleOffer::where('slug', $slug)->firstOrFail();
+
+        // 1. Paginate the actual bundle deals for this offer
+        $bundleDeals = BundleOfferProduct::where('bundle_offer_id', $offer->id)->paginate(12);
+
+        // 2. Get all unique product IDs from the current page of deals
+        $allProductIds = $bundleDeals->pluck('product_id')->flatten()->unique()->all();
+
+        // 3. Fetch all related products in a single query for efficiency
+        $productsCollection = Product::whereIn('id', $allProductIds)->get()->keyBy('id');
+
+        // Fetch all active offers for the filter sidebar
+        $offerList = BundleOffer::where('status', 1)->where('enddate', '>=', now())->get();
+
+        return view('front.offer.show', compact('offer', 'bundleDeals', 'productsCollection', 'offerList'));
+    }
+
+    /**
+     * MODIFIED: Handle AJAX requests to filter and display bundle deals.
+     */
+    public function filterOffers(Request $request)
+{
+    $request->validate(['offer_id' => 'required|integer|exists:bundle_offers,id']);
+
+    // Start the query for bundle deals
+    $query = BundleOfferProduct::where('bundle_offer_id', $request->offer_id);
+
+    // MODIFIED: Add the price range filter to the query
+    if ($request->filled('min_price') && $request->filled('max_price')) {
+        $query->whereBetween('discount_price', [(float)$request->min_price, (float)$request->max_price]);
+    }
+
+    // Paginate the results
+    $bundleDeals = $query->paginate(12);
+
+    // The rest of the method remains the same
+    $allProductIds = $bundleDeals->pluck('product_id')->flatten()->unique()->all();
+    $productsCollection = Product::whereIn('id', $allProductIds)->get()->keyBy('id');
+    $html = view('front.offer.bundle_card_partial', compact('bundleDeals', 'productsCollection'))->render();
+
+    return response()->json([
+        'html' => $html,
+        'hasMorePages' => $bundleDeals->hasMorePages(),
+    ]);
+}
+
+
+    /**
+     * Handle AJAX requests for filtering and loading more products.
+     */
+    public function filterProducts(Request $request)
+    {
+        // Start with a broad query for all products.
+        $query = Product::where('status', 1)->with(['category', 'variants']);
+
+        // Filter by Main Category if selected
+        if ($request->filled('category_id')) {
+            $query->where('category_id', $request->category_id);
+        }
+
+        // Filter by Subcategory if selected
+        if ($request->filled('subcategory_id')) {
+            $query->where('subcategory_id', $request->subcategory_id);
+        }
+        
+        // Filter by Price Range
+        if ($request->filled('min_price') && $request->filled('max_price')) {
+            $query->whereBetween('base_price', [(float)$request->min_price, (float)$request->max_price]);
+        }
+
+        // Filter by Stock Status
+        if ($request->filled('stock_status')) {
+            if ($request->stock_status === 'on_sale') {
+                $query->whereNotNull('discount_price')->where('discount_price', '>', 0);
+            } elseif ($request->stock_status === 'in_stock') {
+                $query->whereHas('variants', function ($variantQuery) {
+                    $variantQuery->whereJsonLength('sizes', '>', 0);
+                });
+            }
+        }
+
+        $products = $query->latest()->paginate(12);
+
+        $html = view('front.category.product_card_partial', compact('products'))->render();
+
+        return response()->json([
+            'html' => $html,
+            'hasMorePages' => $products->hasMorePages(),
+        ]);
+
+    }
+
+     public function animationCategory($slug)
+    {
+        $animationCategory = AnimationCategory::where('slug', $slug)->firstOrFail();
+
+        // 1. Get all product IDs assigned to this animation category
+        $productIds = AssignCategory::where('category_id', $animationCategory->id)
+            // You might add ->where('type', 'animation') if you have other types
+            ->pluck('product_id');
+
+        // 2. Fetch and paginate the initial products
+        $products = Product::whereIn('id', $productIds)
+            ->where('status', 1)
+            ->with(['variants'])
+            ->latest()
+            ->paginate(12);
+
+        // 3. Fetch all active animation categories for the filter sidebar
+        $animationCategoryList = AnimationCategory::where('status', 1)->get();
+
+        return view('front.animation.show', compact('animationCategory', 'products', 'animationCategoryList'));
+    }
+
+    public function filterAnimationCategory(Request $request)
+{
+    $request->validate(['animation_category_id' => 'required|integer|exists:animation_categories,id']);
+
+    // 1. Get product IDs for the requested animation category
+    $productIds = AssignCategory::where('category_id', $request->animation_category_id)->pluck('product_id');
+
+    // 2. Start the query for products
+    $productsQuery = Product::whereIn('id', $productIds)->where('status', 1);
+
+    // 3. MODIFIED: Add Price and Stock filters to the product query
+    if ($request->filled('min_price') && $request->filled('max_price')) {
+        $productsQuery->whereBetween('base_price', [(float)$request->min_price, (float)$request->max_price]);
+    }
+
+    if ($request->filled('stock_status')) {
+        if ($request->stock_status === 'on_sale') {
+            $productsQuery->whereNotNull('discount_price')->where('discount_price', '>', 0);
+        } elseif ($request->stock_status === 'in_stock') {
+            $productsQuery->whereHas('variants', function ($variantQuery) {
+                $variantQuery->whereJsonLength('sizes', '>', 0);
+            });
+        }
+    }
+
+    // 4. Paginate the final results
+    $products = $productsQuery->with(['variants'])->latest()->paginate(12);
+
+    // The rest of the method is unchanged
+    $html = view('front.category.product_card_partial', compact('products'))->render();
+
+    return response()->json([
+        'html' => $html,
+        'hasMorePages' => $products->hasMorePages(),
+    ]);
+}
+    
 }

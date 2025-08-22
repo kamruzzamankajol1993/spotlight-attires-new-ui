@@ -80,7 +80,7 @@
                     <span class="navbar-toggler-icon"></span>
                 </button>
                 <a class="navbar-brand mx-auto" href="{{route('home.index')}}">
-                    <img src="{{$front_ins_url}}public/black.png" style="width: 120px;height:21px;" alt="Random Store">
+                    <img src="{{$front_ins_url}}{{$front_logo_name}}" style="width: 120px;height:21px;" alt="Random Store">
                 </a>
                 <!-- Updated User icon to trigger the new offcanvas -->
                 <a class="nav-link text-light" href="#" data-bs-toggle="offcanvas" data-bs-target="#signInOffcanvas"
@@ -124,12 +124,11 @@
                         </a>
                         <div class="collapse" id="submenu-{{ $category->id }}">
                             @foreach($category->subcategories as $subcategory)
-                                <a href="{{-- route('subcategory.page', $subcategory->slug) --}}#" class="list-group-item list-group-item-action ps-5">{{ $subcategory->name }}</a>
+                                <a href="{{route('subcategory.show', $subcategory->slug)}}" class="list-group-item list-group-item-action ps-5">{{ $subcategory->name }}</a>
                             @endforeach
                         </div>
                     @else
-                        <a href="{{-- route('category.page', $category->slug) --}}#"
-                           class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                        <a href="{{route('category.show', $category->slug)}}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
                            {{ $category->name }} <i class="bi bi-chevron-right ms-auto"></i>
                         </a>
                     @endif
@@ -191,12 +190,12 @@
                         </a>
                         <div class="collapse" id="mobile-submenu-{{ $category->id }}">
                             @foreach($category->subcategories as $subcategory)
-                                <a href="{{-- route('subcategory.page', $subcategory->slug) --}}#" class="list-group-item list-group-item-action ps-5">{{ $subcategory->name }}</a>
+                                <a href="{{route('subcategory.show', $subcategory->slug)}}" class="list-group-item list-group-item-action ps-5">{{ $subcategory->name }}</a>
                             @endforeach
                         </div>
                     @else
                         <!-- Category without Submenu -->
-                        <a href="{{-- route('category.page', $category->slug) --}}#"
+                        <a href="{{route('category.show', $category->slug)}}"
                            class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
                             <i class="bi bi-tag me-2"></i> {{ $category->name }} <i class="bi bi-chevron-right ms-auto"></i>
                         </a>

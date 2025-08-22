@@ -482,7 +482,7 @@
                 <div class="main-category-banner" style="background-image: url('{{  $front_ins_url .'public/' . $featuredCategories->first()->image}}');">
                     <div class="main-category-banner-content">
                         <h4 class="mb-3">{{ Str::upper($featuredCategories->first()->name) }}</h4>
-                        <a href="#" class="btn btn-outline-light">Visit Now</a>
+                        <a href="{{route('animation.category.show', $featuredCategories->first()->slug)}}" class="btn btn-outline-light">Visit Now</a>
                     </div>
                 </div>
             </div>
@@ -498,7 +498,7 @@
                                 <h5>{{ Str::upper($category->name) }}</h5>
                                 {{-- You can add a subtitle field to your animation_categories table for this --}}
                                 <p class="mb-2">New Collection</p>
-                                <a href="#" class="btn btn-outline-light btn-sm">Visit Now</a>
+                                <a href="{{ route('animation.category.show', $category->slug) }}" class="btn btn-outline-light btn-sm">Visit Now</a>
                             </div>
                         </div>
                     </div>
