@@ -29,9 +29,49 @@ class ProductVariant extends Model
      *
      * @var array
      */
+   
+
     protected $casts = [
-        'sizes' => 'array', // Automatically cast the JSON to an array
+        'sizes' => 'array',
+        'main_image' => 'array',      // Add this line
+        'variant_image' => 'array',   // Add this line as well to prevent a similar error
     ];
+
+    protected $appends = ['detailed_sizes'];
+
+    /**
+     * Accessor for detailed sizes.
+     * This method fetches the names for the size IDs stored in the `sizes` JSON column.
+     *
+     * @return array
+     */
+    public function getDetailedSizesAttribute(): array
+    {
+        $sizesData = $this->sizes;
+        if (empty($sizesData) || !is_array($sizesData)) {
+            return [];
+        }
+
+        $sizeIds = array_column($sizesData, 'size_id');
+        if (empty($sizeIds)) {
+            return [];
+        }
+
+        $sizesMasterList = Size::whereIn('id', $sizeIds)->get()->keyBy('id');
+        
+        $detailedSizes = [];
+        foreach ($sizesData as $sizeEntry) {
+            if (isset($sizeEntry['size_id']) && $sizesMasterList->has($sizeEntry['size_id'])) {
+                $detailedSizes[] = [
+                    'id'       => $sizeEntry['size_id'],
+                    'name'     => $sizesMasterList[$sizeEntry['size_id']]->name,
+                    'quantity' => $sizeEntry['quantity'],
+                ];
+            }
+        }
+
+        return $detailedSizes;
+    }
 
     /**
      * Get the product that this variant belongs to.

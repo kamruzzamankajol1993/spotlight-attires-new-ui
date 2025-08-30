@@ -63,6 +63,8 @@
                     <a class="nav-link text-dark" href="#" data-bs-toggle="offcanvas" data-bs-target="#cartOffcanvas"
                         aria-controls="cartOffcanvas">
                         <i class="bi bi-cart fs-4"></i>
+                        <span id="desktop-cart-count" class="badge rounded-pill bg-dark" style="font-size: 0.6em; padding: .35em .5em;">0</span>
+
                     </a>
                 </div>
             </div>
@@ -268,102 +270,25 @@
         <div class="offcanvas-body">
             <!-- Scrollable product list -->
             <div class="cart-products">
-                <!-- Product 1 -->
-                <div class="cart-product-item">
-                    <img src="https://placehold.co/80x80" alt="Product Image">
-                    <div class="product-details">
-                        <h6 class="mb-0">BERSERK ARMOUR - Exclusive DropShoulder - M</h6>
-                        <small class="text-muted">SKU: Guts-M</small>
-                        <div class="d-flex align-items-center mt-2">
-                            <span class="me-2 text-muted">1 x </span>
-                            <span class="price">৳ 950.0</span>
-                        </div>
-                    </div>
-                    <button type="button" class="btn-close" aria-label="Remove item"></button>
+              <div class="text-center p-5">
+                <div class="spinner-border" role="status">
+                    <span class="visually-hidden">Loading...</span>
                 </div>
-
-                <!-- Product 2 (example) -->
-                <div class="cart-product-item">
-                    <img src="https://placehold.co/80x80" alt="Product Image">
-                    <div class="product-details">
-                        <h6 class="mb-0">IGRIS ARMOUR - Exclusive DropShoulder - M</h6>
-                        <small class="text-muted">SKU: Red-Igris-M</small>
-                        <div class="d-flex align-items-center mt-2">
-                            <span class="me-2 text-muted">1 x </span>
-                            <span class="price">৳ 950.0</span>
-                        </div>
-                    </div>
-                    <button type="button" class="btn-close" aria-label="Remove item"></button>
-                </div>
-
-                <!-- Product 3 (example) -->
-                <div class="cart-product-item">
-                    <img src="https://placehold.co/80x80" alt="Product Image">
-                    <div class="product-details">
-                        <h6 class="mb-0">Example Product Name</h6>
-                        <small class="text-muted">SKU: Example-SKU</small>
-                        <div class="d-flex align-items-center mt-2">
-                            <span class="me-2 text-muted">1 x </span>
-                            <span class="price">৳ 500.0</span>
-                        </div>
-                    </div>
-                    <button type="button" class="btn-close" aria-label="Remove item"></button>
-                </div>
-                <!-- Product 1 -->
-                <div class="cart-product-item">
-                    <img src="https://placehold.co/80x80" alt="Product Image">
-                    <div class="product-details">
-                        <h6 class="mb-0">BERSERK ARMOUR - Exclusive DropShoulder - M</h6>
-                        <small class="text-muted">SKU: Guts-M</small>
-                        <div class="d-flex align-items-center mt-2">
-                            <span class="me-2 text-muted">1 x </span>
-                            <span class="price">৳ 950.0</span>
-                        </div>
-                    </div>
-                    <button type="button" class="btn-close" aria-label="Remove item"></button>
-                </div>
-
-                <!-- Product 2 (example) -->
-                <div class="cart-product-item">
-                    <img src="https://placehold.co/80x80" alt="Product Image">
-                    <div class="product-details">
-                        <h6 class="mb-0">IGRIS ARMOUR - Exclusive DropShoulder - M</h6>
-                        <small class="text-muted">SKU: Red-Igris-M</small>
-                        <div class="d-flex align-items-center mt-2">
-                            <span class="me-2 text-muted">1 x </span>
-                            <span class="price">৳ 950.0</span>
-                        </div>
-                    </div>
-                    <button type="button" class="btn-close" aria-label="Remove item"></button>
-                </div>
-
-                <!-- Product 3 (example) -->
-                <div class="cart-product-item">
-                    <img src="https://placehold.co/80x80" alt="Product Image">
-                    <div class="product-details">
-                        <h6 class="mb-0">Example Product Name</h6>
-                        <small class="text-muted">SKU: Example-SKU</small>
-                        <div class="d-flex align-items-center mt-2">
-                            <span class="me-2 text-muted">1 x </span>
-                            <span class="price">৳ 500.0</span>
-                        </div>
-                    </div>
-                    <button type="button" class="btn-close" aria-label="Remove item"></button>
-                </div>
+            </div>
             </div>
 
             <!-- Fixed bottom section -->
             <div class="cart-fixed-bottom">
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h5 class="mb-0">Subtotal:</h5>
-                    <h5 class="mb-0 fw-bold">৳ 950.0</h5>
-                </div>
-                <p class="text-muted small">
-                    Add ৳ 2,550.0 to cart and get free shipping!
-                </p>
-                <button class="btn btn-outline-dark">View Cart</button>
-                <button class="btn btn-dark">Checkout</button>
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="mb-0" style="color:black;">Subtotal:</h5>
+                <h5 class="mb-0 fw-bold" id="cart-subtotal" style="color:black;">৳ 0.00</h5>
             </div>
+            <p class="text-muted small" id="cart-shipping-message">
+                Shipping and taxes calculated at checkout.
+            </p>
+            <a href="#" class="btn btn-outline-dark">View Cart</a>
+            <a href="#" class="btn btn-dark">Checkout</a>
+        </div>
         </div>
     </div>
 
@@ -384,7 +309,7 @@
             aria-controls="cartOffcanvas">
             <div class="position-relative">
                 <i class="bi bi-cart"></i>
-                <span class="badge rounded-pill bg-dark">0</span>
+                 <span id="mobile-cart-count" class="badge rounded-pill bg-dark">0</span>
             </div>
             <span>Cart</span>
         </a>

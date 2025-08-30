@@ -22,8 +22,8 @@
                     }
                 }
             @endphp
-            
-            <a href="#"> {{-- Add product details route later --}}
+
+            <a href="{{ route('product.show', $product->slug) }}">
                 <picture>
                     <source media="(min-width: 992px)" srcset="{{ $desktopImage }}">
                     <img src="{{ $mobileImage }}" alt="{{ $product->name }}" class="card-img-top img-fluid">

@@ -1426,3 +1426,110 @@ h5 {
         align-self: flex-start;
     }
 }
+
+
+/*--------------------------------------------------------------
+# Product Details Css
+--------------------------------------------------------------*/
+
+.product-container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 2rem;
+    background-color: white;
+    border-radius: 1rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+
+/* Hide the default Slick navigation on the image carousel */
+
+.main-slider .slick-prev,
+.main-slider .slick-next {
+    display: none !important;
+}
+
+
+/* Custom styles for the vertical thumbnail navigation */
+
+.thumbnail-nav {
+    margin-right: 1rem;
+    width: 100px;
+}
+
+.thumbnail-nav .slick-slide {
+    margin-bottom: 0.5rem;
+}
+
+.thumbnail-nav .slick-current .thumbnail-image {
+    border: 2px solid #000;
+}
+
+.thumbnail-image {
+    cursor: pointer;
+    border-radius: 0.5rem;
+    transition: border 0.3s ease;
+}
+
+
+/* Custom styles for the arrows under the thumbnails */
+
+.custom-arrows {
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    width: 100%;
+    margin-top: 0.5rem;
+}
+
+.custom-arrows button {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 1.5rem;
+    color: #333;
+    margin: 0 0.25rem;
+    transition: color 0.2s;
+}
+
+.custom-arrows button:hover {
+    color: #000;
+}
+
+.star-rating .bi-star-fill {
+    color: #ffc107;
+}
+
+.review-bar-container {
+    flex-grow: 1;
+    height: 8px;
+    background-color: #e5e7eb;
+    border-radius: 9999px;
+    overflow: hidden;
+}
+
+.review-bar-fill {
+    background-color: #ffc107;
+    height: 100%;
+    border-radius: 9999px;
+}
+
+.rating-box {
+    border: 1px solid #e5e7eb;
+    padding: 1rem;
+    border-radius: 0.5rem;
+}
+
+.form-input {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid #e5e7eb;
+    border-radius: 0.5rem;
+    font-size: 0.875rem;
+    transition: border-color 0.2s;
+}
+
+.form-input:focus {
+    outline: none;
+    border-color: #000;
+}

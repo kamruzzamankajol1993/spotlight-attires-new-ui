@@ -2,7 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\FrontController;
-
+use App\Http\Controllers\CartController;
 
 Route::controller(FrontController::class)->group(function () {
 
@@ -17,7 +17,18 @@ Route::controller(FrontController::class)->group(function () {
     Route::get('/animation-category-filter', 'filterAnimationCategory')->name('animation.category.filter');
 
     Route::get('/shop', 'shop')->name('shop.show');
+    Route::get('/product/{slug}', 'product')->name('product.show');
     Route::get('/shop-filter', 'ajaxShopFilter')->name('shop.ajax_filter');
     Route::get('products-filter', 'filterProducts')->name('products.filter');
 
 });
+
+// START: MODIFIED CART ROUTES
+
+Route::controller(CartController::class)->prefix('cart')->name('cart.')->group(function () {
+    Route::post('/add', 'addToCart')->name('add');
+    Route::get('/content', 'getCartContent')->name('content');
+    Route::post('/update', 'updateCartItem')->name('update');
+    Route::post('/remove', 'removeCartItem')->name('remove');
+});
+// END: MODIFIED CART ROUTES

@@ -194,6 +194,93 @@
     });
     </script>
 
+    <!-- cart script--->
+    <script>
+    // Global function to update the cart offcanvas display
+    function updateCartOffcanvas() {
+        $.ajax({
+            url: '{{ route("cart.content") }}',
+            type: 'GET',
+            success: function(response) {
+                $('.cart-products').html(response.html);
+                $('#cart-subtotal').text('৳ ' + response.subtotal);
+                $('#mobile-cart-count').text(response.count);
+                $('#desktop-cart-count').text(response.count);
+            },
+            error: function() {
+                $('.cart-products').html('<p class="text-danger text-center p-3">Could not load cart. Please try again.</p>');
+            }
+        });
+    }
+
+    $(document).ready(function() {
+        // Load initial cart content when the page loads
+        updateCartOffcanvas();
+
+        // Use event delegation for removing items from the dynamically loaded cart
+        $('body').on('click', '.remove-cart-item', function() {
+            const rowId = $(this).data('row-id');
+            const cartItemDiv = $(this).closest('.cart-product-item');
+
+            $.ajax({
+                url: '{{ route("cart.remove") }}',
+                type: 'POST',
+                data: {
+                    rowId: rowId,
+                    _token: '{{ csrf_token() }}'
+                },
+                beforeSend: function() {
+                    cartItemDiv.css('opacity', '0.5'); // Visual feedback
+                },
+                success: function(response) {
+                    // The 'remove' route now returns the full updated cart content, so we just re-render everything
+                    $('.cart-products').html(response.html);
+                    $('#cart-subtotal').text('৳ ' + response.subtotal);
+                    $('#mobile-cart-count').text(response.count);
+                    $('#desktop-cart-count').text(response.count);
+                },
+                error: function() {
+                    alert('Error removing item. Please try again.');
+                    cartItemDiv.css('opacity', '1'); // Revert visual feedback on error
+                }
+            });
+        });
+
+        // Use event delegation for updating item quantity
+        $('body').on('click', '.cart-quantity-btn', function() {
+            const rowId = $(this).data('row-id');
+            const change = parseInt($(this).data('change'));
+            const quantitySpan = $(this).parent().find('.cart-quantity-value');
+            let currentQuantity = parseInt(quantitySpan.text());
+            let newQuantity = currentQuantity + change;
+
+            if (newQuantity < 1) {
+                return; // Quantity cannot be less than 1
+            }
+
+            $.ajax({
+                url: '{{ route("cart.update") }}',
+                type: 'POST',
+                data: {
+                    rowId: rowId,
+                    quantity: newQuantity,
+                    _token: '{{ csrf_token() }}'
+                },
+                success: function(response) {
+                    // The 'update' route also returns the full cart content
+                    $('.cart-products').html(response.html);
+                    $('#cart-subtotal').text('৳ ' + response.subtotal);
+                    $('#mobile-cart-count').text(response.count);
+                    $('#desktop-cart-count').text(response.count);
+                },
+                error: function() {
+                    alert('Error updating quantity. Please try again.');
+                }
+            });
+        });
+    });
+</script>
+
 
 </body>
 

@@ -35,7 +35,7 @@
                         <h1 class="fw-bold">{{ Str::upper($product->name) }}</h1>
                         {{-- You can use the product description or category name here --}}
                         <p>{{ $product->category->name ?? 'New Arrival' }}</p>
-                        <a href="{{-- route('product.details', $product->slug) --}}#" class="btn btn-outline-light">ORDER NOW</a>
+                        <a href="{{ route('product.show', $product->slug) }}" class="btn btn-outline-light">ORDER NOW</a>
                     </div>
                 </div>
             @endforeach
@@ -76,7 +76,7 @@
             <div class="content">
                 <h4 class="fw-bold">{{ Str::upper(Str::limit($topBannerProduct->name, 20)) }}</h4>
                 <p>{{ $topBannerProduct->category->name ?? 'Featured Item' }}</p>
-                <a href="#" class="btn btn-outline-light">VIEW DETAILS</a>
+                <a href="{{ route('product.show', $topBannerProduct->slug) }}" class="btn btn-outline-light">VIEW DETAILS</a>
             </div>
         </div>
     @endif
@@ -105,7 +105,7 @@
                         <div class="content">
                             <h5 class="fw-bold">{{ Str::upper(Str::limit($bottomProduct->name, 18)) }}</h5>
                             <p>LIMITED OFFER</p>
-                            <a href="#" class="btn btn-outline-light btn-sm">SHOP NOW</a>
+                            <a href="{{ route('product.show', $bottomProduct->slug) }}" class="btn btn-outline-light btn-sm">SHOP NOW</a>
                         </div>
                     </div>
                 </div>
@@ -144,7 +144,7 @@
                 }
             }
         @endphp
-
+<a href="{{ route('product.show', $product->slug) }}">
         {{-- Picture element for responsive images --}}
     <picture>
         {{-- Desktop and laptop (≥992px) --}}
@@ -156,7 +156,7 @@
              alt="{{ $product->name }}" 
              class="card-img-top img-fluid">
     </picture>
-
+</a>
         <div class="product-details-body">
             <h5 class="product-title mb-1">{{ Str::limit($product->name, 25) }}</h5>
             <p class="product-meta mb-1">Category: {{ $product->category->name ?? 'N/A' }}</p>
@@ -233,7 +233,7 @@
                 }
             }
         @endphp
-
+<a href="{{ route('product.show', $product->slug) }}">
         {{-- Picture element for responsive images --}}
     <picture>
         {{-- Desktop and laptop (≥992px) --}}
@@ -245,6 +245,7 @@
              alt="{{ $product->name }}" 
              class="card-img-top img-fluid">
     </picture>
+    </a>
         <div class="product-details-body">
             <h5 class="product-title mb-1">{{ Str::limit($product->name, 25) }}</h5>
             <p class="product-meta mb-1">Category: {{ $product->category->name ?? 'N/A' }}</p>
@@ -324,7 +325,7 @@
                 }
             }
         @endphp
-
+<a href="{{ route('product.show', $product->slug) }}">
         {{-- Picture element for responsive images --}}
     <picture>
         {{-- Desktop and laptop (≥992px) --}}
@@ -336,6 +337,7 @@
              alt="{{ $product->name }}" 
              class="card-img-top img-fluid">
     </picture>
+    </a>
         <div class="product-details-body">
             <h5 class="product-title mb-1">{{ Str::limit($product->name, 25) }}</h5>
             <p class="product-meta mb-1">Category: {{ $product->category->name ?? 'N/A' }}</p>

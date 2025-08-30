@@ -14,6 +14,21 @@ use App\Models\BundleOffer;
 use App\Models\AssignCategory;
 class FrontController extends Controller
 {
+
+     public function product($slug)
+    {
+        $product = Product::where('slug', $slug)
+            ->with([
+                'category',                 // For breadcrumbs
+                'subcategory',              // For breadcrumbs
+                'variants.color',           // Eager load variants AND their associated colors
+                'assignChart.entries'       // Eager load the assigned size chart AND its entries
+            ])
+            ->firstOrFail();
+
+        return view('front.product.show', compact('product'));
+    }
+
     public function index()
     {
 
