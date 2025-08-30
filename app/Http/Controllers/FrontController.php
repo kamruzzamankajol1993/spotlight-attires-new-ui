@@ -15,6 +15,15 @@ use App\Models\AssignCategory;
 class FrontController extends Controller
 {
 
+    public function quickView($id)
+{
+    $product = Product::with(['variants.color', 'category'])
+        ->findOrFail($id);
+    
+    // We will create this new view file in the next step
+    return view('front.include.quick_view_modal_content', compact('product'));
+}
+
      public function product($slug)
     {
         $product = Product::where('slug', $slug)
@@ -176,6 +185,32 @@ class FrontController extends Controller
             }
         }
 
+         // --- START: NEW SORTING LOGIC ---
+        $sortBy = $request->input('sort_by', 'newest'); // Default to 'newest'
+
+        switch ($sortBy) {
+            case 'price_asc':
+                // Order by discount price if it exists, otherwise by base price
+                $query->orderByRaw('ISNULL(discount_price), discount_price ASC, base_price ASC');
+                break;
+            case 'price_desc':
+                $query->orderByRaw('ISNULL(discount_price), discount_price DESC, base_price DESC');
+                break;
+            case 'name_asc':
+                $query->orderBy('name', 'asc');
+                break;
+            case 'popularity':
+                // NOTE: 'popularity' requires a metric like sales or views.
+                // As a placeholder, we'll sort by newest.
+                $query->latest();
+                break;
+            case 'newest':
+            default:
+                $query->latest(); // This is equivalent to orderBy('created_at', 'desc')
+                break;
+        }
+        // --- END: NEW SORTING LOGIC ---
+
         $products = $query->with(['category', 'variants'])->latest()->paginate(12);
 
         $html = view('front.category.product_card_partial', compact('products'))->render();
@@ -292,6 +327,32 @@ class FrontController extends Controller
             }
         }
 
+         // --- START: NEW SORTING LOGIC ---
+        $sortBy = $request->input('sort_by', 'newest'); // Default to 'newest'
+
+        switch ($sortBy) {
+            case 'price_asc':
+                // Order by discount price if it exists, otherwise by base price
+                $query->orderByRaw('ISNULL(discount_price), discount_price ASC, base_price ASC');
+                break;
+            case 'price_desc':
+                $query->orderByRaw('ISNULL(discount_price), discount_price DESC, base_price DESC');
+                break;
+            case 'name_asc':
+                $query->orderBy('name', 'asc');
+                break;
+            case 'popularity':
+                // NOTE: 'popularity' requires a metric like sales or views.
+                // As a placeholder, we'll sort by newest.
+                $query->latest();
+                break;
+            case 'newest':
+            default:
+                $query->latest(); // This is equivalent to orderBy('created_at', 'desc')
+                break;
+        }
+        // --- END: NEW SORTING LOGIC ---
+
         $products = $query->latest()->paginate(12);
 
         $html = view('front.category.product_card_partial', compact('products'))->render();
@@ -349,6 +410,30 @@ class FrontController extends Controller
             });
         }
     }
+
+    // --- START: NEW SORTING LOGIC ---
+        $sortBy = $request->input('sort_by', 'newest'); // Default to 'newest'
+
+        switch ($sortBy) {
+            case 'price_asc':
+                $productsQuery->orderByRaw('ISNULL(discount_price), discount_price ASC, base_price ASC');
+                break;
+            case 'price_desc':
+                $productsQuery->orderByRaw('ISNULL(discount_price), discount_price DESC, base_price DESC');
+                break;
+            case 'name_asc':
+                $productsQuery->orderBy('name', 'asc');
+                break;
+            case 'popularity':
+                // As a placeholder, we'll sort by newest.
+                $productsQuery->latest();
+                break;
+            case 'newest':
+            default:
+                $productsQuery->latest(); // orderBy('created_at', 'desc')
+                break;
+        }
+        // --- END: NEW SORTING LOGIC ---
 
     // 4. Paginate the final results
     $products = $productsQuery->with(['variants'])->latest()->paginate(12);

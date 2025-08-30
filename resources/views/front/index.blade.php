@@ -181,7 +181,7 @@
                     <span class="fw-bold">৳ {{ $product->base_price }}</span>
                 @endif
             </p>
-            <a href="#" class="btn btn-primary btn-add-cart">Add to Cart</a>
+            <a href="#" class="btn btn-primary btn-add-cart" data-product-id="{{ $product->id }}">Add to Cart</a>
         </div>
     </div>
     @endforeach
@@ -270,7 +270,7 @@
                     <span class="fw-bold">৳ {{ $product->base_price }}</span>
                 @endif
             </p>
-            <a href="#" class="btn btn-primary btn-add-cart">Add to Cart</a>
+            <a href="#" class="btn btn-primary btn-add-cart" data-product-id="{{ $product->id }}">Add to Cart</a>
         </div>
     </div>
     @endforeach
@@ -362,7 +362,7 @@
                     <span class="fw-bold">৳ {{ number_format($product->base_price, 2) }}</span>
                 @endif
             </p>
-            <a href="#" class="btn btn-primary btn-add-cart">Add to Cart</a>
+            <a href="#" class="btn btn-primary btn-add-cart" data-product-id="{{ $product->id }}">Add to Cart</a>
         </div>
     </div>
     @endforeach
@@ -607,8 +607,64 @@
     </section>
 
     </main>
+    <!-- Quick View Modal -->
+    <div class="modal fade" id="quickViewModal" tabindex="-1" aria-labelledby="quickViewModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="quickViewModalLabel">Product Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="quickViewModalBody">
+                <div class="text-center p-5">
+                    <div class="spinner-border" style="width: 3rem; height: 3rem;" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- Quick View Modal -->
 @endsection
 @section('script')
+<script>
+    $(document).ready(function() {
+        // Use event delegation for buttons in sliders
+        $('body').on('click', '.btn-add-cart', function(e) {
+            e.preventDefault(); // Prevents the link from jumping to the top of the page
+
+            const productId = $(this).data('product-id');
+            const modal = $('#quickViewModal');
+            const modalBody = $('#quickViewModalBody');
+
+            // --- START: MODIFIED URL GENERATION ---
+            // Create a URL template using the named route and a placeholder
+            let urlTemplate = "{{ route('product.quick_view', ['id' => ':id']) }}";
+            // Replace the placeholder with the actual product ID
+            let productUrl = urlTemplate.replace(':id', productId);
+            // --- END: MODIFIED URL GENERATION ---
+
+            // Show the modal
+            modal.modal('show');
+
+            // Set a loading state
+            modalBody.html('<div class="text-center p-5"><div class="spinner-border" style="width: 3rem; height: 3rem;" role="status"><span class="visually-hidden">Loading...</span></div></div>');
+
+            // Fetch product details via AJAX
+            $.ajax({
+                url: productUrl, // Use the dynamically generated URL
+                type: 'GET',
+                success: function(response) {
+                    modalBody.html(response);
+                },
+                error: function() {
+                    modalBody.html('<p class="text-danger text-center">Sorry, we could not load the product details. Please try again.</p>');
+                }
+            });
+        });
+    });
+</script>
 <script>
     $(function() {
     // Select the timer container div

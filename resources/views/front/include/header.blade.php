@@ -63,7 +63,7 @@
                     <a class="nav-link text-dark" href="#" data-bs-toggle="offcanvas" data-bs-target="#cartOffcanvas"
                         aria-controls="cartOffcanvas">
                         <i class="bi bi-cart fs-4"></i>
-                        <span id="desktop-cart-count" class="badge rounded-pill bg-dark" style="font-size: 0.6em; padding: .35em .5em;">0</span>
+                        <span id="desktop-cart-count" class="badge rounded-pill bg-dark" style="position: relative;top: -13px;left: -8px;font-size: 0.6em; padding: .35em .5em;">0</span>
 
                     </a>
                 </div>

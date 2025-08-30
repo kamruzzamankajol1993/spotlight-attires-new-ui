@@ -20,6 +20,7 @@ Route::controller(FrontController::class)->group(function () {
     Route::get('/product/{slug}', 'product')->name('product.show');
     Route::get('/shop-filter', 'ajaxShopFilter')->name('shop.ajax_filter');
     Route::get('products-filter', 'filterProducts')->name('products.filter');
+     Route::get('/product-quick-view/{id}', 'quickView')->name('product.quick_view');
 
 });
 

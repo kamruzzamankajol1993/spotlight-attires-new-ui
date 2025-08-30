@@ -35,6 +35,24 @@
                 </div>
 
                 <div class="col-md-9">
+                       <!--- new filter section --->
+                    <div class="d-flex justify-content-end">
+                    <div class="row mb-3">
+                        <div class="col">
+                            
+                                
+                            <select class="form-select" id="sort-select-new" aria-label="Sort Products">
+                                <option value="default">Sort by</option>
+                                <option value="name_asc">A to Z</option>
+                                <option value="price_asc">Price: Low to High</option>
+                                <option value="price_desc">Price: High to Low</option>
+                                <option value="newest">Newest Arrivals</option>
+                                <option value="popularity">Most Popular</option>
+                            </select>
+                            </div>
+                        </div>
+                    </div>
+                    <!--- end new filter section ---->
                     <div class="product-grid">
                         <div id="product-list" class="row row-cols-2 row-cols-sm-2 row-cols-lg-3 row-cols-xl-4 g-3" data-base-subcategory-id="{{ $subcategory->id }}">
                             {{-- Load the initial products for the subcategory --}}
@@ -61,9 +79,65 @@
         </div>
     </section>
 </main>
+  <!-- Quick View Modal -->
+    <div class="modal fade" id="quickViewModal" tabindex="-1" aria-labelledby="quickViewModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="quickViewModalLabel">Product Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="quickViewModalBody">
+                <div class="text-center p-5">
+                    <div class="spinner-border" style="width: 3rem; height: 3rem;" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- Quick View Modal -->
 @endsection
 
 @section('script')
+<script>
+    $(document).ready(function() {
+        // Use event delegation for buttons in sliders
+        $('body').on('click', '.btn-add-cart', function(e) {
+            e.preventDefault(); // Prevents the link from jumping to the top of the page
+
+            const productId = $(this).data('product-id');
+            const modal = $('#quickViewModal');
+            const modalBody = $('#quickViewModalBody');
+
+            // --- START: MODIFIED URL GENERATION ---
+            // Create a URL template using the named route and a placeholder
+            let urlTemplate = "{{ route('product.quick_view', ['id' => ':id']) }}";
+            // Replace the placeholder with the actual product ID
+            let productUrl = urlTemplate.replace(':id', productId);
+            // --- END: MODIFIED URL GENERATION ---
+
+            // Show the modal
+            modal.modal('show');
+
+            // Set a loading state
+            modalBody.html('<div class="text-center p-5"><div class="spinner-border" style="width: 3rem; height: 3rem;" role="status"><span class="visually-hidden">Loading...</span></div></div>');
+
+            // Fetch product details via AJAX
+            $.ajax({
+                url: productUrl, // Use the dynamically generated URL
+                type: 'GET',
+                success: function(response) {
+                    modalBody.html(response);
+                },
+                error: function() {
+                    modalBody.html('<p class="text-danger text-center">Sorry, we could not load the product details. Please try again.</p>');
+                }
+            });
+        });
+    });
+</script>
 <script>
 $(document).ready(function() {
     let page = 2;
@@ -79,7 +153,8 @@ $(document).ready(function() {
         let filters = {
             min_price: $('#min-price-slider').val(),
             max_price: $('#max-price-slider').val(),
-            stock_status: $('input[name="stock-status"]:checked').val()
+            stock_status: $('input[name="stock-status"]:checked').val(),
+             sort_by: $('#sort-select-new').val() 
         };
 
         const activeMainCategory = $('.main-category-filter.active').data('id');
@@ -150,6 +225,10 @@ $(document).ready(function() {
                 }
             }
         }
+    });
+
+    $('#sort-select-new').on('change', function() {
+        loadProducts(true); // Reset and load products with the new sorting
     });
     
     $('#price-filter-btn').on('click', function() { loadProducts(true); });

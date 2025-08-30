@@ -52,7 +52,7 @@
                         <span class="fw-bold">৳{{ number_format($product->base_price) }}</span>
                     @endif
                 </p>
-                <a href="#" class="btn btn-primary btn-add-cart w-100">Add to Cart</a>
+                <a href="#" class="btn btn-primary btn-add-cart" data-product-id="{{ $product->id }}">Add to Cart</a>
             </div>
         </div>
     </div>
