@@ -11,6 +11,7 @@ Route::controller(FrontController::class)->group(function () {
     Route::get('/subcategory/{slug}', 'subcategory')->name('subcategory.show');
     // ADD THESE NEW ROUTES FOR THE OFFER PAGE
     Route::get('/offer/{slug}','offer')->name('offer.show');
+    Route::get('/offer-product/{id}','offerProduct')->name('offerProduct.show');
     Route::get('/offers/filter','filterOffers')->name('offer.filter');
 
     Route::get('/animation-category/{slug}', 'animationCategory')->name('animation.category.show');
@@ -27,8 +28,12 @@ Route::controller(FrontController::class)->group(function () {
 // START: MODIFIED CART ROUTES
 
 Route::controller(CartController::class)->prefix('cart')->name('cart.')->group(function () {
+    Route::get('/showCartData', 'showCartData')->name('show');
     Route::post('/add', 'addToCart')->name('add');
     Route::get('/content', 'getCartContent')->name('content');
+     Route::get('/main-content', 'getMainCartContent')->name('main_content');
+    Route::post('/main-update', 'updateMainCartItem')->name('main.update');
+    Route::post('/main-remove', 'removeMainCartItem')->name('main.remove');
     Route::post('/update', 'updateCartItem')->name('update');
     Route::post('/remove', 'removeCartItem')->name('remove');
 });

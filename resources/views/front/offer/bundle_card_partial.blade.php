@@ -52,7 +52,7 @@
                         <span class="fw-bold">৳{{ number_format($totalBasePrice) }}</span>
                     @endif
                 </p>
-                <a href="#" class="btn btn-primary btn-add-cart w-100">View Deal</a>
+                <a href="{{route('offerProduct.show',$deal->id )}}" class="btn btn-primary btn-add-cart w-100">View Deal</a>
             </div>
         </div>
     </div>

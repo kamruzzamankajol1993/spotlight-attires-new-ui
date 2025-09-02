@@ -1533,3 +1533,350 @@ h5 {
     outline: none;
     border-color: #000;
 }
+
+
+/*--------------------------------------------------------------
+# Combo Offer
+--------------------------------------------------------------*/
+
+.spotlight_combo_page_product_container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 2rem;
+    background-color: white;
+    border-radius: 1rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+
+/* Hide the default Slick navigation on the image carousel */
+
+.spotlight_combo_page_main_slider .slick-prev,
+.spotlight_combo_page_main_slider .slick-next {
+    display: none !important;
+}
+
+
+/* Custom styles for the vertical thumbnail navigation */
+
+.spotlight_combo_page_thumbnail_nav {
+    margin-right: 1rem;
+    width: 100px;
+}
+
+.spotlight_combo_page_thumbnail_nav .slick-slide {
+    margin-bottom: 0.5rem;
+}
+
+.spotlight_combo_page_thumbnail_nav .slick-current .spotlight_combo_page_thumbnail_image {
+    border: 2px solid #000;
+}
+
+.spotlight_combo_page_thumbnail_image {
+    cursor: pointer;
+    border-radius: 0.5rem;
+    transition: border 0.3s ease;
+}
+
+
+/* Custom styles for the arrows under the thumbnails */
+
+.spotlight_combo_page_custom_arrows {
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    width: 100%;
+    margin-top: 0.5rem;
+}
+
+.spotlight_combo_page_custom_arrows button {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 1.5rem;
+    color: #333;
+    margin: 0 0.25rem;
+    transition: color 0.2s;
+}
+
+.spotlight_combo_page_custom_arrows button:hover {
+    color: #000;
+}
+
+.spotlight_combo_page_star_rating .bi-star-fill {
+    color: #ffc107;
+}
+
+.spotlight_combo_page_review_bar_container {
+    flex-grow: 1;
+    height: 8px;
+    background-color: #e5e7eb;
+    border-radius: 9999px;
+    overflow: hidden;
+}
+
+.spotlight_combo_page_review_bar_fill {
+    background-color: #ffc107;
+    height: 100%;
+    border-radius: 9999px;
+}
+
+.spotlight_combo_page_rating_box {
+    border: 1px solid #e5e7eb;
+    padding: 1rem;
+    border-radius: 0.5rem;
+}
+
+.spotlight_combo_page_form_input {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid #e5e7eb;
+    border-radius: 0.5rem;
+    font-size: 0.875rem;
+    transition: border-color 0.2s;
+}
+
+.spotlight_combo_page_form_input:focus {
+    outline: none;
+    border-color: #000;
+}
+
+.spotlight_combo_page_select-button {
+    height: 150px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    border-radius: 1rem;
+    background-color: #f8f9fa;
+    border: 2px dashed #dee2e6;
+    transition: border-color 0.2s;
+}
+
+.spotlight_combo_page_select-button:hover {
+    border-color: #6c757d;
+}
+
+.spotlight_combo_page_modal-card {
+    border-radius: 1rem;
+    overflow: hidden;
+}
+
+.spotlight_combo_page_product-option {
+    border: 1px solid #e9ecef;
+    border-radius: 0.5rem;
+    overflow: hidden;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.spotlight_combo_page_product-option:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.spotlight_combo_page_product-option img {
+    width: 100%;
+    height: auto;
+}
+
+.spotlight_combo_page_product-option-content {
+    padding: 0.75rem;
+}
+
+.spotlight_combo_page_product-option-content h6 {
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+.spotlight_combo_page_product-option-content .spotlight_combo_page_price {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #343a40;
+}
+
+.spotlight_combo_page_product-option-content .spotlight_combo_page_original-price {
+    font-size: 0.7rem;
+    text-decoration: line-through;
+    color: #adb5bd;
+}
+
+
+/*--------------------------------------------------------------
+# Cart Page
+--------------------------------------------------------------*/
+
+.spotlight_cart_progress_header {
+    background-color: #007bff;
+    color: white;
+    padding: 1rem 0;
+}
+
+.spotlight_cart_progress_item {
+    display: flex;
+    align-items: center;
+}
+
+.spotlight_cart_progress_item:not(:last-child)::after {
+    content: "→";
+    margin: 0 1rem;
+    font-size: 1.25rem;
+    opacity: 0.5;
+}
+
+.spotlight_cart_container {
+    max-width: 1400px;
+    margin-top: 2rem;
+}
+
+.spotlight_cart_summary_card {
+    background-color: white;
+    border-radius: 0.5rem;
+    padding: 1.5rem;
+}
+
+.spotlight_cart_item {
+    display: flex;
+    align-items: center;
+    border-bottom: 1px solid #dee2e6;
+    padding: 1rem 0;
+}
+
+.spotlight_cart_item_image {
+    width: 100px;
+    height: 100px;
+    object-fit: contain;
+    border: 1px solid #dee2e6;
+    border-radius: 0.5rem;
+}
+
+.spotlight_cart_item_details {
+    flex-grow: 1;
+}
+
+.spotlight_cart_item_quantity {
+    display: flex;
+    align-items: center;
+    border: 1px solid #dee2e6;
+    border-radius: 0.25rem;
+    overflow: hidden;
+}
+
+.spotlight_cart_item_quantity button {
+    background: #f8f9fa;
+    border: none;
+    padding: 0.25rem 0.75rem;
+}
+
+.spotlight_cart_total_row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5rem 0;
+}
+
+.spotlight_cart_action_button {
+    width: 100%;
+    padding: 0.75rem;
+    font-weight: 600;
+}
+
+.spotlight_cart_interest_card {
+    background-color: white;
+    border-radius: 0.5rem;
+    padding: 1.5rem;
+    margin-top: 2rem;
+}
+
+.spotlight_cart_accordion_item {
+    border: 1px solid #dee2e6;
+    border-radius: 0.5rem;
+    overflow: hidden;
+    margin-bottom: 0.5rem;
+}
+
+
+/* Table specific styles for responsiveness */
+
+.spotlight_cart_table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.spotlight_cart_table th,
+.spotlight_cart_table td {
+    padding: 1rem;
+    border-bottom: 1px solid #dee2e6;
+    vertical-align: middle;
+}
+
+.spotlight_cart_table th {
+    text-align: center;
+    font-weight: 600;
+    color: #6c757d;
+}
+
+.spotlight_cart_table td {
+    text-align: center;
+}
+
+.spotlight_cart_table_row:first-child .spotlight_cart_table_cell:first-child {
+    width: 50%;
+}
+
+.spotlight_cart_nested_item td {
+    padding: 0.5rem;
+    border-top: none;
+}
+
+.spotlight_cart_nested_item_image {
+    width: 50px;
+    /* Smaller image size for nested items */
+    height: 50px;
+    object-fit: contain;
+    border: 1px solid #dee2e6;
+    border-radius: 0.25rem;
+}
+
+.spotlight_cart_nested_item .spotlight_cart_item_details {
+    display: flex;
+    align-items: center;
+}
+
+.spotlight_cart_nested_item .spotlight_cart_item_details h6 {
+    font-size: 0.9rem;
+    margin-left: 0.5rem;
+}
+
+@media (max-width: 767.98px) {
+    .spotlight_cart_table thead {
+        display: none;
+    }
+    .spotlight_cart_table,
+    .spotlight_cart_table tbody,
+    .spotlight_cart_table tr,
+    .spotlight_cart_table td {
+        display: block;
+        width: 100%;
+    }
+    .spotlight_cart_table tr {
+        border-bottom: 1px solid #dee2e6;
+        margin-bottom: 1rem;
+    }
+    .spotlight_cart_table td {
+        text-align: right;
+        position: relative;
+        padding-left: 50%;
+    }
+    .spotlight_cart_table td::before {
+        content: attr(data-label);
+        position: absolute;
+        left: 1rem;
+        width: 45%;
+        padding-right: 1rem;
+        white-space: nowrap;
+        text-align: left;
+        font-weight: 600;
+    }
+}

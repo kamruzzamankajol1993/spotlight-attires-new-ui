@@ -15,6 +15,38 @@ use App\Models\AssignCategory;
 class FrontController extends Controller
 {
 
+
+    public function offerProduct($id)
+{
+    $bundleDeal = BundleOfferProduct::findOrFail($id);
+    $productIds = $bundleDeal->product_id;
+    $productsCollection = collect();
+    $allImages = [];
+    $totalBasePrice = 0;
+
+    if (!empty($productIds) && is_array($productIds)) {
+        $productsCollection = Product::whereIn('id', $productIds)
+            ->with(['variants.color']) // This is correct
+            ->get();
+
+        foreach ($productsCollection as $product) {
+            if (is_array($product->main_image) && count($product->main_image) > 0) {
+                $allImages = array_merge($allImages, $product->main_image);
+            }
+            $totalBasePrice += $product->base_price;
+        }
+    }
+
+    $allImages = array_unique($allImages);
+
+    return view('front.offer.offerproduct', compact(
+        'bundleDeal',
+        'productsCollection',
+        'allImages',
+        'totalBasePrice'
+    ));
+}
+
     public function quickView($id)
 {
     $product = Product::with(['variants.color', 'category'])

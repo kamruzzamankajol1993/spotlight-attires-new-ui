@@ -9,6 +9,19 @@ use Illuminate\Support\Facades\Session;
 
 class CartController extends Controller
 {
+
+
+     public function showCartData()
+    {
+        // 2. FETCH 4 RANDOM, ACTIVE PRODUCTS
+        $randomProducts = Product::where('status', 1) // Optional: only show active products
+                                 ->inRandomOrder()
+                                 ->limit(4)
+                                 ->get();
+
+        // 3. PASS THE PRODUCTS TO THE VIEW
+        return view('front.cart.cart', compact('randomProducts'));
+    }
     /**
      * Add a product to the cart.
      */
@@ -117,5 +130,63 @@ class CartController extends Controller
         }
 
         return $this->getCartContent();
+    }
+
+
+public function getMainCartContent()
+    {
+        $cart = Session::get('cart', []);
+        $subtotal = 0;
+        foreach ($cart as $item) {
+            $subtotal += $item['price'] * $item['quantity'];
+        }
+
+        // Renders the NEW MAIN cart partial
+        $cartHtml = view('front.include.main_cart_items_partial', ['cart' => $cart])->render();
+
+        return response()->json([
+            'html' => $cartHtml,
+            'count' => count($cart),
+            'subtotal' => number_format($subtotal, 2)
+        ]);
+    }
+     // ===================================================
+    // =========== NEW METHODS FOR MAIN CART =============
+    // ===================================================
+
+    /**
+     * Update an item's quantity for the MAIN cart page.
+     */
+    public function updateMainCartItem(Request $request)
+    {
+        $request->validate([
+            'rowId' => 'required|string',
+            'quantity' => 'required|integer|min:1'
+        ]);
+
+        $cart = Session::get('cart', []);
+
+        if (isset($cart[$request->rowId])) {
+            $cart[$request->rowId]['quantity'] = $request->quantity;
+            Session::put('cart', $cart);
+        }
+        // Returns MAIN cart partial
+        return $this->getMainCartContent();
+    }
+
+    /**
+     * Remove an item for the MAIN cart page.
+     */
+    public function removeMainCartItem(Request $request)
+    {
+        $request->validate(['rowId' => 'required|string']);
+        $cart = Session::get('cart', []);
+
+        if (isset($cart[$request->rowId])) {
+            unset($cart[$request->rowId]);
+            Session::put('cart', $cart);
+        }
+        // Returns MAIN cart partial
+        return $this->getMainCartContent();
     }
 }

@@ -286,7 +286,7 @@
             <p class="text-muted small" id="cart-shipping-message">
                 Shipping and taxes calculated at checkout.
             </p>
-            <a href="#" class="btn btn-outline-dark">View Cart</a>
+            <a href="{{route('cart.show')}}" class="btn btn-outline-dark">View Cart</a>
             <a href="#" class="btn btn-dark">Checkout</a>
         </div>
         </div>
@@ -305,7 +305,7 @@
             </div>
             <span>Wishlist</span>
         </a>
-        <a href="#" class="nav-link text-dark" data-bs-toggle="offcanvas" data-bs-target="#cartOffcanvas"
+        <a href="{{route('cart.show')}}" class="nav-link text-dark" data-bs-toggle="offcanvas" data-bs-target="#cartOffcanvas"
             aria-controls="cartOffcanvas">
             <div class="position-relative">
                 <i class="bi bi-cart"></i>
@@ -313,7 +313,7 @@
             </div>
             <span>Cart</span>
         </a>
-        <a href="#" class="nav-link text-dark" data-bs-toggle="offcanvas" data-bs-target="#mobileOffcanvas"
+        <a href="{{route('shop.show')}}" class="nav-link text-dark" data-bs-toggle="offcanvas" data-bs-target="#mobileOffcanvas"
             aria-controls="mobileOffcanvas">
             <i class="bi bi-list"></i>
             <span>Menu</span>
