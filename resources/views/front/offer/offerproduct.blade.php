@@ -130,11 +130,11 @@
 
                             <!-- Quantity and Buttons -->
                             <div class="d-flex flex-column flex-sm-row align-items-center gap-4 mb-4">
-                                <div class="d-flex align-items-center border rounded-3 overflow-hidden">
-                                    <button class="btn btn-light rounded-0">-</button>
-                                    <span class="px-3">1</span>
-                                    <button class="btn btn-light rounded-0">+</button>
-                                </div>
+                                <div class="d-flex align-items-center border rounded-3 overflow-hidden quantity-selector">
+    <button class="btn btn-light rounded-0 quantity-decrease">-</button>
+    <span class="px-3 quantity-input">1</span>
+    <button class="btn btn-light rounded-0 quantity-increase">+</button>
+</div>
                                 <button class="btn btn-dark fw-semibold rounded-3 flex-grow-1 add-to-cart-button">Add To
                                     Cart</button>
                                 <button class="btn btn-secondary fw-semibold rounded-3 flex-grow-1 buy-button">Buy
@@ -148,7 +148,7 @@
                                         <i class="bi bi-plus-circle me-1"></i>
                                         <span>Add to compare</span>
                                     </a>
-                                    <a href="#"
+                                    <a href="#"  id="add-bundle-to-wishlist"
                                         class="d-flex align-items-center text-secondary text-decoration-none ms-3">
                                         <i class="bi bi-heart me-1"></i>
                                         <span>Add to wishlist</span>
@@ -414,6 +414,7 @@
     @json($productsCollection->keyBy('id'))
 </script>
 @section('script')
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
     
     $(document).ready(function(){
@@ -584,6 +585,266 @@
             const parentDiv = slotElement.empty().addClass('d-flex justify-content-between align-items-center py-2 border-bottom');
             parentDiv.html(updatedHTML);
         }
+
+        // --- START: Quantity Selector Logic ---
+        $('.quantity-decrease').on('click', function() {
+            let quantityInput = $(this).siblings('.quantity-input');
+            let currentQuantity = parseInt(quantityInput.text());
+            if (currentQuantity > 1) {
+                quantityInput.text(currentQuantity - 1);
+            }
+        });
+
+        $('.quantity-increase').on('click', function() {
+            let quantityInput = $(this).siblings('.quantity-input');
+            let currentQuantity = parseInt(quantityInput.text());
+            quantityInput.text(currentQuantity + 1);
+        });
+        // --- END: Quantity Selector Logic ---
+
+
+        // --- START: SCRIPT FOR ADDING BUNDLE TO CART ---
+        $('.add-to-cart-button').on('click', function() {
+            const buyQuantity = {{ $bundleDeal->buy_quantity }};
+            const selectedCount = Object.keys(selectedProducts).length;
+
+            // 1. Validate: Check if all slots are filled
+            if (selectedCount < buyQuantity) {
+               Swal.fire({
+                  icon: 'warning',
+                  title: 'Incomplete Selection',
+                  text: 'Please select a product for all available slots before adding to cart.'
+                });
+                return; // Stop the function
+            }
+            
+            const button = $(this);
+            button.prop('disabled', true).text('Adding...');
+
+            // 2. Prepare Payload
+            const selectedProductsArray = Object.values(selectedProducts);
+            const payload = {
+                _token: '{{ csrf_token() }}',
+                bundleId: {{ $bundleDeal->id }},
+                quantity: parseInt($('.quantity-input').text()),
+                selectedProducts: selectedProductsArray
+            };
+
+            // 3. AJAX Request
+            $.ajax({
+                url: '{{ route("cart.addBundle") }}',
+                type: 'POST',
+                data: JSON.stringify(payload),
+                contentType: 'application/json',
+                success: function(response) {
+                    if (response.success) {
+    // Show a success notification toast
+    Swal.fire({
+        toast: true,
+        position: 'top-end',
+        icon: 'success',
+        title: response.message,
+        showConfirmButton: false,
+        timer: 3000,
+        timerProgressBar: true
+    });
+
+    // Call a function to update the mini-cart display
+    // Make sure this function is defined in your global JS file
+    updateCartOffcanvas(); 
+    
+} else {
+    // Show an error popup
+    Swal.fire({
+        icon: 'error',
+        title: 'Request Failed',
+        text: 'An unknown error occurred. Please try again.'
+    });
+}
+                },
+                error: function(xhr) {
+                    let errorMessage = 'Could not add bundle to cart. Please try again.';
+                    if (xhr.responseJSON && xhr.responseJSON.message) {
+                        errorMessage = xhr.responseJSON.message;
+                    }
+                    Swal.fire({
+                      icon: 'error',
+                      title: 'Oops...',
+                      text: errorMessage
+                    });
+                },
+                complete: function() {
+                     button.prop('disabled', false).text('Add To Cart');
+                }
+            });
+        });
+        // --- END: SCRIPT FOR ADDING BUNDLE TO CART ---
+
+
+         // --- START: SCRIPT FOR ADDING BUNDLE TO CART ---
+        $('.buy-button').on('click', function() {
+            const buyQuantity = {{ $bundleDeal->buy_quantity }};
+            const selectedCount = Object.keys(selectedProducts).length;
+
+            // 1. Validate: Check if all slots are filled
+            if (selectedCount < buyQuantity) {
+               Swal.fire({
+                  icon: 'warning',
+                  title: 'Incomplete Selection',
+                  text: 'Please select a product for all available slots before adding to cart.'
+                });
+                return; // Stop the function
+            }
+            
+            const button = $(this);
+            button.prop('disabled', true).text('Adding...');
+
+            // 2. Prepare Payload
+            const selectedProductsArray = Object.values(selectedProducts);
+            const payload = {
+                _token: '{{ csrf_token() }}',
+                bundleId: {{ $bundleDeal->id }},
+                quantity: parseInt($('.quantity-input').text()),
+                selectedProducts: selectedProductsArray
+            };
+
+            // 3. AJAX Request
+            $.ajax({
+                url: '{{ route("cart.addBundle") }}',
+                type: 'POST',
+                data: JSON.stringify(payload),
+                contentType: 'application/json',
+                success: function(response) {
+                    if (response.success) {
+    // Show a success notification toast
+    Swal.fire({
+        toast: true,
+        position: 'top-end',
+        icon: 'success',
+        title: response.message,
+        showConfirmButton: false,
+        timer: 3000,
+        timerProgressBar: true
+    });
+
+    // Call a function to update the mini-cart display
+    // Make sure this function is defined in your global JS file
+    updateCartOffcanvas(); 
+
+     @auth
+                        // If user is logged in, redirect straight to checkout
+                        window.location.href = "{{ route('user.checkout') }}";
+                    @else
+                        // If user is a guest, open the login/register modal
+                        const signInModal = new bootstrap.Modal(document.getElementById('signInOffcanvas'));
+                        signInModal.show();
+                    @endauth
+    
+} else {
+    // Show an error popup
+    Swal.fire({
+        icon: 'error',
+        title: 'Request Failed',
+        text: 'An unknown error occurred. Please try again.'
+    });
+}
+                },
+                error: function(xhr) {
+                    let errorMessage = 'Could not add bundle to cart. Please try again.';
+                    if (xhr.responseJSON && xhr.responseJSON.message) {
+                        errorMessage = xhr.responseJSON.message;
+                    }
+                    Swal.fire({
+                      icon: 'error',
+                      title: 'Oops...',
+                      text: errorMessage
+                    });
+                },
+                complete: function() {
+                     button.prop('disabled', false).text('Add To Cart');
+                }
+            });
+        });
+        // --- END: SCRIPT FOR ADDING BUNDLE TO CART ---
+
+        // --- NEW SCRIPT FOR ADDING BUNDLE TO WISHLIST ---
+    $('#add-bundle-to-wishlist').on('click', function() {
+        @auth
+            // --- USER IS LOGGED IN ---
+            const buyQuantity = {{ $bundleDeal->buy_quantity }};
+            const selectedCount = Object.keys(selectedProducts).length;
+
+            if (selectedCount < buyQuantity) {
+                Swal.fire({ icon: 'warning', title: 'Incomplete Selection', text: 'Please select a product for all available slots first.' });
+                return;
+            }
+
+            const $button = $(this);
+            const payload = {
+                selected_products: Object.values(selectedProducts),
+                _token: "{{ csrf_token() }}"
+            };
+
+            $.ajax({
+                url: '{{ route("wishlist.addBundle") }}',
+                type: 'POST',
+                data: payload,
+                beforeSend: function() {
+                    $button.prop('disabled', true).find('span').text('Adding...');
+                },
+                success: function(response) {
+                    if (response.success) {
+                        Swal.fire({
+                            toast: true,
+                            position: 'top-end',
+                            icon: 'success',
+                            title: response.message,
+                            showConfirmButton: false,
+                            timer: 3000
+                        });
+                    }
+                },
+                error: function(xhr) {
+                    Swal.fire({ icon: 'error', title: 'Oops...', text: xhr.responseJSON.message || 'Something went wrong.' });
+                },
+                complete: function() {
+                    $button.prop('disabled', false).find('span').text('Add to wishlist');
+                }
+            });
+
+        @else
+            // --- USER IS A GUEST ---
+            Swal.fire({
+                title: 'Login Required',
+                text: "You need to be logged in to add items to your wishlist.",
+                icon: 'info',
+                showCancelButton: true,
+                confirmButtonText: 'Login or Register',
+                cancelButtonText: 'Not Now'
+            }).then((result) => {
+                 if (result.isConfirmed) {
+                    // --- START OF NEW, MORE ROBUST FIX ---
+                    const quickViewModalEl = document.getElementById('quickViewModal');
+                    const quickViewModalInstance = bootstrap.Modal.getInstance(quickViewModalEl);
+                    const signInOffcanvas = new bootstrap.Offcanvas(document.getElementById('signInOffcanvas'));
+
+                    // 1. Hide the quick view modal
+                    if (quickViewModalInstance) {
+                        quickViewModalInstance.hide();
+                    }
+
+                    // 2. Manually remove the backdrop and cleanup body styles.
+                    //    This forcefully resets the state and prevents conflicts.
+                    $('.modal-backdrop').remove();
+                    $('body').removeAttr('style').removeClass('modal-open');
+                    
+                    // 3. Show the sign-in offcanvas.
+                    signInOffcanvas.show();
+                    // --- END OF NEW FIX ---
+                }
+            });
+        @endauth
+    });
 
     });
 

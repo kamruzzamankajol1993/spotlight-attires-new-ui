@@ -16,6 +16,43 @@ class FrontController extends Controller
 {
 
 
+      /**
+     * Handle AJAX search requests for products.
+     */
+    public function ajaxSearch(Request $request)
+    {
+        $query = $request->input('query');
+
+        if (!$query || strlen($query) < 1) {
+            return response()->json([]);
+        }
+
+
+        $frontEndData = DB::table('system_information')->first();
+
+        
+
+        $products = Product::where('status', 1)
+                           ->where('name', 'LIKE', "{$query}%")
+                           ->select('name', 'slug', 'main_image', 'base_price', 'discount_price')
+                           ->take(10) // Limit the number of results
+                           ->get();
+
+        // Prepare the data for the frontend, including image and product URLs
+        $products->transform(function ($product) use ($frontEndData) {
+            $imageUrl = (is_array($product->main_image) && count($product->main_image) > 0)
+                ? $frontEndData->main_url . 'public/uploads/' . $product->main_image[0]
+                : 'https://placehold.co/50x50?text=N/A';
+            
+            $product->image_url = $imageUrl;
+            $product->url = route('product.show', $product->slug);
+            return $product;
+        });
+
+        return response()->json($products);
+    }
+
+
     public function offerProduct($id)
 {
     $bundleDeal = BundleOfferProduct::findOrFail($id);
@@ -167,6 +204,27 @@ class FrontController extends Controller
         $categoryList = Category::where('status', 1)->with('subcategories')->get();
 
         return view('front.category.category', compact('category', 'products', 'categoryList'));
+    }
+
+    public function productSearch(Request $request)
+    {
+        $searchQuery = $request->input('query');
+
+        if (!$searchQuery) {
+            return redirect()->route('shop.show');
+        }
+
+        $products = Product::where('status', 1)
+                           ->where('name', 'LIKE', "%{$searchQuery}%")
+                           ->with(['category', 'variants'])
+                           ->latest()
+                           ->paginate(16);
+
+        // Fetch filter data for a potential sidebar on the search page
+        $categoryList = Category::where('status', 1)->with('subcategories')->get();
+        $animationCategoryList = AnimationCategory::where('status', 1)->get();
+
+        return view('front.main.search_results', compact('products', 'categoryList', 'animationCategoryList', 'searchQuery'));
     }
 
     public function shop()

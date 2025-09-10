@@ -2,30 +2,61 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-class Customer extends Model
+use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\Hash;
+
+class Customer extends Authenticatable
 {
-     use HasFactory;
+    use HasFactory, Notifiable;
+
     protected $fillable = [
+        'old_customer_id',
+        'reward_points',
+        'user_id',
+        'slug',
+        'type',
         'name',
-        'image',
-        'status',
-        'phone',
-        'address',
         'email',
-        'admin_id',
-        'nid_front_image',
-        'nid_back_image',
+        'phone',
+        'password',
+        'address',
+        'status',
     ];
 
-    public function user()
+    protected $hidden = [
+        'password',
+    ];
+
+    public function addresses()
+    {
+        return $this->hasMany(CustomerAddress::class);
+    }
+
+    /**
+ * Get all of the orders for the Customer.
+ */
+public function orders()
 {
-    return $this->hasOne(User::class); // Or User::class if you prefer
+    return $this->hasMany(Order::class);
 }
 
-public function generalTickets(): HasMany
-{
-    return $this->hasMany(GeneralTicket::class, 'customer_id');
-}
+  /**
+     * Get all of the reward point logs for the Customer.
+     */
+    public function rewardPointLogs()
+    {
+        return $this->hasMany(RewardPoint::class);
+    }
+
+    /**
+     * Hash the password before saving.
+     */
+    public function setPasswordAttribute($value)
+    {
+        if ($value) {
+            $this->attributes['password'] = Hash::make($value);
+        }
+    }
 }

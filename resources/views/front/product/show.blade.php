@@ -184,7 +184,7 @@
                                 <button class="btn btn-light rounded-0" id="quantity-plus">+</button>
                             </div>
                             <button class="btn btn-dark fw-semibold rounded-3 flex-grow-1 add-to-cart-button" id="add-to-cart">Add To Cart</button>
-                            <button class="btn btn-secondary fw-semibold rounded-3 flex-grow-1 buy-button">Buy Now</button>
+                            <button class="btn btn-secondary fw-semibold rounded-3 flex-grow-1 buy-button" id="buy-now">Buy Now</button>
                         </div>
 
                             <!-- Actions and Share with Bootstrap Icons -->
@@ -194,7 +194,7 @@
                                         <i class="bi bi-plus-circle me-1"></i>
                                         <span>Add to compare</span>
                                     </a>
-                                    <a href="#"
+                                    <a href="#"  id="add-to-wishlist"
                                         class="d-flex align-items-center text-secondary text-decoration-none ms-3">
                                         <i class="bi bi-heart me-1"></i>
                                         <span>Add to wishlist</span>
@@ -522,12 +522,21 @@ $(document).ready(function() {
 
     $('#add-to-cart').on('click', function() {
         // Validation
-        if (!selectedVariantId) {
-            alert('Please select a color.');
+
+         if (!selectedVariantId) {
+            Swal.fire({
+              icon: 'warning',
+              title: 'Hold on!',
+              text: 'Please select a color.'
+            });
             return;
         }
         if (!selectedSize) {
-            alert('Please select a size.');
+            Swal.fire({
+              icon: 'warning',
+              title: 'Almost there!',
+              text: 'Please select a size.'
+            });
             return;
         }
         
@@ -558,7 +567,11 @@ $(document).ready(function() {
                     const cartOffcanvas = new bootstrap.Offcanvas(document.getElementById('cartOffcanvas'));
                     cartOffcanvas.show();
                 } else {
-                    alert(response.message || 'An unknown error occurred.');
+                    Swal.fire({
+                      icon: 'error',
+                      title: 'Oops...',
+                      text: response.message || 'An unknown error occurred.'
+                    });
                 }
             },
             error: function(xhr) {
@@ -566,13 +579,159 @@ $(document).ready(function() {
                 if (xhr.responseJSON && xhr.responseJSON.message) {
                     errorMessage = xhr.responseJSON.message;
                 }
-                alert(errorMessage);
+                Swal.fire({
+                  icon: 'error',
+                  title: 'Request Failed',
+                  text: errorMessage
+                });
             },
             complete: function() {
                 // Restore the button to its original state
                 $button.prop('disabled', false).html('Add To Cart');
             }
         });
+    });
+
+     // --- NEW SEPARATE "Buy Now" Handler ---
+    $('#buy-now').on('click', function() {
+        if (!selectedVariantId) {
+            Swal.fire({ icon: 'warning', title: 'Hold on!', text: 'Please select a color.' });
+            return;
+        }
+        if (!selectedSize) {
+            Swal.fire({ icon: 'warning', title: 'Almost there!', text: 'Please select a size.' });
+            return;
+        }
+
+        const $button = $(this);
+        const cartData = {
+            productId: {{ $product->id }},
+            variantId: selectedVariantId,
+            size: selectedSize,
+            quantity: parseInt($('#quantity-value').text()),
+            _token: "{{ csrf_token() }}"
+        };
+
+        $.ajax({
+            url: '{{ route("cart.add") }}',
+            type: 'POST',
+            data: cartData,
+            beforeSend: function() {
+                $button.prop('disabled', true).html('<span class="spinner-border spinner-border-sm"></span> Processing...');
+            },
+            success: function(response) {
+                if (response.success) {
+                    updateCartOffcanvas();
+                    
+                    @auth
+                        // If user is logged in, redirect straight to checkout
+                        window.location.href = "{{ route('user.checkout') }}";
+                    @else
+                        // If user is a guest, open the login/register modal
+                        const signInModal = new bootstrap.Modal(document.getElementById('signInOffcanvas'));
+                        signInModal.show();
+                    @endauth
+                } else {
+                    Swal.fire({ icon: 'error', title: 'Oops...', text: response.message || 'An error occurred.' });
+                }
+            },
+            error: function() {
+                Swal.fire({ icon: 'error', title: 'Request Failed', text: 'Something went wrong.' });
+            },
+            complete: function() {
+                // Only re-enable the button if the user is a guest (and the modal is shown)
+                // Otherwise, the page will redirect.
+                @guest
+                    $button.prop('disabled', false).html('Buy Now');
+                @endguest
+            }
+        });
+    });
+
+    // --- NEW: Handle Add to Wishlist on Product Detail Page ---
+    $('#add-to-wishlist').on('click', function() {
+        @auth
+            // --- USER IS LOGGED IN ---
+            if (!selectedVariantId) {
+                Swal.fire({ icon: 'warning', title: 'Hold on!', text: 'Please select a color first.' });
+                return;
+            }
+            if (!selectedSize) {
+                Swal.fire({ icon: 'warning', title: 'Almost there!', text: 'Please select a size.' });
+                return;
+            }
+
+            const $button = $(this);
+            const wishlistData = {
+                product_id: {{ $product->id }},
+                variant_id: selectedVariantId,
+                size: selectedSize,
+                _token: "{{ csrf_token() }}"
+            };
+
+            $.ajax({
+                url: '{{ route("wishlist.add") }}',
+                type: 'POST',
+                data: wishlistData,
+                beforeSend: function() {
+                    $button.prop('disabled', true).find('span').text('Adding...');
+                },
+                success: function(response) {
+                    if (response.success) {
+                        Swal.fire({
+                            toast: true,
+                            position: 'top-end',
+                            icon: 'success',
+                            title: response.message,
+                            showConfirmButton: false,
+                            timer: 2000
+                        });
+                    } else {
+                         Swal.fire({ icon: 'info', title: 'Already Added', text: response.message });
+                    }
+                },
+                error: function(xhr) {
+                     Swal.fire({ icon: 'error', title: 'Oops...', text: 'Something went wrong. Please try again.' });
+                },
+                complete: function() {
+                    $button.prop('disabled', false).find('span').text('Add to wishlist');
+                }
+            });
+
+        @else
+            // --- USER IS A GUEST ---
+            Swal.fire({
+                title: 'Login Required',
+                text: "You need to be logged in to add items to your wishlist.",
+                icon: 'info',
+                showCancelButton: true,
+                confirmButtonText: 'Login or Register',
+                cancelButtonText: 'Not Now'
+            }).then((result) => {
+
+                 if (result.isConfirmed) {
+                    // --- START OF NEW, MORE ROBUST FIX ---
+                    const quickViewModalEl = document.getElementById('quickViewModal');
+                    const quickViewModalInstance = bootstrap.Modal.getInstance(quickViewModalEl);
+                    const signInOffcanvas = new bootstrap.Offcanvas(document.getElementById('signInOffcanvas'));
+
+                    // 1. Hide the quick view modal
+                    if (quickViewModalInstance) {
+                        quickViewModalInstance.hide();
+                    }
+
+                    // 2. Manually remove the backdrop and cleanup body styles.
+                    //    This forcefully resets the state and prevents conflicts.
+                    $('.modal-backdrop').remove();
+                    $('body').removeAttr('style').removeClass('modal-open');
+                    
+                    // 3. Show the sign-in offcanvas.
+                    signInOffcanvas.show();
+                    // --- END OF NEW FIX ---
+                }
+               
+            });
+        @endauth
     });
 
     // --- Initial Page Load ---

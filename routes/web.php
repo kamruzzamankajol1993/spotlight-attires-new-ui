@@ -3,8 +3,85 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\FrontController;
 use App\Http\Controllers\CartController;
+use App\Http\Controllers\LocationController;
+use App\Http\Controllers\AuthController;
+use App\Http\Controllers\Admin\CheckoutController;
+use App\Http\Controllers\WishlistController;
 
+Route::get('/clear', function() {
+    \Illuminate\Support\Facades\Artisan::call('cache:clear');
+    \Illuminate\Support\Facades\Artisan::call('config:clear');
+    \Illuminate\Support\Facades\Artisan::call('config:cache');
+    \Illuminate\Support\Facades\Artisan::call('view:clear');
+    \Illuminate\Support\Facades\Artisan::call('route:clear');
+    return redirect()->back();
+});
+
+Route::middleware('auth')->group(function () {
+
+      Route::controller(WishlistController::class)->prefix('wishlist')->name('wishlist.')->group(function () {
+        Route::get('/', 'index')->name('index');
+        Route::post('/add', 'add')->name('add');
+        Route::post('/add-bundle', 'addBundle')->name('addBundle');
+        Route::post('/remove', 'remove')->name('remove');
+        Route::post('/move-to-cart', 'moveToCart')->name('moveToCart');
+    });
+
+    Route::controller(CheckoutController::class)->group(function () {
+
+        Route::get('/check-out-now', 'checkout')->name('user.checkout');
+       
+         // --- ADD THIS NEW ROUTE ---
+        Route::post('/get-shipping-charge', 'getShippingCharge')->name('get.shipping.charge');
+
+        Route::post('/place-order', 'placeOrder')->name('place.order');
+        Route::get('/order-success/{orderId}', 'orderSuccess')->name('order.success');
+    });
+
+    Route::controller(AuthController::class)->group(function () {
+ Route::get('/dashboard-user', 'dashboarduser')->name('dashboard.user');
+  Route::post('/dashboard-picture-update', 'updateProfilePicture')->name('dashboard.picture.update');
+
+Route::post('/user-order-cancel', 'cancelOrder')->name('user.order.cancel');
+ Route::get('/user-order-invoice/{id}', 'downloadInvoice')->name('user.order.invoice');
+  Route::post('/reorder', 'reorder')->name('user.reorder');
+  // --- ADD THESE NEW ROUTES FOR PROFILE UPDATES ---
+        Route::post('/dashboard/profile-info-update', 'updateProfileInfo')->name('dashboard.profile.info.update');
+        Route::post('/dashboard/send-verification-otp', 'sendUpdateVerificationOtp')->name('dashboard.send.otp');
+        Route::post('/dashboard/verify-and-update', 'verifyAndUpdateField')->name('dashboard.verify.update');
+    // --- END NEW ROUTES ---
+        Route::get('/user-order-list', 'userOrderList')->name('user.order.list');
+        Route::get('/user-order-detail/{id}', 'userOrderDetail')->name('user.order.detail');
+        Route::get('/user-address-update', 'updateProfileAddress')->name('dashboard.profile.address.update');
+
+          // --- ADD THESE NEW ROUTES FOR ADDRESS MANAGEMENT ---
+        Route::post('/dashboard/address/store', 'storeAddress')->name('dashboard.address.store');
+        Route::post('/dashboard/address/update', 'updateAddress')->name('dashboard.address.update');
+        Route::post('/dashboard/address/delete', 'destroyAddress')->name('dashboard.address.delete');
+        Route::post('/dashboard/address/set-default', 'setDefaultAddress')->name('dashboard.address.setDefault');
+
+    });
+});
+
+// Authentication Routes
+Route::post('/login', [AuthController::class, 'login'])->name('customer.login');
+Route::post('/register', [AuthController::class, 'register'])->name('customer.register');
+Route::post('/verify-otp', [AuthController::class, 'verifyOtp'])->name('customer.verifyOtp');
+Route::post('/resend-otp', [AuthController::class, 'resendOtp'])->name('customer.resendOtp');
+Route::post('/logout', [AuthController::class, 'logout'])->name('customer.logout');
+
+Route::post('/forgot-password', [AuthController::class, 'sendPasswordResetLink'])->name('password.email');
+Route::get('/reset-password/{token}', [AuthController::class, 'showResetForm'])->name('password.reset');
+Route::post('/reset-password', [AuthController::class, 'resetPassword'])->name('password.update');
+
+
+
+Route::get('/locations-districts', [LocationController::class, 'getDistricts'])->name('locations.districts');
+Route::get('/locations-upazilas', [LocationController::class, 'getUpazilas'])->name('locations.upazilas');
 Route::controller(FrontController::class)->group(function () {
+
+    Route::get('/products/ajax-search', 'ajaxSearch')->name('products.ajax_search');
+    Route::get('/product-search', 'productSearch')->name('products.search');
 
     Route::get('/', 'index')->name('home.index');
     Route::get('/category/{slug}', 'category')->name('category.show');
@@ -28,6 +105,12 @@ Route::controller(FrontController::class)->group(function () {
 // START: MODIFIED CART ROUTES
 
 Route::controller(CartController::class)->prefix('cart')->name('cart.')->group(function () {
+
+    Route::post('/cart-add-bundle', [CartController::class, 'addBundleToCart'])->name('addBundle');
+ // --- ADD THESE NEW ROUTES FOR COUPONS ---
+    Route::post('/apply-coupon', 'applyCoupon')->name('applyCoupon');
+    Route::post('/remove-coupon', 'removeCoupon')->name('removeCoupon');
+
     Route::get('/showCartData', 'showCartData')->name('show');
     Route::post('/add', 'addToCart')->name('add');
     Route::get('/content', 'getCartContent')->name('content');

@@ -49,6 +49,9 @@
                     <button class="btn btn-light rounded-0" id="qv-quantity-plus">+</button>
                 </div>
                 <button class="btn btn-dark fw-semibold flex-grow-1" id="qv-add-to-cart">Add To Cart</button>
+                <button class="btn btn-outline-danger" id="qv-add-to-wishlist" title="Add to Wishlist">
+                    <i class="bi bi-heart-fill"></i>
+                </button>
             </div>
         </div>
     </div>
@@ -124,12 +127,20 @@ $(document).ready(function() {
 
     // Handle Add to Cart
     container.find('#qv-add-to-cart').on('click', function() {
-        if (!selectedVariantId) {
-            alert('Please select a color.');
+         if (!selectedVariantId) {
+            Swal.fire({
+              icon: 'warning',
+              title: 'Hold on!',
+              text: 'Please select a color first.'
+            });
             return;
         }
         if (!selectedSize) {
-            alert('Please select a size.');
+            Swal.fire({
+              icon: 'warning',
+              title: 'Almost there!',
+              text: 'Please select a size.'
+            });
             return;
         }
 
@@ -151,19 +162,117 @@ $(document).ready(function() {
             },
             success: function(response) {
                 if (response.success) {
-                    updateCartOffcanvas(); // This global function updates the side cart
-                    $('#quickViewModal').modal('hide'); // Close the modal on success
+                    // 1. Directly update the sidebar cart with the new HTML
+                    $('#cartOffcanvas .cart-products').html(response.sidebar_html);
+                    $('#cart-subtotal').text('৳ ' + response.subtotal);
+                    $('#desktop-cart-count').text(response.count);
+                    $('#mobile-cart-count').text(response.count);
+
+                    // 2. Trigger the global event and PASS the data to it
+                    // This allows the main cart page to update without another AJAX call
+                    $(document.body).trigger('cart-updated', [response]);
+
+                    // 3. Show success feedback and open the sidebar
+                    Swal.fire({
+                        toast: true,
+                        position: 'top-end',
+                        icon: 'success',
+                        title: response.message,
+                        showConfirmButton: false,
+                        timer: 3000
+                    });
+
+                    $('#quickViewModal').modal('hide');
+                    const cartOffcanvas = new bootstrap.Offcanvas(document.getElementById('cartOffcanvas'));
+                    cartOffcanvas.show();
                 } else {
-                    alert(response.message || 'An error occurred.');
+                    Swal.fire({ icon: 'error', title: 'Oops...', text: response.message || 'An error occurred.' });
                 }
             },
-            error: function() {
-                alert('Could not add product to cart. Please try again.');
+            error: function(xhr) {
+                Swal.fire({ icon: 'error', title: 'Request Failed', text: 'Could not add product to cart.' });
             },
             complete: function() {
                 $button.prop('disabled', false).text('Add To Cart');
             }
         });
+    });
+
+     // --- NEW: Handle Add to Wishlist ---
+    container.find('#qv-add-to-wishlist').on('click', function() {
+        @auth
+            // --- USER IS LOGGED IN ---
+            if (!selectedVariantId) {
+                Swal.fire({ icon: 'warning', title: 'Hold on!', text: 'Please select a color first.' });
+                return;
+            }
+            if (!selectedSize) {
+                Swal.fire({ icon: 'warning', title: 'Almost there!', text: 'Please select a size.' });
+                return;
+            }
+
+            const $button = $(this);
+            const wishlistData = {
+                product_id: {{ $product->id }},
+                variant_id: selectedVariantId,
+                size: selectedSize,
+                _token: "{{ csrf_token() }}"
+            };
+
+            $.ajax({
+                url: '{{ route("wishlist.add") }}',
+                type: 'POST',
+                data: wishlistData,
+                beforeSend: function() {
+                    $button.prop('disabled', true).find('i').toggleClass('bi-heart-fill bi-arrow-clockwise');
+                },
+                success: function(response) {
+                    if (response.success) {
+                        Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: response.message, showConfirmButton: false, timer: 2000 });
+                    } else {
+                         Swal.fire({ icon: 'info', title: 'Already Added', text: response.message });
+                    }
+                },
+                error: function(xhr) {
+                     Swal.fire({ icon: 'error', title: 'Oops...', text: 'Something went wrong. Please try again.' });
+                },
+                complete: function() {
+                    $button.prop('disabled', false).find('i').toggleClass('bi-arrow-clockwise bi-heart-fill');
+                }
+            });
+
+        @else
+            // --- USER IS A GUEST ---
+            Swal.fire({
+                title: 'Login Required',
+                text: "You need to be logged in to add items to your wishlist.",
+                icon: 'info',
+                showCancelButton: true,
+                confirmButtonText: 'Login or Register',
+                cancelButtonText: 'Not Now'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // --- START OF NEW, MORE ROBUST FIX ---
+                    const quickViewModalEl = document.getElementById('quickViewModal');
+                    const quickViewModalInstance = bootstrap.Modal.getInstance(quickViewModalEl);
+                    const signInOffcanvas = new bootstrap.Offcanvas(document.getElementById('signInOffcanvas'));
+
+                    // 1. Hide the quick view modal
+                    if (quickViewModalInstance) {
+                        quickViewModalInstance.hide();
+                    }
+
+                    // 2. Manually remove the backdrop and cleanup body styles.
+                    //    This forcefully resets the state and prevents conflicts.
+                    $('.modal-backdrop').remove();
+                    $('body').removeAttr('style').removeClass('modal-open');
+                    
+                    // 3. Show the sign-in offcanvas.
+                    signInOffcanvas.show();
+                    // --- END OF NEW FIX ---
+                }
+            });
+        @endauth
     });
 
     // Trigger click on the first color to initialize sizes

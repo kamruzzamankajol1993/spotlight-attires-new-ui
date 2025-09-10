@@ -1,5 +1,3 @@
-
-
 @extends('front.master.master')
 
 @section('title')
@@ -7,13 +5,18 @@ Your Cart
 @endsection
 
 @section('css')
-{{-- You can add specific CSS here if needed --}}
+<style>
+    /* Add a style for the loading state */
+    #main-cart-body .spinner-border {
+        width: 3rem;
+        height: 3rem;
+    }
+</style>
 @endsection
 
 @section('body')
  <section class="section">
             <div class="container">
-                <!-- Header with Progress Bar -->
                 <header class="spotlight_cart_progress_header">
                     <div class="container">
                         <nav class="d-flex justify-content-center align-items-center fw-semibold">
@@ -25,14 +28,12 @@ Your Cart
                 </header>
 
                 <div class="container spotlight_cart_container">
-                    <!-- Coupon and Free Shipping Alert -->
-                    <div class="alert alert-success d-flex align-items-center small py-2 rounded-pill" role="alert">
+                    {{-- <div class="alert alert-success d-flex align-items-center small py-2 rounded-pill" role="alert">
                         <i class="bi bi-cart3 me-2"></i>
                         <span>Add **৳ 1,901.0** to cart and get free shipping!</span>
-                    </div>
+                    </div> --}}
 
                     <div class="row g-4">
-                        <!-- Left Side: Cart Items -->
                         <div class="col-12 col-lg-8">
                             <div class="spotlight_cart_summary_card">
                                 <h5 class="fw-semibold">Product</h5>
@@ -46,324 +47,338 @@ Your Cart
                                                 <th>SUBTOTAL</th>
                                             </tr>
                                         </thead>
-                                        <tbody>
-                                            <!-- Cart Item 1 -->
+                                        <tbody id="main-cart-body">
+                                            {{-- Cart items will be loaded here by JavaScript --}}
                                             <tr>
-                                                <td class="d-flex align-items-center text-start" data-label="PRODUCT">
-                                                    <button class="btn btn-sm btn-link text-muted me-2 p-0"><i
-                                                            class="bi bi-x"></i></button>
-                                                    <img src="https://placehold.co/100x100/F5F5F5/4B5563?text=Product+1"
-                                                        alt="BERSERK ARMOUR" class="spotlight_cart_item_image me-3">
-                                                    <div class="spotlight_cart_item_details">
-                                                        <h6 class="mb-0 fw-semibold">BERSERK ARMOUR - Exclusive
-                                                            DropShoulder</h6>
-                                                        <p class="text-muted small mb-0">- M</p>
+                                                <td colspan="4" class="text-center py-5">
+                                                    <div class="spinner-border" role="status">
+                                                        <span class="visually-hidden">Loading...</span>
                                                     </div>
                                                 </td>
-                                                <td data-label="PRICE" class="fw-semibold">৳ 799.0</td>
-                                                <td data-label="QUANTITY">
-                                                    <div class="spotlight_cart_item_quantity mx-auto">
-                                                        <button class="btn btn-light">-</button>
-                                                        <span class="px-2">1</span>
-                                                        <button class="btn btn-light">+</button>
-                                                    </div>
-                                                </td>
-                                                <td data-label="SUBTOTAL" class="fw-semibold">৳ 799.0</td>
-                                            </tr>
-                                            <!-- Cart Item 2 (Main Bundle Product) -->
-                                            <tr>
-                                                <td class="d-flex align-items-center text-start" data-label="PRODUCT">
-                                                    <button class="btn btn-sm btn-link text-muted me-2 p-0"><i
-                                                            class="bi bi-x"></i></button>
-                                                    <img src="https://placehold.co/100x100/F5F5F5/4B5563?text=Product+2"
-                                                        alt="2 Drop Shoulder" class="spotlight_cart_item_image me-3">
-                                                    <div class="spotlight_cart_item_details">
-                                                        <h6 class="mb-0 fw-semibold">2 Drop Shoulder</h6>
-                                                        <p class="text-muted small mb-0">Combo Bundle</p>
-                                                    </div>
-                                                </td>
-                                                <td data-label="PRICE" class="fw-semibold">৳ 800.0</td>
-                                                <td data-label="QUANTITY">
-                                                    <div class="spotlight_cart_item_quantity mx-auto">
-                                                        <button class="btn btn-light">-</button>
-                                                        <span class="px-2">1</span>
-                                                        <button class="btn btn-light">+</button>
-                                                    </div>
-                                                </td>
-                                                <td data-label="SUBTOTAL" class="fw-semibold">৳ 800.0</td>
-                                            </tr>
-                                            <!-- Nested Product 3 -->
-                                            <tr class="spotlight_cart_nested_item">
-                                                <td data-label="PRODUCT" class="text-start">
-                                                    <div class="d-flex align-items-center">
-                                                        <img src="https://placehold.co/50x50/F5F5F5/4B5563?text=Prod+3"
-                                                            alt="PREMIUM DROP-SHOULDER"
-                                                            class="spotlight_cart_nested_item_image me-2">
-                                                        <div class="spotlight_cart_nested_item_details">
-                                                            <h6 class="mb-0 text-muted small">PREMIUM DROP-SHOULDER - L
-                                                            </h6>
-                                                        </div>
-                                                    </div>
-                                                </td>
-                                                <td data-label="PRICE" class="fw-semibold text-center">৳ 380.0</td>
-                                                <td data-label="QUANTITY" class="text-center">1</td>
-                                                <td data-label="SUBTOTAL" class="fw-semibold text-center">৳ 380.0</td>
-                                            </tr>
-                                            <!-- Nested Product 4 -->
-                                            <tr class="spotlight_cart_nested_item">
-                                                <td data-label="PRODUCT" class="text-start">
-                                                    <div class="d-flex align-items-center">
-                                                        <img src="https://placehold.co/50x50/F5F5F5/4B5563?text=Prod+4"
-                                                            alt="PREMIUM DROP-SHOULDER"
-                                                            class="spotlight_cart_nested_item_image me-2">
-                                                        <div class="spotlight_cart_nested_item_details">
-                                                            <h6 class="mb-0 text-muted small">PREMIUM DROP-SHOULDER - M
-                                                            </h6>
-                                                        </div>
-                                                    </div>
-                                                </td>
-                                                <td data-label="PRICE" class="fw-semibold text-center">৳ 380.0</td>
-                                                <td data-label="QUANTITY" class="text-center">1</td>
-                                                <td data-label="SUBTOTAL" class="fw-semibold text-center">৳ 380.0</td>
                                             </tr>
                                         </tbody>
                                     </table>
                                 </div>
 
-                                <div class="d-flex mt-4">
-                                    <input type="text" class="form-control me-2" placeholder="Coupon code">
-                                    <button class="btn btn-outline-secondary">Apply Coupon</button>
-                                </div>
+                                 {{-- DYNAMIC COUPON SECTION --}}
+                        <div id="coupon-section" class="mt-4">
+                            <form id="coupon-form" class="d-flex">
+                                <input type="text" id="coupon-code" class="form-control me-2" placeholder="Coupon code">
+                                <button type="submit" class="btn btn-outline-secondary">Apply Coupon</button>
+                            </form>
+                            <div id="coupon-message" class="mt-2 small"></div>
+                        </div>
                             </div>
 
-                            <!-- You May Be Interested Section -->
                             <div class="spotlight_cart_interest_card">
                                 <h5 class="fw-semibold">You May Be Interested In...</h5>
                                 <div class="row row-cols-2 row-cols-md-4 g-3 mt-3">
-                                    <!-- Product 1 -->
-                                    <div class="col">
-                                        <div class="product-card card">
-                                            <img src="assets/img/product/product.webp" class="card-img-top"
-                                                alt="Product 6">
-                                            <div class="product-details-body">
-                                                <h5 class="product-title mb-1">Product Name 6</h5>
-                                                <p class="product-meta mb-1">Category: Home Goods</p>
-                                                <p class="product-meta mb-1">SKU: PN-006</p>
-                                                <p class="product-meta text-success fw-bold mb-1"><i
-                                                        class="bi bi-check-circle-fill"></i> In stock</p>
-                                                <div class="rating-stars mb-2">
-                                                    <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i
-                                                        class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i
-                                                        class="bi bi-star-fill"></i>
+                                   {{-- This section is now dynamic --}}
+                                   @forelse($randomProducts as $product)
+                                        <div class="col">
+                                            <div class="product-card card h-100">
+                                                @php
+                                                    $image = (is_array($product->main_image) && count($product->main_image) > 0)
+                                                                ? $front_ins_url . 'public/uploads/' . $product->main_image[0]
+                                                                : 'https://placehold.co/400x400';
+                                                @endphp
+                                                <a href="{{ route('product.show', $product->slug) }}">
+                                                    <img src="{{ $image }}" class="card-img-top" alt="{{ $product->name }}">
+                                                </a>
+                                                <div class="product-details-body">
+                                                    <h5 class="product-title mb-1">{{ Str::limit($product->name, 20) }}</h5>
+                                                    <p class="price-tag mb-2">
+                                                        @if($product->discount_price)
+                                                            <del class="text-muted">৳{{ number_format($product->base_price) }}</del>
+                                                            <span class="fw-bold">৳{{ number_format($product->discount_price) }}</span>
+                                                        @else
+                                                            <span class="fw-bold">৳{{ number_format($product->base_price) }}</span>
+                                                        @endif
+                                                    </p>
+                                                    <a href="#" class="btn btn-primary btn-add-cart w-100" data-product-id="{{ $product->id }}">Add to Cart</a>
                                                 </div>
-                                                <p class="price-tag mb-2">৳ 1100.0</p>
-                                                <a href="#" class="btn btn-primary btn-add-cart">Add to Cart</a>
                                             </div>
                                         </div>
-                                    </div>
-                                    <div class="col">
-                                        <div class="product-card card">
-                                            <img src="assets/img/product/product.webp" class="card-img-top"
-                                                alt="Product 6">
-                                            <div class="product-details-body">
-                                                <h5 class="product-title mb-1">Product Name 6</h5>
-                                                <p class="product-meta mb-1">Category: Home Goods</p>
-                                                <p class="product-meta mb-1">SKU: PN-006</p>
-                                                <p class="product-meta text-success fw-bold mb-1"><i
-                                                        class="bi bi-check-circle-fill"></i> In stock</p>
-                                                <div class="rating-stars mb-2">
-                                                    <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i
-                                                        class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i
-                                                        class="bi bi-star-fill"></i>
-                                                </div>
-                                                <p class="price-tag mb-2">৳ 1100.0</p>
-                                                <a href="#" class="btn btn-primary btn-add-cart">Add to Cart</a>
-                                            </div>
+                                    @empty
+                                        <div class="col-12">
+                                            <p>No other products to suggest at the moment.</p>
                                         </div>
-                                    </div>
-                                    <div class="col">
-                                        <div class="product-card card">
-                                            <img src="assets/img/product/product.webp" class="card-img-top"
-                                                alt="Product 6">
-                                            <div class="product-details-body">
-                                                <h5 class="product-title mb-1">Product Name 6</h5>
-                                                <p class="product-meta mb-1">Category: Home Goods</p>
-                                                <p class="product-meta mb-1">SKU: PN-006</p>
-                                                <p class="product-meta text-success fw-bold mb-1"><i
-                                                        class="bi bi-check-circle-fill"></i> In stock</p>
-                                                <div class="rating-stars mb-2">
-                                                    <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i
-                                                        class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i
-                                                        class="bi bi-star-fill"></i>
-                                                </div>
-                                                <p class="price-tag mb-2">৳ 1100.0</p>
-                                                <a href="#" class="btn btn-primary btn-add-cart">Add to Cart</a>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="col">
-                                        <div class="product-card card">
-                                            <img src="assets/img/product/product.webp" class="card-img-top"
-                                                alt="Product 6">
-                                            <div class="product-details-body">
-                                                <h5 class="product-title mb-1">Product Name 6</h5>
-                                                <p class="product-meta mb-1">Category: Home Goods</p>
-                                                <p class="product-meta mb-1">SKU: PN-006</p>
-                                                <p class="product-meta text-success fw-bold mb-1"><i
-                                                        class="bi bi-check-circle-fill"></i> In stock</p>
-                                                <div class="rating-stars mb-2">
-                                                    <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i
-                                                        class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i
-                                                        class="bi bi-star-fill"></i>
-                                                </div>
-                                                <p class="price-tag mb-2">৳ 1100.0</p>
-                                                <a href="#" class="btn btn-primary btn-add-cart">Add to Cart</a>
-                                            </div>
-                                        </div>
-                                    </div>
-
+                                    @endforelse
                                 </div>
                             </div>
                         </div>
 
-                        <!-- Right Side: Cart Totals & Delivery -->
                         <div class="col-12 col-lg-4">
-                            <div class="spotlight_cart_summary_card mb-4">
-                                <h5 class="fw-semibold">Cart Totals</h5>
-                                <div class="spotlight_cart_total_row border-bottom">
-                                    <span class="fw-semibold">Subtotal</span>
-                                    <span class="fw-semibold">৳ 2,359.0</span>
-                                </div>
-                                <div class="spotlight_cart_total_row mb-3">
-                                    <span class="fw-semibold">Shipping</span>
-                                    <div class="d-flex flex-column align-items-end small">
-                                        <span>Inside Dhaka: ৳ 80.0</span>
-                                        <span>Outside Dhaka: ৳ 130.0</span>
-                                        <span class="fw-semibold mt-1">Shipping to Dhaka.</span>
-                                        <a href="#" class="text-decoration-none mt-1">Change address</a>
-                                    </div>
-                                </div>
-                                <div class="spotlight_cart_total_row border-top pt-3">
-                                    <h6 class="fw-bold mb-0">Total</h6>
-                                    <h6 class="fw-bold mb-0">৳ 2,439.0</h6>
-                                </div>
-                                <button class="btn btn-dark spotlight_cart_action_button mt-3">Proceed To
-                                    Checkout</button>
-                            </div>
+                             <div class="spotlight_cart_summary_card mb-4">
+                        <h5 class="fw-semibold">Cart Totals</h5>
+                        <div class="spotlight_cart_total_row border-bottom">
+                            <span class="fw-semibold">Subtotal</span>
+                            <span class="fw-semibold" id="cart-page-subtotal">৳ 0.00</span>
+                        </div>
 
-                            <!-- Delivery & Return Section -->
+                        {{-- DYNAMIC COUPON DISPLAY --}}
+                        <div id="coupon-applied-section" class="spotlight_cart_total_row border-bottom text-success">
+                            <span class="fw-semibold">Discount</span>
+                            <span class="fw-semibold" id="cart-page-discount">- ৳ 0.00</span>
+                            <a href="#" id="remove-coupon-btn" class="text-danger ms-2 small">[Remove]</a>
+                        </div>
+                      
+                        <div class="spotlight_cart_total_row border-top pt-3">
+                            <h6 class="fw-bold mb-0">Total</h6>
+                            <h6 class="fw-bold mb-0" id="cart-page-total">৳ 0.00</h6>
+                        </div>
+                        
+                        {{-- DYNAMIC CHECKOUT BUTTON --}}
+                        <button id="proceed-to-checkout-btn" class="btn btn-dark spotlight_cart_action_button mt-3">Proceed To Checkout</button>
+                    </div>
+
                             <div class="spotlight_cart_summary_card">
-                                <h5 class="fw-semibold mb-3">Delivery & Return</h5>
-                                <div class="accordion" id="deliveryAccordion">
-                                    <div class="accordion-item spotlight_cart_accordion_item">
-                                        <h2 class="accordion-header" id="headingOne">
-                                            <button class="accordion-button collapsed small fw-semibold" type="button"
-                                                data-bs-toggle="collapse" data-bs-target="#collapseOne"
-                                                aria-expanded="false" aria-controls="collapseOne">
-                                                My order hasn’t arrived yet. Where is it?
-                                            </button>
-                                        </h2>
-                                        <div id="collapseOne" class="accordion-collapse collapse"
-                                            aria-labelledby="headingOne" data-bs-parent="#deliveryAccordion">
-                                            <div class="accordion-body small text-muted">
-                                                You can track your order using the tracking number provided in your
-                                                shipping confirmation email. Please allow 2-3 business days for
-                                                processing and shipping.
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="accordion-item spotlight_cart_accordion_item">
-                                        <h2 class="accordion-header" id="headingTwo">
-                                            <button class="accordion-button collapsed small fw-semibold" type="button"
-                                                data-bs-toggle="collapse" data-bs-target="#collapseTwo"
-                                                aria-expanded="false" aria-controls="collapseTwo">
-                                                How can you evaluate content without design? No typography, no colors,
-                                                no layout, no styles, all those things that convey the important signals
-                                                that go beyond the mere textual, hierarchies of information, weight.
-                                            </button>
-                                        </h2>
-                                        <div id="collapseTwo" class="accordion-collapse collapse"
-                                            aria-labelledby="headingTwo" data-bs-parent="#deliveryAccordion">
-                                            <div class="accordion-body small text-muted">
-                                                This is a placeholder answer. The question itself is a bit of a
-                                                placeholder, so you'd want to replace both the question and the answer
-                                                with real content.
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="accordion-item spotlight_cart_accordion_item">
-                                        <h2 class="accordion-header" id="headingThree">
-                                            <button class="accordion-button collapsed small fw-semibold" type="button"
-                                                data-bs-toggle="collapse" data-bs-target="#collapseThree"
-                                                aria-expanded="false" aria-controls="collapseThree">
-                                                Do you deliver on public holidays?
-                                            </button>
-                                        </h2>
-                                        <div id="collapseThree" class="accordion-collapse collapse"
-                                            aria-labelledby="headingThree" data-bs-parent="#deliveryAccordion">
-                                            <div class="accordion-body small text-muted">
-                                                Deliveries are not made on public holidays. Please check our delivery
-                                                schedule for more information.
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="accordion-item spotlight_cart_accordion_item">
-                                        <h2 class="accordion-header" id="headingFour">
-                                            <button class="accordion-button collapsed small fw-semibold" type="button"
-                                                data-bs-toggle="collapse" data-bs-target="#collapseFour"
-                                                aria-expanded="false" aria-controls="collapseFour">
-                                                Do you deliver to my postcode?
-                                            </button>
-                                        </h2>
-                                        <div id="collapseFour" class="accordion-collapse collapse"
-                                            aria-labelledby="headingFour" data-bs-parent="#deliveryAccordion">
-                                            <div class="accordion-body small text-muted">
-                                                Please enter your postcode at checkout to see if we deliver to your
-                                                area.
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="accordion-item spotlight_cart_accordion_item">
-                                        <h2 class="accordion-header" id="headingFive">
-                                            <button class="accordion-button collapsed small fw-semibold" type="button"
-                                                data-bs-toggle="collapse" data-bs-target="#collapseFive"
-                                                aria-expanded="false" aria-controls="collapseFive">
-                                                Is next-day delivery available on all orders?
-                                            </button>
-                                        </h2>
-                                        <div id="collapseFive" class="accordion-collapse collapse"
-                                            aria-labelledby="headingFive" data-bs-parent="#deliveryAccordion">
-                                            <div class="accordion-body small text-muted">
-                                                Next-day delivery is available for most orders placed before our cutoff
-                                                time. Some exclusions may apply.
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="accordion-item spotlight_cart_accordion_item">
-                                        <h2 class="accordion-header" id="headingSix">
-                                            <button class="accordion-button collapsed small fw-semibold" type="button"
-                                                data-bs-toggle="collapse" data-bs-target="#collapseSix"
-                                                aria-expanded="false" aria-controls="collapseSix">
-                                                Do I need to be there to sign for delivery?
-                                            </button>
-                                        </h2>
-                                        <div id="collapseSix" class="accordion-collapse collapse"
-                                            aria-labelledby="headingSix" data-bs-parent="#deliveryAccordion">
-                                            <div class="accordion-body small text-muted">
-                                                A signature may be required for some deliveries. Please check the
-                                                tracking information for details.
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
+                               {{-- ... your static accordion content ... --}}
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
         </section>
+           <!-- Quick View Modal -->
+    <div class="modal fade" id="quickViewModal" tabindex="-1" aria-labelledby="quickViewModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="quickViewModalLabel">Product Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="quickViewModalBody">
+                <div class="text-center p-5">
+                    <div class="spinner-border" style="width: 3rem; height: 3rem;" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- Quick View Modal -->
 @endsection
 
 @section('script')
 
+<script>
+    $(document).ready(function() {
+
+
+   
+
+
+        // Use event delegation for buttons in sliders
+        $('body').on('click', '.btn-add-cart', function(e) {
+            e.preventDefault(); // Prevents the link from jumping to the top of the page
+
+            const productId = $(this).data('product-id');
+            const modal = $('#quickViewModal');
+            const modalBody = $('#quickViewModalBody');
+
+            // --- START: MODIFIED URL GENERATION ---
+            // Create a URL template using the named route and a placeholder
+            let urlTemplate = "{{ route('product.quick_view', ['id' => ':id']) }}";
+            // Replace the placeholder with the actual product ID
+            let productUrl = urlTemplate.replace(':id', productId);
+            // --- END: MODIFIED URL GENERATION ---
+
+            // Show the modal
+            modal.modal('show');
+
+            // Set a loading state
+            modalBody.html('<div class="text-center p-5"><div class="spinner-border" style="width: 3rem; height: 3rem;" role="status"><span class="visually-hidden">Loading...</span></div></div>');
+
+            // Fetch product details via AJAX
+            $.ajax({
+                url: productUrl, // Use the dynamically generated URL
+                type: 'GET',
+                success: function(response) {
+                    modalBody.html(response);
+                },
+                error: function() {
+                    modalBody.html('<p class="text-danger text-center">Sorry, we could not load the product details. Please try again.</p>');
+                }
+            });
+        });
+    });
+</script>
+<script>
+$(document).ready(function() {
+    
+     // --- HELPER FUNCTION TO UPDATE TOTALS ---
+    function updateCartTotals(response) {
+        $('#cart-page-subtotal').text('৳ ' + response.subtotal);
+        if (response.coupon && parseFloat(response.discount) > 0) {
+            $('#cart-page-discount').text('- ৳ ' + response.discount);
+            $('#coupon-applied-section').show();
+            $('#coupon-section').hide();
+        } else {
+            $('#coupon-applied-section').hide();
+            $('#coupon-section').show();
+            $('#coupon-code').val(''); // Clear input
+        }
+        $('#cart-page-total').text('৳ ' + response.total);
+    }
+
+    // --- FUNCTION TO LOAD/REFRESH THE MAIN CART PAGE CONTENT ---
+    function loadMainCart() {
+        $.ajax({
+            url: '{{ route("cart.main_content") }}',
+            type: 'GET',
+            success: function(response) {
+                $('#main-cart-body').html(response.html);
+                updateCartTotals(response);
+            },
+            error: function() {
+                $('#main-cart-body').html('<tr><td colspan="4" class="text-center text-danger py-5">Could not load cart. Please try again.</td></tr>');
+            }
+        });
+    }
+
+    // --- INITIAL CART LOAD ---
+    loadMainCart();
+
+    $(document.body).on('cart-updated', function() {
+        loadMainCart();
+    });
+
+      // --- COUPON FORM SUBMISSION ---
+    $('#coupon-form').on('submit', function(e) {
+        e.preventDefault();
+        const code = $('#coupon-code').val();
+        if (!code) return;
+
+        $.ajax({
+            url: '{{ route("cart.applyCoupon") }}',
+            method: 'POST',
+            data: { _token: '{{ csrf_token() }}', coupon_code: code },
+            success: function(response) {
+                Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: response.message, showConfirmButton: false, timer: 2000 });
+                $('#main-cart-body').html(response.html);
+                updateCartTotals(response);
+            },
+            error: function(xhr) {
+                Swal.fire({ icon: 'error', title: 'Oops...', text: xhr.responseJSON.message });
+            }
+        });
+    });
+
+    // --- REMOVE COUPON ---
+    $('#remove-coupon-btn').on('click', function(e) {
+        e.preventDefault();
+        $.ajax({
+            url: '{{ route("cart.removeCoupon") }}',
+            method: 'POST',
+            data: { _token: '{{ csrf_token() }}' },
+            success: function(response) {
+                Swal.fire({ toast: true, position: 'top-end', icon: 'info', title: response.message, showConfirmButton: false, timer: 2000 });
+                $('#main-cart-body').html(response.html);
+                updateCartTotals(response);
+            }
+        });
+    });
+
+    // --- PROCEED TO CHECKOUT BUTTON ---
+    $('#proceed-to-checkout-btn').on('click', function(e) {
+        e.preventDefault();
+        
+        @auth
+            // If user is logged in, redirect to checkout
+            window.location.href = '{{ route("user.checkout") }}';
+        @else
+            // If user is a guest, open the login/register modal
+            const signInModal = new bootstrap.Modal(document.getElementById('signInOffcanvas'));
+            signInModal.show();
+        @endauth
+    });
+
+    // --- EVENT HANDLERS FOR UPDATE AND REMOVE ---
+    // Using event delegation since cart items are loaded dynamically
+     // --- UPDATED EVENT HANDLER FOR REMOVING ITEMS ---
+    $('#main-cart-body').on('click', '.remove-main-cart-item', function() {
+        const rowId = $(this).data('row-id');
+
+        Swal.fire({
+            title: 'Are you sure?',
+            text: "Do you want to remove this item from your cart?",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'Yes, remove it!',
+            cancelButtonText: 'Cancel'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                // If the user confirms, proceed with the removal
+                $.ajax({
+                    url: '{{ route("cart.main.remove") }}',
+                    type: 'POST',
+                    data: { _token: '{{ csrf_token() }}', rowId: rowId },
+                    success: function(response) {
+                        // On success, call the global function to update the sidebar.
+                        // This will also trigger the 'cart-updated' event,
+                        // which automatically refreshes the main cart table.
+                        updateCartOffcanvas();
+
+                        Swal.fire({
+                           toast: true,
+                           position: 'top-end',
+                           icon: 'success',
+                           title: 'Item removed successfully!',
+                           showConfirmButton: false,
+                           timer: 2000
+                        });
+                    },
+                    error: function() {
+                        Swal.fire(
+                          'Error!',
+                          'Could not remove the item. Please try again.',
+                          'error'
+                        )
+                    }
+                });
+            }
+        });
+    });
+
+    $('#main-cart-body').on('click', '.update-main-cart-item', function() {
+        const rowId = $(this).data('row-id');
+        const action = $(this).data('action');
+        const quantityElement = $(this).closest('div').find('span');
+        let currentQuantity = parseInt(quantityElement.text());
+        
+        let newQuantity = (action === 'increase') ? currentQuantity + 1 : currentQuantity - 1;
+
+        if (newQuantity < 1) return; // Prevent quantity from going below 1
+        
+        quantityElement.text(newQuantity); // Optimistic UI update
+
+        $.ajax({
+            url: '{{ route("cart.main.update") }}',
+            type: 'POST',
+            data: { _token: '{{ csrf_token() }}', rowId: rowId, quantity: newQuantity },
+            success: function(response) {
+                $('#main-cart-body').html(response.html);
+                $('#cart-page-subtotal').text('৳ ' + response.subtotal);
+                $('#cart-page-total').text('৳ ' + response.subtotal);
+                updateCartOffcanvas(); // Also update the sidebar cart
+            },
+            error: function() {
+                //alert('Could not update quantity. Please try again.');
+                quantityElement.text(currentQuantity); // Revert on error
+                // Show a SweetAlert error message
+                Swal.fire({
+                  icon: 'error',
+                  title: 'Update Failed',
+                  text: 'Could not update the quantity. Please try again.'
+                });
+            }
+        });
+    });
+
+});
+</script>
 @endsection

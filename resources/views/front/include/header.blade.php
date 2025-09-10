@@ -1,5 +1,49 @@
     <!-- Desktop & Tablet Header (Hidden on mobile) -->
-
+<style>
+    .search-container {
+        position: relative;
+    }
+    .search-results-popup {
+        display: none;
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        background-color: #fff;
+        border: 1px solid #e0e0e0;
+        border-top: none;
+        border-radius: 0 0 0.375rem 0.375rem;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        z-index: 1050; /* Ensure it's above other content */
+        max-height: 400px;
+        overflow-y: auto;
+    }
+    .search-result-item {
+        display: flex;
+        align-items: center;
+        padding: 0.75rem 1rem;
+        border-bottom: 1px solid #f0f0f0;
+        text-decoration: none;
+        color: #212529;
+        transition: background-color 0.2s ease-in-out;
+    }
+    .search-result-item:last-child { border-bottom: none; }
+    .search-result-item:hover { background-color: #f8f9fa;color: black }
+    .search-result-item img {
+        width: 50px;
+        height: 50px;
+        object-fit: cover;
+        border-radius: 0.25rem;
+        margin-right: 1rem;
+    }
+    .search-result-info .price {
+        font-size: 0.9em;
+    }
+    /* Specific adjustment for mobile search container */
+    .mobile-search-bar .search-container {
+        width: 100%;
+    }
+</style>
     <header class="d-none d-lg-block sticky-header">
         <!-- Top Section -->
         <div class="header-top p-3 d-flex align-items-center" style="background-color: {{ $headerColor }} !important;">
@@ -10,12 +54,17 @@
                 </a>
 
                 <!-- Search Bar -->
-                <div class="search-container">
-                    <div class="input-group">
-                        <input type="text" class="form-control" placeholder="Search for products">
-                        <span class="input-group-text"><i class="bi bi-search"></i></span>
-                    </div>
+                 <!-- DYNAMIC SEARCH BAR -->
+            <div class="search-container">
+                <div class="input-group">
+                    <input type="text" id="product-search-input" class="form-control" placeholder="Search for products" autocomplete="off">
+                    <span class="input-group-text" id="desktop-search-icon" style="cursor: pointer;"><i class="bi bi-search"></i></span>
                 </div>
+                <!-- Search Results Popup Container -->
+                <div id="search-results-container" class="search-results-popup">
+                    {{-- Results will be injected here by JavaScript --}}
+                </div>
+            </div>
 
                 <!-- Support -->
                 <div class="d-flex align-items-center">
@@ -49,13 +98,27 @@
                 <!-- Right Side: Icons -->
                 <div class="d-flex align-items-center">
                     <!-- Updated User icon to trigger the new offcanvas -->
+
+                    @if (Auth::check())
+<a class="nav-link text-dark me-3" href="{{route('dashboard.user')}}" >
+                        <i class="bi bi-person-circle fs-4"></i>
+                    </a>
+                    @else
                     <a class="nav-link text-dark me-3" href="#" data-bs-toggle="offcanvas"
                         data-bs-target="#signInOffcanvas" aria-controls="signInOffcanvas">
                         <i class="bi bi-person-circle fs-4"></i>
                     </a>
-                    <a class="nav-link text-dark me-3" href="#">
+                    @endif
+                    @if (Auth::check())
+                    <a class="nav-link text-dark me-3" href="{{route('wishlist.index')}}">
                         <i class="bi bi-heart fs-4"></i>
                     </a>
+                    @else
+ <a class="nav-link text-dark me-3" href="#" data-bs-toggle="offcanvas"
+                        data-bs-target="#signInOffcanvas" aria-controls="signInOffcanvas">
+                        <i class="bi bi-heart fs-4"></i>
+                    </a>
+                    @endif
                     <a class="nav-link text-dark me-3" href="#">
                         <i class="bi bi-arrow-left-right fs-4"></i>
                     </a>
@@ -92,17 +155,19 @@
             </div>
         </nav>
         <!-- Bottom Section: Search -->
-        <div class="mobile-search-bar">
-            <form class="d-flex">
-                <div class="input-group">
-                    <input class="form-control rounded-pill" type="search" placeholder="Search for products"
-                        aria-label="Search">
-                    <span class="input-group-text">
-                        <i class="bi bi-search"></i>
-                    </span>
-                </div>
-            </form>
-        </div>
+         <!-- Bottom Section: DYNAMIC MOBILE SEARCH -->
+    <div class="mobile-search-bar">
+        <form class="d-flex" onsubmit="return false;">
+            <div class="input-group search-container">
+                <input id="mobile-product-search-input" class="form-control rounded-pill" type="search" placeholder="Search for products" aria-label="Search" autocomplete="off">
+                <span class="input-group-text">
+                    <i class="bi bi-search"></i>
+                </span>
+                <!-- Mobile Search Results Popup Container -->
+                <div id="mobile-search-results-container" class="search-results-popup"></div>
+            </div>
+        </form>
+    </div>
     </header>
 
     <!-- Offcanvas for Desktop/Tablet Categories -->
@@ -219,47 +284,7 @@
     </div>
 
     <!-- Offcanvas for Sign In Form -->
-    <div class="offcanvas offcanvas-end" tabindex="-1" id="signInOffcanvas" aria-labelledby="signInOffcanvasLabel">
-        <div class="offcanvas-header">
-            <h5 class="offcanvas-title" id="signInOffcanvasLabel">Sign in</h5>
-            <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
-        </div>
-        <div class="offcanvas-body">
-            <form>
-                <div class="mb-3">
-                    <label for="usernameEmail" class="form-label">Username or email address *</label>
-                    <input type="text" class="form-control" id="usernameEmail" required>
-                </div>
-                <div class="mb-3">
-                    <label for="password" class="form-label">Password *</label>
-                    <div class="input-group">
-                        <input type="password" class="form-control" id="password" required>
-                        <button class="btn btn-outline-secondary" type="button" id="togglePassword">
-                            <i class="bi bi-eye"></i>
-                        </button>
-                    </div>
-                </div>
-                <div class="d-grid mb-3">
-                    <button type="submit" class="btn btn-dark">Log In</button>
-                </div>
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <div class="form-check">
-                        <input class="form-check-input" type="checkbox" value="" id="rememberMe">
-                        <label class="form-check-label" for="rememberMe">
-                            Remember me
-                        </label>
-                    </div>
-                    <a href="#" class="text-decoration-none text-dark">Lost your password?</a>
-                </div>
-            </form>
-            <hr>
-            <div class="text-center">
-                <i class="bi bi-person-circle fs-1 text-secondary"></i>
-                <p class="mt-3">No account yet?</p>
-                <a href="#" class="btn btn-outline-dark rounded-pill px-4">Create An Account</a>
-            </div>
-        </div>
-    </div>
+    @include('front.include.loginRegister')
 
     <!-- Offcanvas for Shopping Cart -->
     <div class="offcanvas offcanvas-end" tabindex="-1" id="cartOffcanvas" aria-labelledby="cartOffcanvasLabel">
@@ -298,13 +323,25 @@
             <i class="bi bi-shop"></i>
             <span>Shop</span>
         </a>
-        <a href="#" class="nav-link text-dark">
+
+        @if(Auth::check())
+        <a href="{{route('wishlist.index')}}" class="nav-link text-dark">
             <div class="position-relative">
                 <i class="bi bi-heart"></i>
                 <span class="badge rounded-pill bg-danger">0</span>
             </div>
             <span>Wishlist</span>
         </a>
+        @else
+         <a href="#" class="nav-link text-dark" data-bs-toggle="offcanvas"
+                        data-bs-target="#signInOffcanvas" aria-controls="signInOffcanvas">
+            <div class="position-relative">
+                <i class="bi bi-heart"></i>
+                <span class="badge rounded-pill bg-danger">0</span>
+            </div>
+            <span>Wishlist</span>
+        </a>
+        @endif
         <a href="{{route('cart.show')}}" class="nav-link text-dark" data-bs-toggle="offcanvas" data-bs-target="#cartOffcanvas"
             aria-controls="cartOffcanvas">
             <div class="position-relative">

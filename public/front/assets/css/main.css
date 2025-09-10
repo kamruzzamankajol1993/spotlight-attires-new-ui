@@ -639,7 +639,7 @@ section,
 }
 
 .spotlighthero .banner-item .content h4,
-h5 {
+.spotlighthero .banner-item .content h5 {
     color: white;
 }
 
@@ -1879,4 +1879,871 @@ h5 {
         text-align: left;
         font-weight: 600;
     }
+}
+
+
+/* Checkout page */
+
+.spotlight_checkout_container {
+    margin: 0 auto;
+    background-color: white;
+    padding: 30px;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.spotlight_checkout_coupon-link {
+    text-align: center;
+    margin-bottom: 20px;
+    font-size: 0.9em;
+}
+
+.spotlight_checkout_coupon-link a {
+    color: #3498db;
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.spotlight_checkout_coupon-link a:hover {
+    text-decoration: underline;
+}
+
+.spotlight_checkout_section-title {
+    font-size: 1.5em;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 20px;
+}
+
+.spotlight_checkout_form-group {
+    margin-bottom: 20px;
+}
+
+.spotlight_checkout_form-control {
+    border-radius: 8px;
+    padding: 10px;
+    border: 1px solid #ddd;
+}
+
+.spotlight_checkout_form-control:focus {
+    border-color: #3498db;
+    box-shadow: 0 0 0 0.25rem rgba(52, 152, 219, 0.25);
+}
+
+.spotlight_checkout_order-summary {
+    background-color: #fafafa;
+    padding: 20px;
+    border-radius: 8px;
+    height: 100%;
+}
+
+.spotlight_checkout_order-item {
+    display: flex;
+    align-items: center;
+    margin-bottom: 15px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid #eee;
+}
+
+.spotlight_checkout_order-item img {
+    width: 70px;
+    height: 70px;
+    border-radius: 8px;
+    margin-right: 15px;
+}
+
+.spotlight_checkout_item-details {
+    flex-grow: 1;
+}
+
+.spotlight_checkout_item-name {
+    font-weight: 500;
+    margin-bottom: 5px;
+}
+
+.spotlight_checkout_item-price,
+.spotlight_checkout_subtotal,
+.spotlight_checkout_shipping-price,
+.spotlight_checkout_total-price {
+    font-weight: 600;
+    color: #333;
+}
+
+.spotlight_checkout_subtotal,
+.spotlight_checkout_shipping,
+.spotlight_checkout_total {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 0;
+    border-top: 1px solid #eee;
+}
+
+.spotlight_checkout_total {
+    font-size: 1.25em;
+    font-weight: 700;
+    margin-top: 10px;
+    border-top: 2px solid #333;
+}
+
+.spotlight_checkout_shipping-options {
+    display: flex;
+    flex-direction: column;
+    margin-top: 5px;
+}
+
+.spotlight_checkout_shipping-option {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.9em;
+    color: #555;
+    margin-bottom: 5px;
+}
+
+.spotlight_checkout_radio-label {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+}
+
+.spotlight_checkout_radio-label input {
+    margin-right: 5px;
+}
+
+.spotlight_checkout_cash-on-delivery {
+    margin-top: 20px;
+    padding: 15px;
+    background-color: #f0f0f0;
+    border-radius: 8px;
+}
+
+.spotlight_checkout_cash-on-delivery h5 {
+    font-size: 1em;
+    font-weight: 600;
+    margin-bottom: 10px;
+    color: black;
+}
+
+.spotlight_checkout_cash-on-delivery ul {
+    list-style-type: disc;
+    padding-left: 20px;
+    font-size: 0.9em;
+}
+
+.spotlight_checkout_privacy-text {
+    font-size: 0.8em;
+    color: #777;
+    margin-top: 20px;
+    text-align: center;
+}
+
+.spotlight_checkout_place-order-btn {
+    width: 100%;
+    padding: 15px;
+    margin-top: 20px;
+    background-color: #000;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    transition: background-color 0.2s;
+}
+
+.spotlight_checkout_place-order-btn:hover {
+    background-color: #333;
+}
+
+.spotlight_checkout_change-address {
+    font-size: 0.8em;
+    color: #3498db;
+    text-decoration: none;
+}
+
+.spotlight_checkout_change-address:hover {
+    text-decoration: underline;
+}
+
+
+/* Media Queries for Responsiveness */
+
+@media (max-width: 768px) {
+    .spotlight_checkout_container {
+        padding: 15px;
+    }
+    .spotlight_checkout_section-title {
+        font-size: 1.2em;
+    }
+    .spotlight_checkout_order-summary {
+        margin-top: 30px;
+    }
+}
+
+
+/* user profile design */
+
+.spotlight_user_profile_container {
+    margin: 0 auto;
+}
+
+.spotlight_user_profile_breadcrumb {
+    margin-bottom: 20px;
+    font-size: 0.9em;
+    color: #6c757d;
+}
+
+.spotlight_user_profile_main-content {
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    padding: 30px;
+    min-height: 70vh;
+}
+
+.spotlight_user_profile_sidebar {
+    background-color: #fff;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.spotlight_user_profile_sidebar-header {
+    display: flex;
+    align-items: center;
+    padding: 10px;
+    border-bottom: 1px solid #eee;
+    margin-bottom: 20px;
+}
+
+.spotlight_user_profile_user-avatar-container {
+    position: relative;
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background-color: #e9ecef;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.spotlight_user_profile_user-avatar-container i {
+    font-size: 2.5em;
+    color: #adb5bd;
+}
+
+.spotlight_user_profile_user-info {
+    margin-left: 15px;
+}
+
+.spotlight_user_profile_user-name {
+    font-size: 1.1em;
+    font-weight: 600;
+}
+
+.spotlight_user_profile_user-cash {
+    font-size: 0.9em;
+    color: #28a745;
+}
+
+.spotlight_user_profile_view-profile-link {
+    font-size: 0.8em;
+    color: #007bff;
+    text-decoration: none;
+}
+
+.spotlight_user_profile_nav-list .list-group-item {
+    border: none;
+    border-radius: 8px;
+    margin-bottom: 5px;
+    transition: background-color 0.2s;
+    cursor: pointer;
+}
+
+.spotlight_user_profile_nav-list .list-group-item:hover,
+.spotlight_user_profile_nav-list .list-group-item.active {
+    background-color: #e9ecef;
+    font-weight: 500;
+}
+
+.spotlight_user_profile_nav-list .list-group-item i {
+    margin-right: 10px;
+}
+
+.spotlight_user_profile_nav-list .list-group-item.active {
+    color: #000;
+}
+
+.spotlight_user_profile_profile-header {
+    border-bottom: 1px solid #eee;
+    padding-bottom: 20px;
+    margin-bottom: 30px;
+}
+
+.spotlight_user_profile_profile-header h4 {
+    font-weight: 600;
+}
+
+.spotlight_user_profile_profile-picture-section {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 30px;
+}
+
+.spotlight_user_profile_profile-picture {
+    position: relative;
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    background-color: #e9ecef;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.spotlight_user_profile_profile-picture i {
+    font-size: 4em;
+    color: #adb5bd;
+}
+
+.spotlight_user_profile_camera-icon {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    background-color: #007bff;
+    color: #fff;
+    border-radius: 50%;
+    width: 35px;
+    height: 35px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    border: 2px solid white;
+}
+
+.spotlight_user_profile_camera-icon i {
+    font-size: 1.2em;
+    color: #fff;
+}
+
+.spotlight_user_profile_form-label {
+    font-size: 0.9em;
+    font-weight: 500;
+    color: #333;
+}
+
+.spotlight_user_profile_form-control {
+    border-radius: 8px;
+    padding: 10px;
+    border: 1px solid #ddd;
+}
+
+.spotlight_user_profile_form-control:focus {
+    border-color: #3498db;
+    box-shadow: 0 0 0 0.25rem rgba(52, 152, 219, 0.25);
+}
+
+.spotlight_user_profile_input-group-text {
+    background-color: #e9ecef;
+    border: 1px solid #ddd;
+    border-radius: 8px 0 0 8px;
+}
+
+.spotlight_user_profile_update-btn {
+    background-color: #008080;
+    color: white;
+    padding: 10px 20px;
+    border-radius: 8px;
+    border: none;
+    font-weight: 600;
+    transition: background-color 0.2s;
+    width: 100%;
+}
+
+.spotlight_user_profile_update-btn:hover {
+    background-color: #006666;
+}
+
+.spotlight_user_profile_main-header {
+    border-bottom: 1px solid #eee;
+    padding-bottom: 20px;
+    margin-bottom: 30px;
+}
+
+.spotlight_user_profile_main-header h4 {
+    font-weight: 600;
+}
+
+.spotlight_user_profile_filter-tabs .btn {
+    border-radius: 20px;
+    padding: 8px 18px;
+    margin-right: 10px;
+    font-size: 0.9em;
+    font-weight: 500;
+}
+
+.spotlight_user_profile_filter-tabs .btn.active {
+    background-color: #000;
+    color: #fff;
+}
+
+.spotlight_user_profile_order-card {
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 20px;
+    margin-top: 20px;
+    background-color: #fff;
+}
+
+.spotlight_user_profile_order-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px dashed #ddd;
+    padding-bottom: 15px;
+    margin-bottom: 15px;
+}
+
+.spotlight_user_profile_order-id {
+    font-weight: 600;
+}
+
+.spotlight_user_profile_order-delivery {
+    font-size: 0.8em;
+    color: #6c757d;
+}
+
+.spotlight_user_profile_order-info {
+    display: flex;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.spotlight_user_profile_order-info i {
+    font-size: 1.5em;
+    margin-right: 10px;
+    color: #3498db;
+}
+
+.spotlight_user_profile_order-details {
+    font-size: 0.9em;
+}
+
+.spotlight_user_profile_order-name {
+    font-weight: 600;
+}
+
+.spotlight_user_profile_order-date {
+    font-size: 0.8em;
+    color: #6c757d;
+    text-align: right;
+}
+
+.spotlight_user_profile_order-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 15px;
+    border-top: 1px dashed #ddd;
+    margin-top: 15px;
+}
+
+.spotlight_user_profile_amount {
+    font-weight: 700;
+}
+
+.spotlight_user_profile_status {
+    font-size: 0.9em;
+    font-weight: 600;
+    padding: 5px 10px;
+    border-radius: 5px;
+    text-transform: uppercase;
+}
+
+.spotlight_user_profile_status.delivered {
+    background-color: #d4edda;
+    color: #155724;
+}
+
+.spotlight_user_profile_btn {
+    padding: 8px 15px;
+    border-radius: 8px;
+    font-weight: 500;
+    font-size: 0.9em;
+}
+
+.spotlight_user_profile_btn-primary {
+    background-color: #007bff;
+    color: #fff;
+    border: 1px solid #007bff;
+}
+
+.spotlight_user_profile_btn-secondary {
+    background-color: #6c757d;
+    color: #fff;
+    border: 1px solid #6c757d;
+}
+
+
+/* Media Queries for Responsiveness */
+
+@media (max-width: 768px) {
+    .spotlight_user_profile_sidebar {
+        margin-bottom: 20px;
+    }
+    .spotlight_user_profile_filter-tabs {
+        display: flex;
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    .spotlight_user_profile_filter-tabs .btn {
+        flex: 0 0 auto;
+    }
+}
+
+.spotlight_user_profile_order-details-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.spotlight_user_profile_order-details-header a {
+    font-size: 0.9em;
+    text-decoration: none;
+}
+
+.spotlight_user_profile_order-details-header a:hover {
+    text-decoration: underline;
+}
+
+.spotlight_user_profile_timeline {
+    position: relative;
+}
+
+.spotlight_user_profile_timeline::before {
+    content: '';
+    position: absolute;
+    left: 110px;
+    top: 0;
+    height: 100%;
+    width: 2px;
+    background-color: #ddd;
+}
+
+.spotlight_user_profile_timeline-item {
+    position: relative;
+    margin-bottom: 30px;
+    padding-left: 150px;
+}
+
+.spotlight_user_profile_timeline-date {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100px;
+    text-align: right;
+    font-size: 0.9em;
+    color: #888;
+}
+
+.spotlight_user_profile_timeline-icon {
+    position: absolute;
+    left: 102px;
+    top: 0;
+    width: 16px;
+    height: 16px;
+    background-color: #3498db;
+    border: 2px solid #fff;
+    border-radius: 50%;
+}
+
+.spotlight_user_profile_timeline-icon.active {
+    background-color: #28a745;
+}
+
+.spotlight_user_profile_timeline-content h5 {
+    font-weight: 600;
+    font-size: 1.1em;
+    margin-bottom: 5px;
+    color: black;
+}
+
+.spotlight_user_profile_timeline-content p {
+    font-size: 0.9em;
+    color: #555;
+}
+
+.spotlight_user_profile_section-card {
+    background-color: #f8f9fa;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+.spotlight_user_profile_product-list .list-group-item {
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    margin-bottom: 10px;
+}
+
+.spotlight_user_profile_product-item {
+    display: flex;
+    align-items: center;
+}
+
+.spotlight_user_profile_product-item img {
+    width: 60px;
+    height: 60px;
+    border-radius: 8px;
+    margin-right: 15px;
+}
+
+.spotlight_user_profile_shipping-address {
+    background-color: #f8f9fa;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 20px;
+}
+
+.spotlight_user_profile_summary-table td,
+.spotlight_user_profile_summary-table th {
+    padding: 8px 0;
+    border: none;
+}
+
+.spotlight_user_profile_summary-table .text-success {
+    font-weight: 500;
+}
+
+.spotlight_user_profile_download-btn {
+    background-color: #008080;
+    color: white;
+    padding: 12px 20px;
+    border-radius: 8px;
+    border: none;
+    font-weight: 600;
+    transition: background-color 0.2s;
+    width: 100%;
+}
+
+.spotlight_user_profile_download-btn:hover {
+    background-color: #006666;
+}
+
+
+/* Media Queries for Responsiveness */
+
+@media (max-width: 768px) {
+    .spotlight_user_profile_sidebar {
+        margin-bottom: 20px;
+    }
+    .spotlight_user_profile_timeline {
+        padding-left: 20px;
+    }
+    .spotlight_user_profile_timeline::before {
+        left: 10px;
+    }
+    .spotlight_user_profile_timeline-item {
+        padding-left: 30px;
+        margin-bottom: 20px;
+    }
+    .spotlight_user_profile_timeline-date {
+        position: relative;
+        left: 0;
+        width: auto;
+        text-align: left;
+        margin-bottom: 5px;
+    }
+    .spotlight_user_profile_timeline-icon {
+        left: 2px;
+    }
+    .spotlight_user_profile_order-details-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+}
+
+.spotlight_user_profile_wishlist-card {
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+.spotlight_user_profile_wishlist-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.spotlight_user_profile_product-info {
+    display: flex;
+    align-items: center;
+}
+
+.spotlight_user_profile_product-info img {
+    width: 80px;
+    height: 80px;
+    border-radius: 8px;
+    margin-right: 15px;
+    position: relative;
+}
+
+.spotlight_user_profile_product-details {
+    display: flex;
+    flex-direction: column;
+}
+
+.spotlight_user_profile_product-details p {
+    margin: 0;
+    font-weight: 500;
+}
+
+.spotlight_user_profile_product-details small {
+    color: #777;
+}
+
+.spotlight_user_profile_product-price {
+    display: flex;
+    align-items: center;
+    font-size: 1.1em;
+    font-weight: 600;
+}
+
+.spotlight_user_profile_original-price {
+    color: #888;
+    text-decoration: line-through;
+    font-size: 0.8em;
+    font-weight: 400;
+    margin-left: 10px;
+}
+
+.spotlight_user_profile_add-to-cart-btn {
+    background-color: #008080;
+    color: white;
+    border: none;
+    padding: 8px 15px;
+    border-radius: 8px;
+}
+
+.spotlight_user_profile_wishlist-actions .btn {
+    margin-left: 10px;
+}
+
+.spotlight_user_profile_badge {
+    position: absolute;
+    top: 5px;
+    left: 5px;
+    background-color: #008080;
+    color: white;
+    font-size: 0.7em;
+    padding: 4px 8px;
+    border-radius: 5px;
+    z-index: 10;
+}
+
+.spotlight_user_profile_delivery-badge {
+    background-color: #f0ad4e;
+    color: white;
+    font-size: 0.8em;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-weight: 500;
+    margin-top: 5px;
+}
+
+.spotlight_user_profile_wishlist-card {
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+.spotlight_user_profile_wishlist-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.spotlight_user_profile_product-info {
+    display: flex;
+    align-items: center;
+}
+
+.spotlight_user_profile_product-info img {
+    width: 80px;
+    height: 80px;
+    border-radius: 8px;
+    margin-right: 15px;
+    position: relative;
+}
+
+.spotlight_user_profile_product-details {
+    display: flex;
+    flex-direction: column;
+}
+
+.spotlight_user_profile_product-details p {
+    margin: 0;
+    font-weight: 500;
+}
+
+.spotlight_user_profile_product-details small {
+    color: #777;
+}
+
+.spotlight_user_profile_product-price {
+    display: flex;
+    align-items: center;
+    font-size: 1.1em;
+    font-weight: 600;
+}
+
+.spotlight_user_profile_original-price {
+    color: #888;
+    text-decoration: line-through;
+    font-size: 0.8em;
+    font-weight: 400;
+    margin-left: 10px;
+}
+
+.spotlight_user_profile_add-to-cart-btn {
+    background-color: #008080;
+    color: white;
+    border: none;
+    padding: 8px 15px;
+    border-radius: 8px;
+}
+
+.spotlight_user_profile_wishlist-actions .btn {
+    margin-left: 10px;
+}
+
+.spotlight_user_profile_badge {
+    position: absolute;
+    top: 5px;
+    left: 5px;
+    background-color: #008080;
+    color: white;
+    font-size: 0.7em;
+    padding: 4px 8px;
+    border-radius: 5px;
+    z-index: 10;
+}
+
+.spotlight_user_profile_delivery-badge {
+    background-color: #f0ad4e;
+    color: white;
+    font-size: 0.8em;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-weight: 500;
+    margin-top: 5px;
 }

@@ -29,6 +29,8 @@
     <!-- Main CSS File -->
     <link href="{{asset('/')}}public/front/assets/css/main.css" rel="stylesheet">
     @yield('css')
+    <script src="{{asset('/')}}public/front/assets/js/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
 
 <body>
@@ -39,7 +41,7 @@
     @include('front.include.footer')
 
     <!-- Vendor JS Files -->
-    <script src="{{asset('/')}}public/front/assets/js/jquery.min.js"></script>
+    
     <script src="{{asset('/')}}public/front/assets/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
     <script src="{{asset('/')}}public/front/assets/vendor/aos/aos.js"></script>
     <script src="{{asset('/')}}public/front/assets/vendor/slickslider/slick.min.js"></script>
@@ -206,6 +208,7 @@
                 $('#cart-subtotal').text('৳ ' + response.subtotal);
                 $('#mobile-cart-count').text(response.count);
                 $('#desktop-cart-count').text(response.count);
+                $(document.body).trigger('cart-updated');
             },
             error: function() {
                 $('.cart-products').html('<p class="text-danger text-center p-3">Could not load cart. Please try again.</p>');
@@ -238,9 +241,15 @@
                     $('#cart-subtotal').text('৳ ' + response.subtotal);
                     $('#mobile-cart-count').text(response.count);
                     $('#desktop-cart-count').text(response.count);
+
+                    $(document.body).trigger('cart-updated');
                 },
                 error: function() {
-                    alert('Error removing item. Please try again.');
+                     Swal.fire({
+                      icon: 'error',
+                      title: 'Oops...',
+                      text: 'Error removing item. Please try again.'
+                    });
                     cartItemDiv.css('opacity', '1'); // Revert visual feedback on error
                 }
             });
@@ -272,16 +281,91 @@
                     $('#cart-subtotal').text('৳ ' + response.subtotal);
                     $('#mobile-cart-count').text(response.count);
                     $('#desktop-cart-count').text(response.count);
+
+                    $(document.body).trigger('cart-updated');
                 },
                 error: function() {
-                    alert('Error updating quantity. Please try again.');
+                    Swal.fire({
+                      icon: 'error',
+                      title: 'Update Failed',
+                      text: 'Error updating quantity. Please try again.'
+                    });
                 }
             });
         });
     });
 </script>
 
+<script>
+$(document).ready(function() {
+    function initializeAjaxSearch(inputSelector, resultsSelector, iconSelector) {
+        let searchTimeout;
+        const searchInput = $(inputSelector);
+        const resultsContainer = $(resultsSelector);
+        const searchIcon = $(iconSelector);
 
+        // Function to perform the redirect
+        function goToSearchPage() {
+            const query = searchInput.val().trim();
+            if (query) {
+                window.location.href = `{{ route('products.search') }}?query=${encodeURIComponent(query)}`;
+            }
+        }
+
+        searchInput.on('keyup', function(e) {
+            if (e.key === 'Enter') {
+                goToSearchPage();
+                return;
+            }
+            
+            clearTimeout(searchTimeout);
+            const query = $(this).val().trim();
+
+            if (query.length < 1) {
+                resultsContainer.hide().html('');
+                return;
+            }
+
+            searchTimeout = setTimeout(function() {
+                resultsContainer.show().html('<div class="text-center p-3"><span class="spinner-border spinner-border-sm"></span></div>');
+                $.ajax({
+                    url: '{{ route("products.ajax_search") }}',
+                    method: 'GET',
+                    data: { query: query },
+                    success: function(products) {
+                        resultsContainer.html('');
+                        if (products && products.length > 0) {
+                            products.forEach(function(product) {
+                                let priceHtml = product.discount_price > 0 ? `<span class="fw-bold text-dark">৳${product.discount_price}</span> <del class="text-muted small ms-2">৳${product.base_price}</del>` : `<span class="fw-bold text-dark">৳${product.base_price}</span>`;
+                                const productHtml = `<a href="${product.url}" class="search-result-item"><img src="${product.image_url}" alt="${product.name}"><div class="search-result-info"><div class="fw-bold">${product.name}</div><div class="price">${priceHtml}</div></div></a>`;
+                                resultsContainer.append(productHtml);
+                            });
+                        } else {
+                            resultsContainer.html('<div class="text-center p-3 text-muted">No products found.</div>');
+                        }
+                    },
+                    error: function() {
+                        resultsContainer.html('<div class="text-center p-3 text-danger">Search failed.</div>');
+                    }
+                });
+            }, 300);
+        });
+        
+        searchIcon.on('click', goToSearchPage);
+    }
+
+    // Initialize the search for both desktop and mobile inputs
+    initializeAjaxSearch('#product-search-input', '#search-results-container', '#desktop-search-icon');
+    initializeAjaxSearch('#mobile-product-search-input', '#mobile-search-results-container', '#mobile-search-icon');
+
+    // Hide search results when clicking anywhere else on the page
+    $(document).on('click', function(e) {
+        if (!$(e.target).closest('.search-container').length) {
+            $('.search-results-popup').hide();
+        }
+    });
+});
+</script>
 </body>
 
 </html>
