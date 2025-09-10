@@ -53,36 +53,45 @@ class FrontController extends Controller
     }
 
 
-    public function offerProduct($id)
-{
-    $bundleDeal = BundleOfferProduct::findOrFail($id);
-    $productIds = $bundleDeal->product_id;
-    $productsCollection = collect();
-    $allImages = [];
-    $totalBasePrice = 0;
+     public function offerProduct($id)
+    {
+        $bundleDeal = BundleOfferProduct::findOrFail($id);
+        $productIds = $bundleDeal->product_id;
+        $productsCollection = collect();
+        $allImages = [];
+        $totalBasePrice = 0;
 
-    if (!empty($productIds) && is_array($productIds)) {
-        $productsCollection = Product::whereIn('id', $productIds)
-            ->with(['variants.color']) // This is correct
-            ->get();
+        if (!empty($productIds) && is_array($productIds)) {
+            // --- UPDATED QUERY ---
+            // Eager load all necessary relationships for the products in the bundle
+            $productsCollection = Product::whereIn('id', $productIds)
+                ->with([
+                    'variants.color', 
+                    'reviews.user', // Eager load approved reviews and the user who wrote them
+                    'reviews.images'  // Eager load images for each review
+                ])
+                ->withCount('reviews') // Get the total number of reviews for each product
+                ->withAvg('reviews', 'rating') // Calculate the average rating for each product
+                ->get();
+            // --- END UPDATED QUERY ---
 
-        foreach ($productsCollection as $product) {
-            if (is_array($product->main_image) && count($product->main_image) > 0) {
-                $allImages = array_merge($allImages, $product->main_image);
+            foreach ($productsCollection as $product) {
+                if (is_array($product->main_image) && count($product->main_image) > 0) {
+                    $allImages = array_merge($allImages, $product->main_image);
+                }
+                $totalBasePrice += $product->base_price;
             }
-            $totalBasePrice += $product->base_price;
         }
+
+        $allImages = array_unique($allImages);
+
+        return view('front.offer.offerproduct', compact(
+            'bundleDeal',
+            'productsCollection',
+            'allImages',
+            'totalBasePrice'
+        ));
     }
-
-    $allImages = array_unique($allImages);
-
-    return view('front.offer.offerproduct', compact(
-        'bundleDeal',
-        'productsCollection',
-        'allImages',
-        'totalBasePrice'
-    ));
-}
 
     public function quickView($id)
 {
@@ -100,8 +109,12 @@ class FrontController extends Controller
                 'category',                 // For breadcrumbs
                 'subcategory',              // For breadcrumbs
                 'variants.color',           // Eager load variants AND their associated colors
-                'assignChart.entries'       // Eager load the assigned size chart AND its entries
+                'assignChart.entries',       // Eager load the assigned size chart AND its entries
+                'reviews.user', // Eager load approved reviews and the user who wrote them
+                'reviews.images'
             ])
+             ->withCount('reviews') // Get the total number of reviews
+            ->withAvg('reviews', 'rating') // Calculate the average rating directly in the query
             ->firstOrFail();
 
         return view('front.product.show', compact('product'));

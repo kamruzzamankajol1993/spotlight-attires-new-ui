@@ -7,6 +7,8 @@ use App\Http\Controllers\LocationController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\Admin\CheckoutController;
 use App\Http\Controllers\WishlistController;
+use App\Http\Controllers\ReviewController;
+use App\Http\Controllers\CompareController;
 
 Route::get('/clear', function() {
     \Illuminate\Support\Facades\Artisan::call('cache:clear');
@@ -17,7 +19,22 @@ Route::get('/clear', function() {
     return redirect()->back();
 });
 
+// --- Product Compare ---
+Route::controller(CompareController::class)->prefix('compare')->name('compare.')->group(function () {
+    Route::get('/', 'index')->name('index');
+    Route::post('/add', 'add')->name('add');
+    Route::post('/add-multiple', 'addMultiple')->name('addMultiple');
+    Route::post('/remove', 'remove')->name('remove');
+    Route::get('/clear', 'clear')->name('clear');
+});
+
 Route::middleware('auth')->group(function () {
+
+     // --- Product Review Routes ---
+    Route::controller(ReviewController::class)->prefix('reviews')->name('reviews.')->group(function () {
+        Route::get('/', 'index')->name('index');
+        Route::post('/store', 'store')->name('store');
+    });
 
       Route::controller(WishlistController::class)->prefix('wishlist')->name('wishlist.')->group(function () {
         Route::get('/', 'index')->name('index');

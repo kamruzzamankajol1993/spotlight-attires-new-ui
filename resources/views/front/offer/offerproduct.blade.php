@@ -4,6 +4,10 @@
 {{ $bundleDeal->title ?? 'Bundle Offer' }}
 @endsection
 @section('css')
+<style>
+    .star-rating .bi-star-fill { color: #ffc107; }
+    .review-images-container img { width: 70px; height: 70px; object-fit: cover; border-radius: 5px; cursor: pointer; margin-right: 5px;}
+</style>
 @endsection
 @section('body')
 <section class="section">
@@ -144,7 +148,7 @@
                             <!-- Actions and Share with Bootstrap Icons -->
                             <div class="d-flex flex-column flex-sm-row align-items-center justify-content-between mt-4">
                                 <div class="d-flex align-items-center space-x-4 mb-4 mb-sm-0">
-                                    <a href="#" class="d-flex align-items-center text-secondary text-decoration-none">
+                                    <a href="#"  id="add-bundle-to-compare" class="d-flex align-items-center text-secondary text-decoration-none">
                                         <i class="bi bi-plus-circle me-1"></i>
                                         <span>Add to compare</span>
                                     </a>
@@ -216,151 +220,97 @@
             </div>
         </section>
         <section class="section">
-            <div class="container">
-                <!-- New Section: Description and Customer Reviews -->
-                <h2 class="h5 fw-semibold mb-3">Description</h2>
-                <div class="bg-white p-4 rounded-3 border">
-                    <h3 class="fw-semibold mb-2">Product Details:</h3>
-                    <ul class="list-unstyled space-y-1 text-sm text-secondary">
-                        <li class="d-flex align-items-center"><i class="bi bi-apparel-fill me-2 text-muted"></i>
-                            Fabric: Premium 100% Cotton Combed Yarn</li>
-                        <li class="d-flex align-items-center"><i class="bi bi-speedometer me-2 text-muted"></i>
-                            Weight: 240+ GSM (Thicker. Stronger. Better.)</li>
-                        <li class="d-flex align-items-center"><i class="bi bi-tshirt-fill me-2 text-muted"></i> Fit:
-                            Relaxed Oversized Drop Shoulder</li>
-                        <li class="d-flex align-items-center"><i class="bi bi-images me-2 text-muted"></i> Print:
-                            Ultra-detailed, fade-resistant anime graphics</li>
-                        <li class="d-flex align-items-center"><i class="bi bi-palette-fill me-2 text-muted"></i>
-                            Finish: Unique Acid Wash</li>
-                        <li class="d-flex align-items-center"><i class="bi bi-rulers me-2 text-muted"></i> Sizes: M,
-                            L, XL, XXL</li>
-                    </ul>
-                    <h3 class="fw-semibold mt-4 mb-2">Why you'll love it:</h3>
-                    <ul class="list-unstyled space-y-1 text-sm text-secondary">
-                        <li class="d-flex align-items-center"><i class="bi bi-check-lg me-2 text-success"></i>
-                            Shadow Army visuals that command attention</li>
-                        <li class="d-flex align-items-center"><i class="bi bi-check-lg me-2 text-success"></i>
-                            Heavyweight yet breathable fabric for all-day comfort</li>
-                        <li class="d-flex align-items-center"><i class="bi bi-check-lg me-2 text-success"></i>
-                            Pre-shrunk for a consistent fit</li>
-                        <li class="d-flex align-items-center"><i class="bi bi-check-lg me-2 text-success"></i>
-                            One-of-a-kind finish—no two tees are exactly the same</li>
-                    </ul>
-                </div>
-
-                <h2 class="h5 fw-semibold mt-5 mb-3">Customer Reviews</h2>
-                <div class="row g-4">
-                    <!-- Left Column: Review Summary -->
-                    <div class="col-12 col-lg-6 p-4 rounded-3 border bg-white">
-                        <div class="text-center mb-4">
-                            <div class="star-rating fs-3 mb-2">
-                                <i class="bi bi-star-fill"></i>
-                                <i class="bi bi-star-fill"></i>
-                                <i class="bi bi-star-fill"></i>
-                                <i class="bi bi-star-fill"></i>
-                                <i class="bi bi-star-fill"></i>
-                            </div>
-                            <p class="text-muted">0 reviews</p>
-                            <p class="mt-4 small fw-semibold">Overall Rating: 0.0/5.0</p>
-                        </div>
-                        <div class="space-y-2">
-                            <!-- 5 Star Bar -->
-                            <div class="d-flex align-items-center">
-                                <span class="small">5 Star</span>
-                                <div class="review-bar-container mx-2">
-                                    <div class="review-bar-fill" style="width: 0%;"></div>
-                                </div>
-                                <span class="small text-muted">0</span>
-                            </div>
-                            <!-- 4 Star Bar -->
-                            <div class="d-flex align-items-center">
-                                <span class="small">4 Star</span>
-                                <div class="review-bar-container mx-2">
-                                    <div class="review-bar-fill" style="width: 0%;"></div>
-                                </div>
-                                <span class="small text-muted">0</span>
-                            </div>
-                            <!-- 3 Star Bar -->
-                            <div class="d-flex align-items-center">
-                                <span class="small">3 Star</span>
-                                <div class="review-bar-container mx-2">
-                                    <div class="review-bar-fill" style="width: 0%;"></div>
-                                </div>
-                                <span class="small text-muted">0</span>
-                            </div>
-                            <!-- 2 Star Bar -->
-                            <div class="d-flex align-items-center">
-                                <span class="small">2 Star</span>
-                                <div class="review-bar-container mx-2">
-                                    <div class="review-bar-fill" style="width: 0%;"></div>
-                                </div>
-                                <span class="small text-muted">0</span>
-                            </div>
-                            <!-- 1 Star Bar -->
-                            <div class="d-flex align-items-center">
-                                <span class="small">1 Star</span>
-                                <div class="review-bar-container mx-2">
-                                    <div class="review-bar-fill" style="width: 0%;"></div>
-                                </div>
-                                <span class="small text-muted">0</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Right Column: Review Form -->
-                    <div class="col-12 col-lg-6 p-4 rounded-3 border bg-white">
-                        <h3 class="h6 fw-semibold mb-2">Be the first to review “Gojo Satoru- premium acid wash”</h3>
-                        <p class="small text-muted mb-4">Your email address will not be published. Required fields
-                            are marked *</p>
-
-                        <div class="mb-3">
-                            <label class="small">Your rating *:</label>
-                            <div class="star-rating fs-5 text-muted space-x-1 cursor-pointer">
-                                <i class="bi bi-star"></i>
-                                <i class="bi bi-star"></i>
-                                <i class="bi bi-star"></i>
-                                <i class="bi bi-star"></i>
-                                <i class="bi bi-star"></i>
-                            </div>
-                        </div>
-
-                        <div class="mb-3">
-                            <label class="form-label small">Your review *</label>
-                            <textarea class="form-control" rows="3" placeholder="Your review *"></textarea>
-                        </div>
-
-                        <div class="mb-3">
-                            <label class="form-label small">Pros</label>
-                            <input type="text" class="form-control" placeholder="Pros">
-                        </div>
-
-                        <div class="mb-3">
-                            <label class="form-label small">Cons</label>
-                            <input type="text" class="form-control" placeholder="Cons">
-                        </div>
-
-                        <div class="mb-3">
-                            <label class="form-label small">Name *</label>
-                            <input type="text" class="form-control" placeholder="Name *">
-                        </div>
-
-                        <div class="mb-3">
-                            <label class="form-label small">Email *</label>
-                            <input type="email" class="form-control" placeholder="Email *">
-                        </div>
-
-                        <div class="form-check mb-3">
-                            <input class="form-check-input" type="checkbox" id="save-info">
-                            <label class="form-check-label small" for="save-info">Save my name, email, and website
-                                in this browser for the next time I comment.</label>
-                        </div>
-
-                        <button class="btn btn-dark fw-semibold rounded-3 w-100">Submit</button>
-                    </div>
-                </div>
+        <div class="container">
+            <h2 class="h5 fw-semibold mb-3">Description</h2>
+            <div class="bg-white p-4 rounded-3 border">
+               {{-- You can add a description to your bundle deal model if needed --}}
+               <p>Enjoy a special discount with this exclusive bundle offer. Select from a variety of high-quality products to create your perfect package.</p>
             </div>
 
-        </section>
+            <h2 class="h5 fw-semibold mt-5 mb-3">Customer Reviews</h2>
+            <div class="row g-4">
+                @php
+                    // Aggregate review data from all products in the bundle
+                    $allReviews = $productsCollection->pluck('reviews')->flatten();
+                    $totalReviewsCount = $productsCollection->sum('reviews_count');
+                    $averageRatingSum = $productsCollection->sum(function($product) {
+                        return $product->reviews_avg_rating * $product->reviews_count;
+                    });
+                    $overallAverageRating = ($totalReviewsCount > 0) ? round($averageRatingSum / $totalReviewsCount, 1) : 0;
+                @endphp
+                <div class="col-12 col-lg-5 p-4 rounded-3 border bg-white">
+                    @if($totalReviewsCount > 0)
+                    <div class="text-center mb-4">
+                        <div class="star-rating fs-3 mb-2">
+                            @for ($i = 1; $i <= 5; $i++)
+                                <i class="bi {{ $i <= round($overallAverageRating) ? 'bi-star-fill text-warning' : 'bi-star text-muted' }}"></i>
+                            @endfor
+                        </div>
+                        <p class="text-muted">{{ $totalReviewsCount }} {{ Str::plural('review', $totalReviewsCount) }} in total for products in this bundle</p>
+                        <p class="mt-4 small fw-semibold">Overall Rating: {{ $overallAverageRating }}/5.0</p>
+                    </div>
+                    @php
+                        $ratingCounts = $allReviews->groupBy('rating')->map->count();
+                        $ratingPercentages = [];
+                        for ($i = 5; $i >= 1; $i--) {
+                            $count = $ratingCounts->get($i, 0);
+                            $percentage = ($totalReviewsCount > 0) ? ($count / $totalReviewsCount) * 100 : 0;
+                            $ratingPercentages[$i] = ['count' => $count, 'percentage' => $percentage];
+                        }
+                    @endphp
+                    <div class="space-y-2">
+                        @foreach($ratingPercentages as $star => $data)
+                        <div class="d-flex align-items-center">
+                            <span class="small">{{ $star }} Star</span>
+                            <div class="review-bar-container mx-2">
+                                <div class="review-bar-fill" style="width: {{ $data['percentage'] }}%;"></div>
+                            </div>
+                            <span class="small text-muted">{{ $data['count'] }}</span>
+                        </div>
+                        @endforeach
+                    </div>
+                    @else
+                    <div class="text-center py-4">
+                        <p class="text-muted">There are no reviews yet for the products in this bundle.</p>
+                        <p class="small">Be the first to leave a review after your purchase!</p>
+                    </div>
+                    @endif
+                </div>
+
+                <div class="col-12 col-lg-7">
+                    @forelse($allReviews->sortByDesc('created_at') as $review)
+                    <div class="bg-white p-3 rounded-3 border mb-3">
+                        <div class="d-flex align-items-start">
+                            <img src="{{ optional($review->user)->image ? asset('public/'.optional($review->user)->image) : 'https://placehold.co/50x50' }}" alt="{{ optional($review->user)->name }}" class="rounded-circle" style="width: 50px; height: 50px;">
+                            <div class="ms-3">
+                                <h6 class="mb-0">{{ optional($review->user)->name ?? 'Anonymous' }}</h6>
+                                <div class="star-rating text-muted small">
+                                    @for ($i = 1; $i <= 5; $i++)
+                                        <i class="bi {{ $i <= $review->rating ? 'bi-star-fill text-warning' : 'bi-star text-muted' }}"></i>
+                                    @endfor
+                                    <span class="ms-2">{{ \Carbon\Carbon::parse($review->created_at)->diffForHumans() }}</span>
+                                </div>
+                                <p class="mt-1 mb-0 small fst-italic">Reviewed: <a href="{{ route('product.show', $review->product->slug) }}" class="text-decoration-none">{{ $review->product->name }}</a></p>
+                            </div>
+                        </div>
+                        <p class="mt-3 mb-2">{{ $review->description }}</p>
+                        @if($review->images->isNotEmpty())
+                        <div class="review-images-container">
+                            @foreach($review->images as $image)
+                                <img src="{{ asset('public/'.$image->image_path) }}" alt="Review image">
+                            @endforeach
+                        </div>
+                        @endif
+                    </div>
+                    @empty
+                    <div class="bg-white p-4 rounded-3 border d-flex align-items-center justify-content-center h-100">
+                        <p class="text-muted">There are no reviews to display.</p>
+                    </div>
+                    @endforelse
+                </div>
+            </div>
+        </div>
+    </section>
         <!-- Modal for Product Selection -->
     <div class="modal fade" id="productSelectModal" tabindex="-1" aria-labelledby="productSelectModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-lg">
@@ -844,6 +794,53 @@
                 }
             });
         @endauth
+    });
+
+
+      // --- SCRIPT FOR ADDING BUNDLE TO COMPARE ---
+    $('#add-bundle-to-compare').on('click', function() {
+        const buyQuantity = {{ $bundleDeal->buy_quantity }};
+        const selectedCount = Object.keys(selectedProducts).length;
+
+        if (selectedCount < buyQuantity) {
+            Swal.fire({ icon: 'warning', title: 'Incomplete Selection', text: 'Please select a product for all available slots first.' });
+            return;
+        }
+
+        const button = $(this);
+        button.prop('disabled', true).find('span').text('Adding...');
+        
+        // Collect all unique selected product IDs
+        const productIds = [...new Set(Object.values(selectedProducts).map(p => p.id))];
+
+        $.ajax({
+            url: '{{ route("compare.addMultiple") }}',
+            method: 'POST',
+            data: {
+                _token: '{{ csrf_token() }}',
+                product_ids: productIds
+            },
+            success: function(response) {
+                Swal.fire({
+                    toast: true,
+                    position: 'top-end',
+                    icon: response.success ? 'success' : 'info',
+                    title: response.message,
+                    showConfirmButton: false,
+                    timer: 2500
+                });
+                
+                if(response.count !== undefined) {
+                    $('#compare-count').text(response.count); // Update the count in the header
+                }
+            },
+            error: function(xhr) {
+                Swal.fire({icon: 'error', title: 'Error', text: xhr.responseJSON.message || 'Could not add to compare list.'});
+            },
+            complete: function() {
+                button.prop('disabled', false).find('span').text('Add to compare');
+            }
+        });
     });
 
     });

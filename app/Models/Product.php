@@ -107,7 +107,22 @@ class Product extends Model
         return $this->hasMany(AssignCategory::class);
     }
 
+     public function reviews()
+    {
+        return $this->hasMany(ProductReview::class)->where('is_approved', true);
+    }
     
+    /**
+     * Accessor to get the average rating.
+     * Use ->withAvg('reviews', 'rating') in your controller for better performance.
+     *
+     * @return float
+     */
+    public function getAverageRatingAttribute()
+    {
+        // The 'reviews_avg_rating' attribute is loaded by withAvg() in the controller
+        return round($this->reviews_avg_rating, 1) ?? 0;
+    }
 
 
     /**

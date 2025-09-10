@@ -31,6 +31,8 @@
         opacity: 0.5;
         text-decoration: line-through;
     }
+     .star-rating .bi-star-fill { color: #ffc107; }
+    .review-images-container img { width: 70px; height: 70px; object-fit: cover; border-radius: 5px; cursor: pointer; }
 </style>
 @endsection
 @section('body')
@@ -190,7 +192,7 @@
                             <!-- Actions and Share with Bootstrap Icons -->
                             <div class="d-flex flex-column flex-sm-row align-items-center justify-content-between mt-4">
                                 <div class="d-flex align-items-center space-x-4 mb-4 mb-sm-0">
-                                    <a href="#" class="d-flex align-items-center text-secondary text-decoration-none">
+                                    <a href="#" id="add-to-compare" class="d-flex align-items-center text-secondary text-decoration-none">
                                         <i class="bi bi-plus-circle me-1"></i>
                                         <span>Add to compare</span>
                                     </a>
@@ -261,127 +263,88 @@
                 </div>
             </div>
         </section>
-        <section class="section">
-            <div class="container">
-                <!-- New Section: Description and Customer Reviews -->
-                    <h2 class="h5 fw-semibold mb-3">Description</h2>
-                    <div class="bg-white p-4 rounded-3 border">
-                       {!! $product->description !!}
-                    </div>
-
-                    <h2 class="h5 fw-semibold mt-5 mb-3">Customer Reviews</h2>
-                    <div class="row g-4">
-                        <!-- Left Column: Review Summary -->
-                        <div class="col-12 col-lg-6 p-4 rounded-3 border bg-white">
-                            <div class="text-center mb-4">
-                                <div class="star-rating fs-3 mb-2">
-                                    <i class="bi bi-star-fill"></i>
-                                    <i class="bi bi-star-fill"></i>
-                                    <i class="bi bi-star-fill"></i>
-                                    <i class="bi bi-star-fill"></i>
-                                    <i class="bi bi-star-fill"></i>
-                                </div>
-                                <p class="text-muted">0 reviews</p>
-                                <p class="mt-4 small fw-semibold">Overall Rating: 0.0/5.0</p>
-                            </div>
-                            <div class="space-y-2">
-                                <!-- 5 Star Bar -->
-                                <div class="d-flex align-items-center">
-                                    <span class="small">5 Star</span>
-                                    <div class="review-bar-container mx-2">
-                                        <div class="review-bar-fill" style="width: 0%;"></div>
-                                    </div>
-                                    <span class="small text-muted">0</span>
-                                </div>
-                                <!-- 4 Star Bar -->
-                                <div class="d-flex align-items-center">
-                                    <span class="small">4 Star</span>
-                                    <div class="review-bar-container mx-2">
-                                        <div class="review-bar-fill" style="width: 0%;"></div>
-                                    </div>
-                                    <span class="small text-muted">0</span>
-                                </div>
-                                <!-- 3 Star Bar -->
-                                <div class="d-flex align-items-center">
-                                    <span class="small">3 Star</span>
-                                    <div class="review-bar-container mx-2">
-                                        <div class="review-bar-fill" style="width: 0%;"></div>
-                                    </div>
-                                    <span class="small text-muted">0</span>
-                                </div>
-                                <!-- 2 Star Bar -->
-                                <div class="d-flex align-items-center">
-                                    <span class="small">2 Star</span>
-                                    <div class="review-bar-container mx-2">
-                                        <div class="review-bar-fill" style="width: 0%;"></div>
-                                    </div>
-                                    <span class="small text-muted">0</span>
-                                </div>
-                                <!-- 1 Star Bar -->
-                                <div class="d-flex align-items-center">
-                                    <span class="small">1 Star</span>
-                                    <div class="review-bar-container mx-2">
-                                        <div class="review-bar-fill" style="width: 0%;"></div>
-                                    </div>
-                                    <span class="small text-muted">0</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Right Column: Review Form -->
-                        <div class="col-12 col-lg-6 p-4 rounded-3 border bg-white">
-                            <h3 class="h6 fw-semibold mb-2">Be the first to review “Gojo Satoru- premium acid wash”</h3>
-                            <p class="small text-muted mb-4">Your email address will not be published. Required fields
-                                are marked *</p>
-
-                            <div class="mb-3">
-                                <label class="small">Your rating *:</label>
-                                <div class="star-rating fs-5 text-muted space-x-1 cursor-pointer">
-                                    <i class="bi bi-star"></i>
-                                    <i class="bi bi-star"></i>
-                                    <i class="bi bi-star"></i>
-                                    <i class="bi bi-star"></i>
-                                    <i class="bi bi-star"></i>
-                                </div>
-                            </div>
-
-                            <div class="mb-3">
-                                <label class="form-label small">Your review *</label>
-                                <textarea class="form-control" rows="3" placeholder="Your review *"></textarea>
-                            </div>
-
-                            <div class="mb-3">
-                                <label class="form-label small">Pros</label>
-                                <input type="text" class="form-control" placeholder="Pros">
-                            </div>
-
-                            <div class="mb-3">
-                                <label class="form-label small">Cons</label>
-                                <input type="text" class="form-control" placeholder="Cons">
-                            </div>
-
-                            <div class="mb-3">
-                                <label class="form-label small">Name *</label>
-                                <input type="text" class="form-control" placeholder="Name *">
-                            </div>
-
-                            <div class="mb-3">
-                                <label class="form-label small">Email *</label>
-                                <input type="email" class="form-control" placeholder="Email *">
-                            </div>
-
-                            <div class="form-check mb-3">
-                                <input class="form-check-input" type="checkbox" id="save-info">
-                                <label class="form-check-label small" for="save-info">Save my name, email, and website
-                                    in this browser for the next time I comment.</label>
-                            </div>
-
-                            <button class="btn btn-dark fw-semibold rounded-3 w-100">Submit</button>
-                        </div>
-                    </div>
+         <section class="section">
+        <div class="container">
+            <h2 class="h5 fw-semibold mb-3">Description</h2>
+            <div class="bg-white p-4 rounded-3 border">
+               {!! $product->description !!}
             </div>
 
-        </section>
+            <h2 class="h5 fw-semibold mt-5 mb-3">Customer Reviews</h2>
+            <div class="row g-4">
+                <div class="col-12 col-lg-5 p-4 rounded-3 border bg-white">
+                    @if($product->reviews_count > 0)
+                    <div class="text-center mb-4">
+                        <div class="star-rating fs-3 mb-2">
+                            @for ($i = 1; $i <= 5; $i++)
+                                <i class="bi {{ $i <= round($product->average_rating) ? 'bi-star-fill' : 'bi-star' }}"></i>
+                            @endfor
+                        </div>
+                        <p class="text-muted">{{ $product->reviews_count }} {{ Str::plural('review', $product->reviews_count) }}</p>
+                        <p class="mt-4 small fw-semibold">Overall Rating: {{ $product->average_rating }}/5.0</p>
+                    </div>
+                    @php
+                        // Calculate rating percentages
+                        $ratingCounts = $product->reviews->groupBy('rating')->map->count();
+                        $ratingPercentages = [];
+                        for ($i = 5; $i >= 1; $i--) {
+                            $count = $ratingCounts->get($i, 0);
+                            $percentage = ($product->reviews_count > 0) ? ($count / $product->reviews_count) * 100 : 0;
+                            $ratingPercentages[$i] = ['count' => $count, 'percentage' => $percentage];
+                        }
+                    @endphp
+                    <div class="space-y-2">
+                        @foreach($ratingPercentages as $star => $data)
+                        <div class="d-flex align-items-center">
+                            <span class="small">{{ $star }} Star</span>
+                            <div class="review-bar-container mx-2">
+                                <div class="review-bar-fill" style="width: {{ $data['percentage'] }}%;"></div>
+                            </div>
+                            <span class="small text-muted">{{ $data['count'] }}</span>
+                        </div>
+                        @endforeach
+                    </div>
+                    @else
+                    <div class="text-center py-4">
+                        <p class="text-muted">This product has no reviews yet.</p>
+                        <p class="small">Be the first to review!</p>
+                    </div>
+                    @endif
+                </div>
+
+                <div class="col-12 col-lg-7">
+                    @forelse($product->reviews as $review)
+                    <div class="bg-white p-3 rounded-3 border mb-3">
+                        <div class="d-flex align-items-start">
+                            <img src="{{ optional($review->user)->image ? asset('public/'.optional($review->user)->image) : 'https://placehold.co/50x50' }}" alt="{{ optional($review->user)->name }}" class="rounded-circle" style="width: 50px; height: 50px;">
+                            <div class="ms-3">
+                                <h6 class="mb-0">{{ optional($review->user)->name ?? 'Anonymous' }}</h6>
+                                <div class="star-rating text-muted small">
+                                    @for ($i = 1; $i <= 5; $i++)
+                                        <i class="bi {{ $i <= $review->rating ? 'bi-star-fill' : 'bi-star' }}"></i>
+                                    @endfor
+                                    <span class="ms-2">{{ \Carbon\Carbon::parse($review->created_at)->diffForHumans() }}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <p class="mt-3 mb-2">{{ $review->description }}</p>
+                        @if($review->images->isNotEmpty())
+                        <div class="review-images-container">
+                            @foreach($review->images as $image)
+                                <img src="{{ asset('public/'.$image->image_path) }}" alt="Review image">
+                            @endforeach
+                        </div>
+                        @endif
+                    </div>
+                    @empty
+                    <div class="bg-white p-4 rounded-3 border d-flex align-items-center justify-content-center h-100">
+                        <p class="text-muted">There are no reviews to display.</p>
+                    </div>
+                    @endforelse
+                </div>
+            </div>
+        </div>
+    </section>
     </main>
 @endsection
 @section('script')
@@ -732,6 +695,31 @@ $(document).ready(function() {
                
             });
         @endauth
+    });
+
+    // --- NEW: Add to Compare Handler ---
+    $('#add-to-compare').on('click', function() {
+        const productId = {{ $product->id }};
+        const button = $(this);
+        button.prop('disabled', true).find('span').text('Adding...');
+
+        $.ajax({
+            url: '{{ route("compare.add") }}',
+            method: 'POST',
+            data: { _token: '{{ csrf_token() }}', product_id: productId },
+            success: function(response) {
+                Swal.fire({ toast: true, position: 'top-end', icon: response.success ? 'success' : 'info', title: response.message, showConfirmButton: false, timer: 2500 });
+                if(response.count !== undefined) {
+                    $('#compare-count').text(response.count);
+                }
+            },
+            error: function() {
+                Swal.fire({icon: 'error', title: 'Error', text: 'Could not add to compare list.'});
+            },
+            complete: function() {
+                button.prop('disabled', false).find('span').text('Add to compare');
+            }
+        });
     });
 
     // --- Initial Page Load ---

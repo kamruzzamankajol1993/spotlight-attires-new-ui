@@ -23,16 +23,17 @@
                                                 class="bi bi-cart-fill"></i> Orders</a></span>
                                     <i class="bi bi-chevron-right"></i>
                                 </li>
-                                <div class="collapse {{ Route::is('user.order.list') || Route::is('user.order.detail') ? 'show' : '' }}" id="orders-collapse">
+                                <div class="collapse {{ Route::is('user.order.list') || Route::is('user.order.detail') || Route::is('reviews.index') ? 'show' : '' }}" id="orders-collapse">
                                     <ul class="list-group list-group-flush ms-4">
-                                        <li class="list-group-item {{ Route::is('user.order.list') || Route::is('user.order.detail') ? 'active' : '' }}"><a href="{{route('user.order.list')}}"
+                                        <li class="list-group-item {{ Route::is('user.order.list') || Route::is('user.order.detail')  ? 'active' : '' }}"><a href="{{route('user.order.list')}}"
                                                 class="text-decoration-none text-dark"><i
                                                     class="bi bi-check-circle-fill text-success"></i> My
                                                 Orders</a></li>
-                                        <li class="list-group-item"><a href="#"
-                                                class="text-decoration-none text-dark"><i
-                                                    class="bi bi-star-fill text-muted"></i> Product Review</a>
-                                        </li>
+                                        <li class="list-group-item {{ Route::is('reviews.index') ? 'active' : '' }}">
+                    <a href="{{ route('reviews.index') }}" class="text-decoration-none text-dark">
+                        <i class="bi bi-star-fill text-muted"></i> Product Review
+                    </a>
+                </li>
                                     </ul>
                                 </div>
                                         <li class="list-group-item {{ Route::is('wishlist.index') ? 'active' : '' }}"><a href="{{route('wishlist.index')}}"

@@ -119,7 +119,7 @@
                         <i class="bi bi-heart fs-4"></i>
                     </a>
                     @endif
-                    <a class="nav-link text-dark me-3" href="#">
+                    <a class="nav-link text-dark me-3" href="{{route('compare.index')}}">
                         <i class="bi bi-arrow-left-right fs-4"></i>
                     </a>
                     <!-- Updated Cart icon to trigger the new offcanvas -->
