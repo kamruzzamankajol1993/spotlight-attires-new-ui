@@ -25,6 +25,22 @@
     </div>
 
     <hr>
+     {{-- --- NEW: FILTER BY SIZE SECTION --- --}}
+    @if(isset($sizes) && $sizes->isNotEmpty())
+    <h5 class="fw-bold my-3 filter_title">Filter by Size</h5>
+    <div class="size-filter-container">
+        @foreach($sizes as $size)
+        <div class="form-check mb-2">
+            <input class="form-check-input size-filter" type="checkbox" value="{{ $size->name }}" id="size-{{ $size->id }}">
+            <label class="form-check-label" for="size-{{ $size->id }}">
+                {{ $size->name }}
+            </label>
+        </div>
+        @endforeach
+    </div>
+    <hr>
+    @endif
+    {{-- --- END: FILTER BY SIZE SECTION --- --}}
     <h5 class="fw-bold my-3 filter_title">Stock Status</h5>
     <div class="form-check mb-2">
         <input class="form-check-input stock-status-filter" type="radio" name="stock-status" id="all-stock" value="" checked>

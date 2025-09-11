@@ -136,6 +136,11 @@ $(document).ready(function() {
     let currentRequest = null;
 
     function getFilters() {
+
+         // --- NEW: Collect selected sizes ---
+        const selectedSizes = $('.size-filter:checked').map(function() {
+            return $(this).val();
+        }).get(); // .get() converts jQuery object to a plain array
         return {
             category_id: $('.main-category-filter.active').data('id'),
             subcategory_id: $('.subcategory-filter.active').data('id'),
@@ -143,7 +148,8 @@ $(document).ready(function() {
             min_price: $('#min-price-slider').val(),
             max_price: $('#max-price-slider').val(),
             stock_status: $('input[name="stock-status"]:checked').val(),
-             sort_by: $('#sort-select-new').val() 
+             sort_by: $('#sort-select-new').val(),
+             sizes: selectedSizes 
         };
     }
 
@@ -217,6 +223,11 @@ $(document).ready(function() {
         let min = parseInt($('#min-price-slider').val()), max = parseInt($('#max-price-slider').val());
         if (min > max) [min, max] = [max, min];
         $('#price-range-display').text(`Price: ৳${min} - ৳${max}`);
+    });
+
+    // --- NEW: Listener for size checkboxes ---
+    $(document).on('change', '.size-filter', function() {
+        loadProducts(true);
     });
 });
 </script>

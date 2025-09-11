@@ -12,6 +12,7 @@ use App\Models\Category;
 use App\Models\Subcategory;
 use App\Models\BundleOffer;
 use App\Models\AssignCategory;
+use App\Models\Size;
 class FrontController extends Controller
 {
 
@@ -216,7 +217,9 @@ class FrontController extends Controller
         // Fetch all categories and their subcategories for the filter sidebar
         $categoryList = Category::where('status', 1)->with('subcategories')->get();
 
-        return view('front.category.category', compact('category', 'products', 'categoryList'));
+        $sizes = Size::where('status', 1)->get();
+
+        return view('front.category.category', compact('category', 'products', 'categoryList', 'sizes'));
     }
 
     public function productSearch(Request $request)
@@ -246,12 +249,14 @@ class FrontController extends Controller
             ->with(['category', 'variants'])
             ->latest()
             ->paginate(12);
+        // --- NEW: Fetch all available sizes for the filter ---
+        $sizes = Size::where('status', 1)->get();
 
         // Fetch all filter groups for the sidebar
         $categoryList = Category::where('status', 1)->with('subcategories')->get();
         $animationCategoryList = AnimationCategory::where('status', 1)->get();
 
-        return view('front.main.shop', compact('products', 'categoryList', 'animationCategoryList'));
+        return view('front.main.shop', compact('products', 'categoryList', 'animationCategoryList', 'sizes'));
     }
 
      /**
@@ -288,6 +293,28 @@ class FrontController extends Controller
             }
         }
 
+          // --- START: CORRECTED SIZE FILTER LOGIC ---
+        if ($request->filled('sizes') && is_array($request->sizes)) {
+            $selectedSizeNames = $request->sizes;
+
+            // Step 1: Get the IDs for the selected size names from the 'sizes' table.
+            $sizeIds = Size::whereIn('name', $selectedSizeNames)->pluck('id')->toArray();
+
+            if (!empty($sizeIds)) {
+                $query->whereHas('variants', function ($variantQuery) use ($sizeIds) {
+                    // Step 2: Check if the 'sizes' JSON column in the 'product_variants' table
+                    // contains an object with any of the found 'size_id's.
+                    $variantQuery->where(function ($q) use ($sizeIds) {
+                        foreach ($sizeIds as $sizeId) {
+                            // IMPORTANT: The 'size_id' in your JSON is a string, so we cast our integer ID to a string for a correct match.
+                            $q->orWhereJsonContains('sizes', ['size_id' => (string)$sizeId]);
+                        }
+                    });
+                });
+            }
+        }
+        // --- END: CORRECTED SIZE FILTER LOGIC ---
+
          // --- START: NEW SORTING LOGIC ---
         $sortBy = $request->input('sort_by', 'newest'); // Default to 'newest'
 
@@ -315,7 +342,7 @@ class FrontController extends Controller
         // --- END: NEW SORTING LOGIC ---
 
         $products = $query->with(['category', 'variants'])->latest()->paginate(12);
-
+//dd($products);
         $html = view('front.category.product_card_partial', compact('products'))->render();
 
         return response()->json([
@@ -339,8 +366,9 @@ class FrontController extends Controller
         // We pass the parent category to the view to help expand the sidebar correctly
         $category = $subcategory->category;
         $categoryList = Category::where('status', 1)->with('subcategories')->get();
+        $sizes = Size::where('status', 1)->get();
 
-        return view('front.category.subcategory', compact('subcategory', 'category', 'products', 'categoryList'));
+        return view('front.category.subcategory', compact('subcategory', 'category', 'products', 'categoryList', 'sizes'));
     }
 
 
@@ -401,6 +429,8 @@ class FrontController extends Controller
      */
     public function filterProducts(Request $request)
     {
+
+       // dd(12);
         // Start with a broad query for all products.
         $query = Product::where('status', 1)->with(['category', 'variants']);
 
@@ -429,6 +459,28 @@ class FrontController extends Controller
                 });
             }
         }
+
+          // --- START: CORRECTED SIZE FILTER LOGIC ---
+        if ($request->filled('sizes') && is_array($request->sizes)) {
+            $selectedSizeNames = $request->sizes;
+
+            // Step 1: Get the IDs for the selected size names from the 'sizes' table.
+            $sizeIds = Size::whereIn('name', $selectedSizeNames)->pluck('id')->toArray();
+
+            if (!empty($sizeIds)) {
+                $query->whereHas('variants', function ($variantQuery) use ($sizeIds) {
+                    // Step 2: Check if the 'sizes' JSON column in the 'product_variants' table
+                    // contains an object with any of the found 'size_id's.
+                    $variantQuery->where(function ($q) use ($sizeIds) {
+                        foreach ($sizeIds as $sizeId) {
+                            // IMPORTANT: The 'size_id' in your JSON is a string, so we cast our integer ID to a string for a correct match.
+                            $q->orWhereJsonContains('sizes', ['size_id' => (string)$sizeId]);
+                        }
+                    });
+                });
+            }
+        }
+        // --- END: CORRECTED SIZE FILTER LOGIC ---
 
          // --- START: NEW SORTING LOGIC ---
         $sortBy = $request->input('sort_by', 'newest'); // Default to 'newest'
@@ -485,8 +537,9 @@ class FrontController extends Controller
 
         // 3. Fetch all active animation categories for the filter sidebar
         $animationCategoryList = AnimationCategory::where('status', 1)->get();
+        $sizes = Size::where('status', 1)->get();
 
-        return view('front.animation.show', compact('animationCategory', 'products', 'animationCategoryList'));
+        return view('front.animation.show', compact('animationCategory', 'products', 'animationCategoryList', 'sizes'));
     }
 
     public function filterAnimationCategory(Request $request)
@@ -513,6 +566,28 @@ class FrontController extends Controller
             });
         }
     }
+
+      // --- START: CORRECTED SIZE FILTER LOGIC ---
+        if ($request->filled('sizes') && is_array($request->sizes)) {
+            $selectedSizeNames = $request->sizes;
+
+            // Step 1: Get the IDs for the selected size names from the 'sizes' table.
+            $sizeIds = Size::whereIn('name', $selectedSizeNames)->pluck('id')->toArray();
+
+            if (!empty($sizeIds)) {
+                $query->whereHas('variants', function ($variantQuery) use ($sizeIds) {
+                    // Step 2: Check if the 'sizes' JSON column in the 'product_variants' table
+                    // contains an object with any of the found 'size_id's.
+                    $variantQuery->where(function ($q) use ($sizeIds) {
+                        foreach ($sizeIds as $sizeId) {
+                            // IMPORTANT: The 'size_id' in your JSON is a string, so we cast our integer ID to a string for a correct match.
+                            $q->orWhereJsonContains('sizes', ['size_id' => (string)$sizeId]);
+                        }
+                    });
+                });
+            }
+        }
+        // --- END: CORRECTED SIZE FILTER LOGIC ---
 
     // --- START: NEW SORTING LOGIC ---
         $sortBy = $request->input('sort_by', 'newest'); // Default to 'newest'
