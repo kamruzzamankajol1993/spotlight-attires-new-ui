@@ -16,9 +16,45 @@ use Illuminate\Support\Str;
 use Illuminate\Support\Facades\File; 
 use Mpdf\Mpdf;
 use Exception;
-
+use GuzzleHttp\Client; 
 class AuthController extends Controller
 {
+
+    /**
+     * A private helper function to send an OTP via ADN SMS Gateway.
+     */
+    private function sendSmsOtp($phone, $otp)
+    {
+        try {
+            $client = new Client();
+            $url = 'https://portal.adnsms.com/api/v1/secure/send-sms';
+
+            $response = $client->post($url, [
+                'form_params' => [
+                    'api_key' => 'KEY-ngd8usyr9mj7hgoazbj7qggib5x9ztud',
+                    'api_secret' => 'jXxdbA3eiuj2EEGa',
+                    'request_type' => 'OTP',
+                    'message_type' => 'TEXT',
+                    'mobile'       => $phone,
+                    'message_body' => 'Your Spotlight Attires verification code is: ' . $otp,
+                ]
+            ]);
+
+            $responseBody = json_decode($response->getBody(), true);
+
+            // Check the API response code from ADN SMS. '200' usually means success.
+            if (isset($responseBody['api_response_code']) && $responseBody['api_response_code'] == "200") {
+                 return true;
+            } else {
+                 \Log::error('ADN SMS API Error: ' . json_encode($responseBody));
+                 return false;
+            }
+        } catch (Exception $e) {
+            \Log::error("SMS sending failed: " . $e->getMessage());
+            return false;
+        }
+    }
+
 
     // --- ADD THIS NEW METHOD FOR PROFILE PICTURE UPDATES ---
     public function updateProfilePicture(Request $request)
@@ -134,16 +170,11 @@ class AuthController extends Controller
         // --- END OF FIX ---
 
         // Send OTP email
-        try {
-            Mail::send('front.emails.otp_email', ['otp' => $otp, 'name' => $request->name], function ($message) use ($request) {
-                $message->to($request->email);
-                $message->subject('Spotlight Attires - Verify Your Account');
-            });
-
-            return response()->json(['success' => true, 'message' => 'A 6-digit OTP has been sent to your email address.']);
-        } catch (Exception $e) {
-            \Log::error("Mail sending failed: " . $e->getMessage());
-            return response()->json(['success' => false, 'message' => 'Could not send OTP email. Please try again.'], 500);
+       // --- UPDATED: Send OTP via SMS ---
+        if ($this->sendSmsOtp($request->phone, $otp)) {
+            return response()->json(['success' => true, 'message' => 'A 6-digit OTP has been sent to your phone number.']);
+        } else {
+            return response()->json(['success' => false, 'message' => 'Could not send OTP. Please check your phone number and try again.'], 500);
         }
     }
 
@@ -230,16 +261,11 @@ class AuthController extends Controller
         $otp = random_int(100000, 999999);
         $tempUserData['otp'] = $otp;
 
-        try {
-            Mail::send('front.emails.otp_email', ['otp' => $otp, 'name' => $tempUserData['name']], function ($message) use ($tempUserData) {
-                $message->to($tempUserData['email']);
-                $message->subject('Spotlight Attires - Your New Verification Code');
-            });
-            session(['temp_user_data' => $tempUserData]);
-            return response()->json(['success' => true, 'message' => 'A new OTP has been sent to your email address.']);
-        } catch (Exception $e) {
-            \Log::error("OTP Resend failed: " . $e->getMessage());
-            return response()->json(['success' => false, 'message' => 'We could not send the verification email. Please try again later.'], 500);
+        // --- UPDATED: Resend OTP via SMS ---
+        if ($this->sendSmsOtp($tempUserData['phone'], $otp)) {
+            return response()->json(['success' => true, 'message' => 'A new OTP has been sent to your phone number.']);
+        } else {
+            return response()->json(['success' => false, 'message' => 'We could not resend the OTP. Please try again later.'], 500);
         }
     }
 
@@ -472,18 +498,23 @@ class AuthController extends Controller
         
         session(['update_verification_data' => $verificationData]);
 
-        try {
-            // For now, we only support email OTPs. SMS would require an SMS gateway service.
-            Mail::send('front.emails.otp_email', ['otp' => $otp, 'name' => Auth::user()->name], function ($message) use ($value) {
-                $message->to($value);
-                $message->subject('Verify Your Information Update');
-            });
-
-            return response()->json(['success' => true, 'message' => 'An OTP has been sent to ' . $value]);
-
-        } catch (Exception $e) {
-            \Log::error("Update OTP sending failed: " . $e->getMessage());
-            return response()->json(['success' => false, 'message' => 'Could not send OTP. Please try again.'], 500);
+          if ($field === 'email') {
+            try {
+                Mail::send('front.emails.otp_email', ['otp' => $otp, 'name' => Auth::user()->name], function ($message) use ($value) {
+                    $message->to($value);
+                    $message->subject('Verify Your Information Update');
+                });
+                return response()->json(['success' => true, 'message' => 'An OTP has been sent to ' . $value]);
+            } catch (Exception $e) {
+                \Log::error("Update OTP email sending failed: " . $e->getMessage());
+                return response()->json(['success' => false, 'message' => 'Could not send OTP email. Please try again.'], 500);
+            }
+        } elseif ($field === 'phone') {
+            if ($this->sendSmsOtp($value, $otp)) {
+                return response()->json(['success' => true, 'message' => 'An OTP has been sent to ' . $value]);
+            } else {
+                return response()->json(['success' => false, 'message' => 'Could not send OTP SMS. Please try again.'], 500);
+            }
         }
     }
 
