@@ -80,7 +80,6 @@
                                             @if(Auth::user()->email_verified_at)
                                                 <span class="input-group-text" title="Verified"><i class="bi bi-check-circle-fill text-success"></i></span>
                                             @endif
-                                            <button class="btn btn-outline-secondary spotlight_user_profile_update-btn"  style="background-color: #e9ecef; color: #333; border-color: #ddd;" id="update-email-btn" data-field="email">Verify</button>
                                         </div>
                                     </div>
                                 </div>
@@ -91,6 +90,10 @@
                                             <input type="tel" id="mobile" class="form-control" value="{{ Auth::user()->phone }}">
                                             @if(Auth::user()->email_verified_at)
                                                  <span class="input-group-text" title="Verified"><i class="bi bi-check-circle-fill text-success"></i></span>
+
+                                                 @else
+                                        <button class="btn btn-outline-secondary spotlight_user_profile_update-btn"  style="background-color: #e9ecef; color: #333; border-color: #ddd;" id="update-mobile-btn" data-field="email">Verify</button>
+
                                             @endif
                                             
                                         </div>

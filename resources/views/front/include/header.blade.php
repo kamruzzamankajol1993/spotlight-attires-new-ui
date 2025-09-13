@@ -312,7 +312,12 @@
                 Shipping and taxes calculated at checkout.
             </p>
             <a href="{{route('cart.show')}}" class="btn btn-outline-dark">View Cart</a>
-            <a href="#" class="btn btn-dark">Checkout</a>
+            @if (Auth::check())
+            <a href="{{route('user.checkout')}}" class="btn btn-dark">Checkout</a>
+            @else
+             <a href="#" class="btn btn-dark" data-bs-toggle="offcanvas"
+                        data-bs-target="#signInOffcanvas" aria-controls="signInOffcanvas">Checkout</a>
+            @endif
         </div>
         </div>
     </div>

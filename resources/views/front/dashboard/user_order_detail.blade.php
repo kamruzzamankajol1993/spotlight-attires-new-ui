@@ -91,7 +91,7 @@
                                             <p class="m-0 text-muted">{{ $order->customer->phone }}</p>
                                             <p class="m-0 text-muted">{{ $order->shipping_address }}</p>
                                         </div>
-                                        @if($order->status == 'Pending')
+                                        @if($order->status == 'pending')
                                             <button class="btn btn-outline-danger spotlight_user_profile_btn" id="cancel-order-btn" data-order-id="{{ $order->id }}">Cancel Order</button>
                                         @endif
                                     </div>

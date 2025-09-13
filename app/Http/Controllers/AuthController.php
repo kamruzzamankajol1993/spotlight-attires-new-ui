@@ -137,11 +137,7 @@ class AuthController extends Controller
             'name'                  => 'required|string|max:255',
             'email'                 => 'required|string|email|max:255|unique:users|unique:customers',
             'phone'                 => 'required|string|max:20|unique:users|unique:customers',
-            'district'              => 'required|string|max:255',
-            'upazila'               => 'required|string|max:255',
-            'address'               => 'required|string|max:255',
             'password'              => 'required|string|min:8|confirmed',
-            'image'                 => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048'
         ]);
 
         if ($validator->fails()) {
@@ -182,70 +178,56 @@ class AuthController extends Controller
      * Verify the OTP and create the user.
      */
     public function verifyOtp(Request $request)
-    {
-        $validator = Validator::make($request->all(), [
-            'otp' => 'required|numeric|digits:6',
-        ]);
+{
+    $validator = Validator::make($request->all(), [
+        'otp' => 'required|numeric|digits:6',
+    ]);
 
-        if ($validator->fails()) {
-            return response()->json(['success' => false, 'message' => 'Please enter a valid 6-digit OTP.'], 422);
-        }
-
-        $tempUserData = session('temp_user_data');
-        if (!$tempUserData || $tempUserData['otp'] != $request->otp) {
-            return response()->json(['success' => false, 'message' => 'The provided OTP is invalid.'], 400);
-        }
-
-        $user = User::create([
-            'name' => $tempUserData['name'],
-            'email' => $tempUserData['email'],
-            'phone' => $tempUserData['phone'],
-            'address' => $tempUserData['address'],
-            'password' => Hash::make($tempUserData['password']),
-            'image' => $tempUserData['image_path'] ?? null,
-            'viewpassword' => $tempUserData['password'],
-            'user_type' => 1,
-            'status' => 1,
-        ]);
-
-        $customer = Customer::create([
-            'name' => $tempUserData['name'],
-            'email' => $tempUserData['email'],
-            'phone' => $tempUserData['phone'],
-            'status' => 1,
-            'type' => 'normal',
-            'address' => $tempUserData['address'],
-            'password' => $tempUserData['password'],
-            'slug' => Str::slug($tempUserData['name']).'-'.uniqid(),
-            'user_id' => $user->id,
-        ]);
-
-        $user->customer_id = $customer->id;
-        $user->save();
-        
-        $fullAddress = $tempUserData['address'] . ', ' . $tempUserData['upazila'] . ', ' . $tempUserData['district'];
-
-        CustomerAddress::create([
-            'customer_id' => $customer->id,
-            'address' => $fullAddress,
-            'address_type' => 'billing',
-            'is_default' => 0,
-        ]);
-
-        CustomerAddress::create([
-            'customer_id' => $customer->id,
-            'address' => $fullAddress,
-            'address_type' => 'shipping',
-            'is_default' => 1,
-        ]);
-
-        session()->forget('temp_user_data');
-        
-        // Log the user in using the default guard with the User model instance
-        Auth::login($user);
-
-        return response()->json(['success' => true, 'redirect_url' => route('dashboard.user')]);
+    if ($validator->fails()) {
+        return response()->json(['success' => false, 'message' => 'Please enter a valid 6-digit OTP.'], 422);
     }
+
+    $tempUserData = session('temp_user_data');
+    if (!$tempUserData || $tempUserData['otp'] != $request->otp) {
+        return response()->json(['success' => false, 'message' => 'The provided OTP is invalid.'], 400);
+    }
+
+    // 3. UPDATED USER CREATION (REMOVED address and image)
+    $user = User::create([
+        'name' => $tempUserData['name'],
+        'email' => $tempUserData['email'],
+        'phone' => $tempUserData['phone'],
+        'password' => Hash::make($tempUserData['password']),
+        'viewpassword' => $tempUserData['password'],
+        'email_verified_at' => now(),
+        'user_type' => 1,
+        'status' => 1,
+    ]);
+
+    // 4. UPDATED CUSTOMER CREATION (REMOVED address)
+    $customer = Customer::create([
+        'name' => $tempUserData['name'],
+        'email' => $tempUserData['email'],
+        'phone' => $tempUserData['phone'],
+        'status' => 1,
+        'type' => 'normal',
+        'password' => $tempUserData['password'],
+        'slug' => Str::slug($tempUserData['name']).'-'.uniqid(),
+        'user_id' => $user->id,
+    ]);
+
+    $user->customer_id = $customer->id;
+    $user->save();
+    
+    // 5. REMOVED ADDRESS CREATION LOGIC
+    // CustomerAddress::create([...]) lines are removed.
+
+    session()->forget('temp_user_data');
+    
+    Auth::login($user);
+
+    return response()->json(['success' => true, 'redirect_url' => route('dashboard.user')]);
+}
     
     /**
      * Resend the OTP.
@@ -748,7 +730,7 @@ class AuthController extends Controller
     {
         $request->validate(['order_id' => 'required|integer']);
         $order = Auth::user()->customer->orders()->where('id', $request->order_id)->firstOrFail();
-        if ($order->status !== 'Pending') {
+        if ($order->status !== 'pending') {
             return response()->json(['success' => false, 'message' => 'This order can no longer be cancelled.'], 403);
         }
         try {

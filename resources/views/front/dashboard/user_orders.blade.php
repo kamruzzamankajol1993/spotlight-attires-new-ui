@@ -20,7 +20,7 @@
 
     @php
         // Define the statuses and their display order for the tabs
-        $statuses = ['Pending', 'Ready To Ship', 'Shipping', 'Delivered', 'Cancelled'];
+        $statuses = ['pending','waiting', 'ready to ship', 'shipping', 'delivered', 'cancelled'];
     @endphp
 
     <!-- Filter Tabs -->

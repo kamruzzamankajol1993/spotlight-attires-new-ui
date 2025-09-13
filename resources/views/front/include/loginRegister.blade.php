@@ -56,29 +56,27 @@
         </form>
 
         {{-- Registration Form --}}
-        <form id="registerForm" style="display: none;" novalidate enctype="multipart/form-data">
-             @csrf
-            <div class="mb-3"><label for="registerName" class="form-label">Full Name *</label><input type="text" class="form-control" id="registerName" name="name" required><div class="invalid-feedback"></div></div>
-            <div class="mb-3"><label for="registerImage" class="form-label">Image</label><input type="file" class="form-control" id="registerImage" name="image" accept="image/*" onchange="previewImage(event)"><img id="imagePreview" src="#" alt="Preview" style="width: 100px; height: auto; margin-top: 10px; display: none;"></div>
-            <div class="mb-3"><label for="registerEmail" class="form-label">Email *</label><input type="email" class="form-control" id="registerEmail" name="email" required><div class="invalid-feedback"></div></div>
-            <div class="mb-3"><label for="registerPhone" class="form-label">Phone *</label><input type="tel" class="form-control" id="registerPhone" name="phone" required><div class="invalid-feedback"></div></div>
-            <div class="mb-3"><label for="registerPassword" class="form-label">Password *</label><div class="input-group"><input type="password" class="form-control" id="registerPassword" name="password" required><button class="btn btn-outline-secondary toggle-password" type="button"><i class="bi bi-eye"></i></button></div><div class="invalid-feedback"></div></div>
-            <div class="mb-3"><label for="confirmPassword" class="form-label">Confirm Password *</label><input type="password" class="form-control" id="confirmPassword" name="password_confirmation" required><div class="invalid-feedback"></div></div>
-            <div class="mb-3"><label for="district" class="form-label">District *</label><select id="district" name="district" required></select><div class="invalid-feedback"></div></div>
-            <div class="mb-3"><label for="upazila" class="form-label">Upazila/Thana *</label><span id="upazila-loader" class="spinner-border spinner-border-sm ms-2" role="status" style="display: none;"></span><select id="upazila" name="upazila" required></select><div class="invalid-feedback"></div></div>
-            <div class="mb-3"><label for="address" class="form-label">Address *</label><textarea class="form-control" id="address" name="address" rows="3" required></textarea><div class="invalid-feedback"></div></div>
-            <div class="d-grid mb-3">
-                <button type="submit" class="btn btn-dark">
-                    <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true" style="display: none;"></span>
-                    Register
-                </button>
-            </div>
-        </form>
+<form id="registerForm" style="display: none;" novalidate>
+     @csrf
+    <div class="mb-3"><label for="registerName" class="form-label">Full Name *</label><input type="text" class="form-control" id="registerName" name="name" required><div class="invalid-feedback"></div></div>
+  
+    <div class="mb-3"><label for="registerEmail" class="form-label">Email *</label><input type="email" class="form-control" id="registerEmail" name="email" required><div class="invalid-feedback"></div></div>
+    <div class="mb-3"><label for="registerPhone" class="form-label">Phone *</label><input type="tel" class="form-control" id="registerPhone" name="phone" required><div class="invalid-feedback"></div></div>
+    <div class="mb-3"><label for="registerPassword" class="form-label">Password *</label><div class="input-group"><input type="password" class="form-control" id="registerPassword" name="password" required><button class="btn btn-outline-secondary toggle-password" type="button"><i class="bi bi-eye"></i></button></div><div class="invalid-feedback"></div></div>
+    <div class="mb-3"><label for="confirmPassword" class="form-label">Confirm Password *</label><input type="password" class="form-control" id="confirmPassword" name="password_confirmation" required><div class="invalid-feedback"></div></div>
+   
+    <div class="d-grid mb-3">
+        <button type="submit" class="btn btn-dark">
+            <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true" style="display: none;"></span>
+            Register
+        </button>
+    </div>
+</form>
         
         {{-- OTP Verification Form --}}
         <form id="otpForm" style="display: none;" novalidate>
             @csrf
-            <p class="text-center">A 6-digit verification code has been sent to your email. Please enter it below.</p>
+            <p class="text-center">A 6-digit verification code has been sent to your phone. Please enter it below.</p>
             <div class="d-flex justify-content-center gap-2 mb-3" id="otp-inputs">
                 <input type="text" class="form-control form-control-lg text-center otp-input" maxlength="1" required>
                 <input type="text" class="form-control form-control-lg text-center otp-input" maxlength="1" required>
@@ -210,66 +208,7 @@ $(document).ready(function() {
         offcanvasTitle.text('Sign in');
     });
 
-     // --- DYNAMIC LOCATION LOGIC ---
-
-        const upazilaLoader = document.getElementById('upazila-loader');
-
-        // 1. Initialize Upazila dropdown (remains the same)
-        const upazilaSelect = new TomSelect('#upazila', {
-            placeholder: 'Select a district first...'
-        });
-        upazilaSelect.disable();
-
-        // 2. Initialize District dropdown using the built-in 'load' function
-        const districtSelect = new TomSelect('#district', {
-            placeholder: 'search a district...',
-            // The 'load' function tells Tom Select how to fetch data asynchronously
-            load: function(query, callback) {
-                fetch('{{ route("locations.districts") }}')
-                    .then(response => response.json())
-                    .then(data => {
-                        // Tom Select expects an array of {value: '', text: ''} objects
-                        const options = data.map(district => ({
-                            value: district,
-                            text: district
-                        }));
-                        callback(options); // Pass the formatted data to Tom Select
-                    }).catch(() => {
-                        callback(); // In case of error, pass nothing
-                    });
-            },
-            // The onChange function for fetching upazilas remains the same
-            onChange: function(selectedDistrict) {
-                upazilaSelect.clear();
-                upazilaSelect.clearOptions();
-                upazilaSelect.disable();
-
-                if (!selectedDistrict) {
-                    upazilaSelect.control_input.placeholder = 'Select a district first...';
-                    return;
-                }
-
-                upazilaLoader.style.display = 'inline-block';
-                upazilaSelect.control_input.placeholder = 'Loading upazilas...';
-
-                fetch(`{{ route('locations.upazilas') }}?district=${encodeURIComponent(selectedDistrict)}`)
-                    .then(response => response.json())
-                    .then(data => {
-                        data.forEach(upazila => {
-                            upazilaSelect.addOption({ value: upazila, text: upazila });
-                        });
-                        upazilaSelect.enable();
-                        upazilaSelect.control_input.placeholder = 'Select an upazila...';
-                    })
-                    .catch(error => {
-                        console.error('Error fetching upazilas:', error);
-                        upazilaSelect.control_input.placeholder = 'Could not load upazilas';
-                    })
-                    .finally(() => {
-                        upazilaLoader.style.display = 'none';
-                    });
-            }
-        });
+    
     
 
     // --- Password Toggle ---

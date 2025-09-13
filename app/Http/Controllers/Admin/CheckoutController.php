@@ -119,6 +119,21 @@ class CheckoutController extends Controller
         try {
             DB::beginTransaction();
 
+
+            if($request->payment_method =="cod"){
+                $payment_status ="unpaid";
+                $total_pay =0;
+                $cod =($cartData['subtotal'] - $cartData['discount']) + $request->shipping_cost;
+                $payment_term ="cod";
+            }else{
+                $payment_status ="paid";
+                $total_pay =($cartData['subtotal'] - $cartData['discount']) + $request->shipping_cost;
+                $cod =0;
+                $payment_term ="online_payment";
+            }
+
+
+
             $order = Order::create([
                 'customer_id'      => $customer->id,
                 'invoice_no'       => 'INV-' . time() . $customer->id,
@@ -126,12 +141,17 @@ class CheckoutController extends Controller
                 'shipping_cost'    => $request->shipping_cost,
                 'discount'         => $cartData['discount'],
                 'total_amount'     => ($cartData['subtotal'] - $cartData['discount']) + $request->shipping_cost,
-                'status'           => 'Pending',
+                'status'           => 'pending',
                 'shipping_address' => $shippingAddress->address,
                 'billing_address'  => $shippingAddress->address,
                 'payment_method'   => $request->payment_method,
                 'delivery_type'    => $request->delivery_type,
-                'payment_status'   => 'unpaid',
+                'payment_term'      => $payment_term,
+                'total_pay' => $total_pay,
+                'cod' => $cod,
+                'due' => ($cartData['subtotal'] - $cartData['discount']) + $request->shipping_cost - $total_pay,
+                'order_from'       => 'web',
+                'payment_status'   => $payment_status,
                 'notes'            => $request->notes,
             ]);
 

@@ -290,8 +290,10 @@ $(document).ready(function() {
             window.location.href = '{{ route("user.checkout") }}';
         @else
             // If user is a guest, open the login/register modal
-            const signInModal = new bootstrap.Modal(document.getElementById('signInOffcanvas'));
-            signInModal.show();
+             // If user is a guest, open the login/register offcanvas
+        const signInOffcanvas = new bootstrap.Offcanvas(document.getElementById('signInOffcanvas')); // <-- CORRECT
+        
+        signInOffcanvas.show();
         @endauth
     });
 
