@@ -7,6 +7,7 @@ use DB;
 use Auth;
 use Carbon\Carbon;
 use App\Models\SystemInformation;
+use App\Models\SocialLink;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Pagination\Paginator;
 class AppServiceProvider extends ServiceProvider
@@ -39,7 +40,9 @@ class AppServiceProvider extends ServiceProvider
 
 
             //global social link code start
-
+//global social link code start
+            $socialLinks = SocialLink::all();
+            view()->share('socialLinks', $socialLinks);
            
             
 

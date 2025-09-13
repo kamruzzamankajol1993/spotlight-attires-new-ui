@@ -15,7 +15,7 @@
                             <hr class="my-4">
                             <p class="mb-1">Your Order ID is:</p>
                             <h4 class="fw-bold">#{{ $order->invoice_no }}</h4>
-                            <p class="small text-muted mt-3">We have sent a confirmation email to <strong>{{ $order->customer->email }}</strong> with your order details.</p>
+                            {{-- <p class="small text-muted mt-3">We have sent a confirmation email to <strong>{{ $order->customer->email }}</strong> with your order details.</p> --}}
                             <div class="mt-4">
                                 <a href="{{ route('shop.show') }}" class="btn btn-outline-secondary">Continue Shopping</a>
                                 <a href="{{ route('user.order.list') }}" class="btn btn-dark">View My Orders</a>

@@ -100,7 +100,7 @@ class AuthController extends Controller
     public function login(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'email'    => 'required|string|email',
+            'email'    => 'required|string',
             'password' => 'required|string',
         ]);
 
@@ -108,7 +108,15 @@ class AuthController extends Controller
             return response()->json(['success' => false, 'errors' => $validator->errors()], 422);
         }
 
-        $user = User::where('email', $request->email)->first();
+        $loginInput = $request->input('email');
+        $loginField = filter_var($loginInput, FILTER_VALIDATE_EMAIL) ? 'email' : 'phone';
+
+        $credentials = [
+            $loginField => $loginInput,
+            'password'  => $request->input('password')
+        ];
+
+        $user = User::where($loginField, $loginInput)->first();
 
         if ($user) {
             if ($user->status == 0) {
@@ -119,8 +127,8 @@ class AuthController extends Controller
             }
         }
 
-        // Attempt to log in using the default 'users' provider
-        if (Auth::attempt(['email' => $request->email, 'password' => $request->password])) {
+        // Attempt to log in
+        if (Auth::attempt($credentials)) {
             $request->session()->regenerate();
             return response()->json(['success' => true, 'redirect_url' => route('dashboard.user')]);
         }
@@ -131,12 +139,12 @@ class AuthController extends Controller
     /**
      * Handle a registration request and send OTP.
      */
-    public function register(Request $request)
+     public function register(Request $request)
     {
         $validator = Validator::make($request->all(), [
             'name'                  => 'required|string|max:255',
-            'email'                 => 'required|string|email|max:255|unique:users|unique:customers',
-            'phone'                 => 'required|string|max:20|unique:users|unique:customers',
+            'email'                 => 'nullable|string|email|max:255|unique:users,email|unique:customers,email',
+            'phone'                 => 'required|string|digits:11|unique:users,phone|unique:customers,phone',
             'password'              => 'required|string|min:8|confirmed',
         ]);
 
@@ -144,29 +152,24 @@ class AuthController extends Controller
             return response()->json(['success' => false, 'errors' => $validator->errors()], 422);
         }
 
-        // --- START OF FIX ---
-
-        // 1. Get all request data EXCEPT the file input ('image') and other sensitive fields.
         $tempUserData = $request->except('password_confirmation', '_token', 'image');
         
-        // 2. Handle the file upload separately.
+        // If email is not provided, generate a unique one using the phone number.
+        if (empty($request->email)) {
+            $tempUserData['email'] = $request->phone . '@guest.user';
+        }
+        
         if ($request->hasFile('image')) {
             $imageName = time().'.'.$request->image->extension();  
             $request->image->move(public_path('uploads/customer_images'), $imageName);
-            // 3. Only store the IMAGE PATH (a string) in the session data.
             $tempUserData['image_path'] = 'uploads/customer_images/' . $imageName;
         }
 
         $otp = random_int(100000, 999999);
         $tempUserData['otp'] = $otp;
 
-        // 4. Now, store the safe, serializable data in the session.
         session(['temp_user_data' => $tempUserData]);
         
-        // --- END OF FIX ---
-
-        // Send OTP email
-       // --- UPDATED: Send OTP via SMS ---
         if ($this->sendSmsOtp($request->phone, $otp)) {
             return response()->json(['success' => true, 'message' => 'A 6-digit OTP has been sent to your phone number.']);
         } else {

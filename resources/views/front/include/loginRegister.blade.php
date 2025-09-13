@@ -3,7 +3,7 @@
         <h5 class="offcanvas-title" id="signInOffcanvasLabel">Sign in</h5>
         <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
     </div>
-    <div class="offcanvas-body">
+    <div class="offcanvas-body" style="overflow-y: auto; padding-bottom: 80px;">
         {{-- General Error Message Area --}}
         <div id="auth-error-message" class="alert alert-danger" style="display: none;"></div>
 
@@ -11,8 +11,8 @@
         <form id="loginForm" novalidate>
              @csrf
             <div class="mb-3">
-                <label for="loginEmail" class="form-label">Email Address *</label>
-                <input type="email" class="form-control" name="email" id="loginEmail" required>
+                <label for="loginEmail" class="form-label">Email or Phone *</label>
+                <input type="text" class="form-control" name="email" id="loginEmail" required>
                 <div class="invalid-feedback"></div>
             </div>
             <div class="mb-3">
@@ -56,22 +56,22 @@
         </form>
 
         {{-- Registration Form --}}
-<form id="registerForm" style="display: none;" novalidate>
-     @csrf
-    <div class="mb-3"><label for="registerName" class="form-label">Full Name *</label><input type="text" class="form-control" id="registerName" name="name" required><div class="invalid-feedback"></div></div>
-  
-    <div class="mb-3"><label for="registerEmail" class="form-label">Email *</label><input type="email" class="form-control" id="registerEmail" name="email" required><div class="invalid-feedback"></div></div>
-    <div class="mb-3"><label for="registerPhone" class="form-label">Phone *</label><input type="tel" class="form-control" id="registerPhone" name="phone" required><div class="invalid-feedback"></div></div>
-    <div class="mb-3"><label for="registerPassword" class="form-label">Password *</label><div class="input-group"><input type="password" class="form-control" id="registerPassword" name="password" required><button class="btn btn-outline-secondary toggle-password" type="button"><i class="bi bi-eye"></i></button></div><div class="invalid-feedback"></div></div>
-    <div class="mb-3"><label for="confirmPassword" class="form-label">Confirm Password *</label><input type="password" class="form-control" id="confirmPassword" name="password_confirmation" required><div class="invalid-feedback"></div></div>
-   
-    <div class="d-grid mb-3">
-        <button type="submit" class="btn btn-dark">
-            <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true" style="display: none;"></span>
-            Register
-        </button>
-    </div>
-</form>
+        <form id="registerForm" style="display: none;" novalidate>
+             @csrf
+            <div class="mb-3"><label for="registerName" class="form-label">Full Name *</label><input type="text" class="form-control" id="registerName" name="name" required><div class="invalid-feedback"></div></div>
+          
+            <div class="mb-3"><label for="registerEmail" class="form-label">Email (Optional)</label><input type="email" class="form-control" id="registerEmail" name="email"><div class="invalid-feedback"></div></div>
+            <div class="mb-3"><label for="registerPhone" class="form-label">Phone *</label><input type="tel" class="form-control" id="registerPhone" name="phone" required pattern="[0-9]{11}" title="Please enter an 11-digit phone number."><div class="invalid-feedback">Please provide a valid 11-digit phone number.</div></div>
+            <div class="mb-3"><label for="registerPassword" class="form-label">Password *</label><div class="input-group"><input type="password" class="form-control" id="registerPassword" name="password" required minlength="8"><button class="btn btn-outline-secondary toggle-password" type="button"><i class="bi bi-eye"></i></button></div><div id="passwordHelp" class="form-text">Password must be at least 8 characters long.</div><div class="invalid-feedback"></div></div>
+            <div class="mb-3"><label for="confirmPassword" class="form-label">Confirm Password *</label><input type="password" class="form-control" id="confirmPassword" name="password_confirmation" required><div class="invalid-feedback"></div></div>
+           
+            <div class="d-grid mb-3">
+                <button type="submit" class="btn btn-dark">
+                    <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true" style="display: none;"></span>
+                    Register
+                </button>
+            </div>
+        </form>
         
         {{-- OTP Verification Form --}}
         <form id="otpForm" style="display: none;" novalidate>
@@ -106,47 +106,27 @@
     </div>
 </div>
 
-<link href="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/css/tom-select.css" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/js/tom-select.complete.min.js"></script>
-
 <script>
-
-    function previewImage(event) {
-        const imagePreview = document.getElementById('imagePreview');
-        const file = event.target.files[0];
-        if (file) {
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                imagePreview.src = e.target.result;
-                imagePreview.style.display = 'block';
-            }
-            reader.readAsDataURL(file);
-        } else {
-            imagePreview.src = '#';
-            imagePreview.style.display = 'none';
-        }
-    }
-</script>
-<script>
-// NEW DYNAMIC AUTH SCRIPT
+// DYNAMIC AUTH SCRIPT
 $(document).ready(function() {
     const offcanvasEl = document.getElementById('signInOffcanvas');
     const offcanvasTitle = $('#signInOffcanvasLabel');
     const loginForm = $('#loginForm');
     const registerForm = $('#registerForm');
     const otpForm = $('#otpForm');
-    const forgotPasswordForm = $('#forgotPasswordForm'); // New form
-    const forgotPasswordLink = $('#forgotPasswordLink'); // New link
-    const backToLoginLink = $('#backToLoginLink'); // New link
+    const forgotPasswordForm = $('#forgotPasswordForm');
+    const forgotPasswordLink = $('#forgotPasswordLink');
+    const backToLoginLink = $('#backToLoginLink');
     const toggleFormBtn = $('#toggleFormBtn');
     const toggleText = $('#toggleText');
     const authToggleSection = $('#authToggleSection');
     const authErrorDiv = $('#auth-error-message');
 
     // --- Helper Functions ---
-    function clearErrors() {
-        $('.form-control').removeClass('is-invalid');
-        $('.invalid-feedback').text('');
+    function clearErrors(form) {
+        const scope = form ? form : $(document);
+        scope.find('.form-control').removeClass('is-invalid');
+        scope.find('.invalid-feedback').text('');
         authErrorDiv.hide().text('');
     }
 
@@ -160,10 +140,13 @@ $(document).ready(function() {
         form.find('button[type="submit"]').prop('disabled', false);
     }
 
-    function displayErrors(errors) {
-        clearErrors();
+    function displayErrors(errors, form) {
+        clearErrors(form);
         $.each(errors, function(field, messages) {
-            const input = $(`#${field}, [name="${field}"]`).first();
+            if (field === 'password_confirmation') {
+                field = 'confirmPassword';
+            }
+            const input = form.find(`#${field}, [name="${field}"]`).first();
             input.addClass('is-invalid');
             input.closest('.mb-3').find('.invalid-feedback').text(messages[0]);
         });
@@ -172,7 +155,7 @@ $(document).ready(function() {
     // --- Form Toggling Logic ---
     toggleFormBtn.on('click', function(e) {
         e.preventDefault();
-        clearErrors();
+        clearErrors(); // Clear all errors when toggling
         if (loginForm.is(':visible')) {
             loginForm.hide();
             registerForm.show();
@@ -188,7 +171,7 @@ $(document).ready(function() {
         }
     });
 
-    // --- NEW: Toggle to Forgot Password Form ---
+    // --- Toggle to Forgot Password Form ---
     forgotPasswordLink.on('click', function(e) {
         e.preventDefault();
         clearErrors();
@@ -198,7 +181,7 @@ $(document).ready(function() {
         offcanvasTitle.text('Reset Password');
     });
 
-    // --- NEW: Toggle back to Login Form ---
+    // --- Toggle back to Login Form ---
     backToLoginLink.on('click', function(e) {
         e.preventDefault();
         clearErrors();
@@ -208,12 +191,9 @@ $(document).ready(function() {
         offcanvasTitle.text('Sign in');
     });
 
-    
-    
-
     // --- Password Toggle ---
     $('.toggle-password').on('click', function() {
-        const input = $(this).prev('input');
+        const input = $(this).closest('.input-group').find('input');
         const icon = $(this).find('i');
         if (input.attr('type') === 'password') {
             input.attr('type', 'text');
@@ -227,13 +207,14 @@ $(document).ready(function() {
     // --- Login Form Submission ---
     loginForm.on('submit', function(e) {
         e.preventDefault();
-        clearErrors();
-        showLoader($(this));
+        const currentForm = $(this);
+        clearErrors(currentForm);
+        showLoader(currentForm);
         
         $.ajax({
             url: '{{ route("customer.login") }}',
             method: 'POST',
-            data: $(this).serialize(),
+            data: currentForm.serialize(),
             success: function(response) {
                 if (response.success) {
                     window.location.href = response.redirect_url;
@@ -241,13 +222,13 @@ $(document).ready(function() {
             },
             error: function(xhr) {
                 if (xhr.status === 422) {
-                    displayErrors(xhr.responseJSON.errors);
+                    displayErrors(xhr.responseJSON.errors, currentForm);
                 } else {
                     authErrorDiv.text(xhr.responseJSON.message || 'An unexpected error occurred.').show();
                 }
             },
             complete: function() {
-                hideLoader(loginForm);
+                hideLoader(currentForm);
             }
         });
     });
@@ -255,8 +236,9 @@ $(document).ready(function() {
     // --- Registration Form Submission ---
     registerForm.on('submit', function(e) {
         e.preventDefault();
-        clearErrors();
-        showLoader($(this));
+        const currentForm = $(this);
+        clearErrors(currentForm);
+        showLoader(currentForm);
         
         const formData = new FormData(this);
 
@@ -276,27 +258,28 @@ $(document).ready(function() {
             },
             error: function(xhr) {
                 if (xhr.status === 422) {
-                    displayErrors(xhr.responseJSON.errors);
+                    displayErrors(xhr.responseJSON.errors, currentForm);
                 } else {
                      authErrorDiv.text(xhr.responseJSON.message || 'An unexpected error occurred.').show();
                 }
             },
             complete: function() {
-                hideLoader(registerForm);
+                hideLoader(currentForm);
             }
         });
     });
 
-     // --- NEW: Forgot Password Form Submission ---
+     // --- Forgot Password Form Submission ---
     forgotPasswordForm.on('submit', function(e) {
         e.preventDefault();
-        clearErrors();
-        showLoader($(this));
+        const currentForm = $(this);
+        clearErrors(currentForm);
+        showLoader(currentForm);
 
         $.ajax({
             url: '{{ route("password.email") }}',
             method: 'POST',
-            data: $(this).serialize(),
+            data: currentForm.serialize(),
             success: function(response) {
                 if(response.success){
                     forgotPasswordForm.hide();
@@ -309,13 +292,13 @@ $(document).ready(function() {
             },
             error: function(xhr) {
                 if (xhr.status === 422) {
-                    displayErrors(xhr.responseJSON.errors);
+                    displayErrors(xhr.responseJSON.errors, currentForm);
                 } else {
                     authErrorDiv.text(xhr.responseJSON.message || 'An unexpected error occurred.').show();
                 }
             },
             complete: function() {
-                hideLoader(forgotPasswordForm);
+                hideLoader(currentForm);
             }
         });
     });
@@ -332,8 +315,9 @@ $(document).ready(function() {
 
     otpForm.on('submit', function(e) {
         e.preventDefault();
-        clearErrors();
-        showLoader($(this));
+        const currentForm = $(this);
+        clearErrors(currentForm);
+        showLoader(currentForm);
 
         let otp = '';
         otpInputs.each(function() {
@@ -356,7 +340,7 @@ $(document).ready(function() {
                  otpForm.find('.invalid-feedback').text(xhr.responseJSON.message || 'Verification failed.');
             },
             complete: function() {
-                hideLoader(otpForm);
+                hideLoader(currentForm);
             }
         });
     });
@@ -392,3 +376,4 @@ $(document).ready(function() {
     });
 });
 </script>
+

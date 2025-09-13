@@ -41,10 +41,11 @@
                         <img src="{{$front_ins_url}}public/black.png" alt="Spotlight Attires"
                             class="footer-logo">
                         <div class="footer-social-icons">
-                            <a href="#"><i class="bi bi-linkedin"></i></a>
-                            <a href="#"><i class="bi bi-facebook"></i></a>
-                            <a href="#"><i class="bi bi-youtube"></i></a>
-                            <a href="#"><i class="bi bi-instagram"></i></a>
+                            @if(isset($socialLinks) && !$socialLinks->isEmpty())
+                                @foreach($socialLinks as $link)
+                                    <a href="{{ $link->link }}" target="_blank" title="{{ $link->title }}"><i class="bi bi-{{ strtolower($link->title) }}"></i></a>
+                                @endforeach
+                            @endif
                         </div>
                     </div>
                 </div>

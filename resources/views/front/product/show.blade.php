@@ -586,13 +586,13 @@ $(document).ready(function() {
                 if (response.success) {
                     updateCartOffcanvas();
                     
-                    @auth
+                     @auth
                         // If user is logged in, redirect straight to checkout
                         window.location.href = "{{ route('user.checkout') }}";
                     @else
-                        // If user is a guest, open the login/register modal
-                        const signInModal = new bootstrap.Modal(document.getElementById('signInOffcanvas'));
-                        signInModal.show();
+                        // If user is a guest, open the login/register offcanvas
+                        const signInOffcanvas = new bootstrap.Offcanvas(document.getElementById('signInOffcanvas'));
+                        signInOffcanvas.show();
                     @endauth
                 } else {
                     Swal.fire({ icon: 'error', title: 'Oops...', text: response.message || 'An error occurred.' });
