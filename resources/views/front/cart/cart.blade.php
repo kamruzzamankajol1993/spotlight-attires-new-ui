@@ -117,7 +117,7 @@ Your Cart
                         </div>
 
                         {{-- DYNAMIC COUPON DISPLAY --}}
-                        <div id="coupon-applied-section" class="spotlight_cart_total_row border-bottom text-success">
+                        <div id="coupon-applied-section" class="spotlight_cart_total_row border-bottom text-success" style="display: none;">
                             <span class="fw-semibold">Discount</span>
                             <span class="fw-semibold" id="cart-page-discount">- ৳ 0.00</span>
                             <a href="#" id="remove-coupon-btn" class="text-danger ms-2 small">[Remove]</a>
@@ -211,7 +211,7 @@ $(document).ready(function() {
      // --- HELPER FUNCTION TO UPDATE TOTALS ---
     function updateCartTotals(response) {
         $('#cart-page-subtotal').text('৳ ' + response.subtotal);
-        if (response.coupon && parseFloat(response.discount) > 0) {
+        if (response.coupon && parseFloat(response.discount.replace(/,/g, '')) > 0) {
             $('#cart-page-discount').text('- ৳ ' + response.discount);
             $('#coupon-applied-section').show();
             $('#coupon-section').hide();
@@ -364,8 +364,7 @@ $(document).ready(function() {
             data: { _token: '{{ csrf_token() }}', rowId: rowId, quantity: newQuantity },
             success: function(response) {
                 $('#main-cart-body').html(response.html);
-                $('#cart-page-subtotal').text('৳ ' + response.subtotal);
-                $('#cart-page-total').text('৳ ' + response.subtotal);
+                updateCartTotals(response); // This is the fix
                 updateCartOffcanvas(); // Also update the sidebar cart
             },
             error: function() {

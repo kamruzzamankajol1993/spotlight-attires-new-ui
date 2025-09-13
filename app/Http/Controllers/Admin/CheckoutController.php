@@ -27,12 +27,35 @@ class CheckoutController extends Controller
         $discount = 0;
         
         if ($coupon) {
-            if ($coupon->discount_type === 'fixed') {
-                $discount = $coupon->discount_value;
-            } elseif ($coupon->discount_type === 'percentage') {
-                $discount = ($subtotal * $coupon->discount_value) / 100;
+            $eligibleSubtotal = $subtotal;
+
+            if (!empty($coupon->product_ids) || !empty($coupon->category_ids)) {
+                $eligibleSubtotal = 0;
+                $productIdsInCart = collect($cart)->where('is_bundle', false)->pluck('product_id')->unique()->all();
+                
+                if(!empty($productIdsInCart)){
+                    $products = Product::whereIn('id', $productIdsInCart)->get()->keyBy('id');
+                    foreach ($cart as $item) {
+                        if (isset($item['is_bundle']) && !$item['is_bundle'] && isset($products[$item['product_id']])) {
+                            $product = $products[$item['product_id']];
+                            $isProductEligible = !empty($coupon->product_ids) && in_array($product->id, $coupon->product_ids);
+                            $isCategoryEligible = !empty($coupon->category_ids) && in_array($product->category_id, $coupon->category_ids);
+                            
+                            if ($isProductEligible || $isCategoryEligible) {
+                                $eligibleSubtotal += $item['price'] * $item['quantity'];
+                            }
+                        }
+                    }
+                }
             }
-            $discount = min($discount, $subtotal);
+            
+            if ($coupon->type === 'fixed') {
+                $discount = $coupon->value;
+            } elseif ($coupon->type === 'percentage') {
+                $discount = ($eligibleSubtotal * $coupon->value) / 100;
+            }
+            
+            $discount = min($discount, $eligibleSubtotal);
         }
         
         return [

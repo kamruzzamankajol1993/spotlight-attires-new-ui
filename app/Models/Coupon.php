@@ -9,32 +9,24 @@ class Coupon extends Model
 {
     use HasFactory;
 
-    /**
-     * The attributes that are mass assignable.
-     *
-     * These fields can be filled using mass assignment methods like `create()` or `update()`.
-     *
-     * @var array<int, string>
-     */
     protected $fillable = [
         'code',
-        'discount_type',
-        'discount_value',
-        'expires_at',
+        'type',
+        'value',
+        'min_amount',
+        'user_type',
+        'product_ids',
+        'category_ids',
         'usage_limit',
-        'usage_limit_per_user', // Added this field
-        'is_active',
+        'times_used',
+        'expires_at',
+        'status',
     ];
 
-    /**
-     * The attributes that should be cast to native types.
-     *
-     * This ensures that when you access these attributes, they are of the correct data type.
-     *
-     * @var array<string, string>
-     */
     protected $casts = [
-        'expires_at' => 'datetime',
-        'is_active' => 'boolean',
+        'product_ids' => 'array',
+        'category_ids' => 'array',
+        'expires_at' => 'date',
+        'status' => 'boolean',
     ];
 }

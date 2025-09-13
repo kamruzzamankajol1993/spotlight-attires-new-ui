@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\Models\Product;
 use App\Models\ProductVariant;
 use App\Models\Coupon;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Session;
 
 class CartController extends Controller
@@ -212,7 +213,7 @@ class CartController extends Controller
 /**
      * A private helper function to get all cart data in a consistent format.
      */
-    private function getCartData()
+     private function getCartData()
     {
         $cart = Session::get('cart', []);
         $subtotal = 0;
@@ -224,13 +225,35 @@ class CartController extends Controller
         $discount = 0;
         
         if ($coupon) {
-            if ($coupon->discount_type === 'fixed') {
-                $discount = $coupon->discount_value;
-            } elseif ($coupon->discount_type === 'percentage') {
-                $discount = ($subtotal * $coupon->discount_value) / 100;
+            $eligibleSubtotal = $subtotal;
+
+            if (!empty($coupon->product_ids) || !empty($coupon->category_ids)) {
+                $eligibleSubtotal = 0;
+                $productIdsInCart = collect($cart)->where('is_bundle', false)->pluck('product_id')->unique()->all();
+                
+                if(!empty($productIdsInCart)){
+                    $products = Product::whereIn('id', $productIdsInCart)->get()->keyBy('id');
+                    foreach ($cart as $item) {
+                        if (isset($item['is_bundle']) && !$item['is_bundle'] && isset($products[$item['product_id']])) {
+                            $product = $products[$item['product_id']];
+                            $isProductEligible = !empty($coupon->product_ids) && in_array($product->id, $coupon->product_ids);
+                            $isCategoryEligible = !empty($coupon->category_ids) && in_array($product->category_id, $coupon->category_ids);
+                            
+                            if ($isProductEligible || $isCategoryEligible) {
+                                $eligibleSubtotal += $item['price'] * $item['quantity'];
+                            }
+                        }
+                    }
+                }
             }
-            // Ensure discount does not exceed subtotal
-            $discount = min($discount, $subtotal);
+            
+            if ($coupon->type === 'fixed') {
+                $discount = $coupon->value;
+            } elseif ($coupon->type === 'percentage') {
+                $discount = ($eligibleSubtotal * $coupon->value) / 100;
+            }
+            
+            $discount = min($discount, $eligibleSubtotal);
         }
         
         $total = $subtotal - $discount;
@@ -257,10 +280,10 @@ public function getMainCartContent()
         $total = $subtotal;
 
         if ($coupon) {
-            if ($coupon->discount_type === 'fixed') {
-                $discount = $coupon->discount_value;
-            } elseif ($coupon->discount_type === 'percentage') {
-                $discount = ($subtotal * $coupon->discount_value) / 100;
+            if ($coupon->type === 'fixed') {
+                $discount = $coupon->value;
+            } elseif ($coupon->type === 'percentage') {
+                $discount = ($subtotal * $coupon->value) / 100;
             }
         }
         
@@ -277,18 +300,13 @@ public function getMainCartContent()
             'coupon' => $coupon, // Send coupon details to the frontend
         ]);
     }
-     // ===================================================
-    // =========== NEW METHODS FOR MAIN CART =============
-    // ===================================================
- /**
-     * Apply a coupon to the cart.
-     */
+ 
     public function applyCoupon(Request $request)
     {
         $request->validate(['coupon_code' => 'required|string']);
         
         $coupon = Coupon::where('code', $request->coupon_code)
-                        ->where('is_active', true)
+                        ->where('status', true)
                         ->where('expires_at', '>', now())
                         ->first();
 
@@ -296,9 +314,60 @@ public function getMainCartContent()
             return response()->json(['success' => false, 'message' => 'Invalid or expired coupon code.'], 404);
         }
 
+        if ($coupon->usage_limit !== null && $coupon->times_used >= $coupon->usage_limit) {
+            return response()->json(['success' => false, 'message' => 'This coupon has reached its usage limit.'], 422);
+        }
+
+        $cartData = $this->getCartData();
+
+        if ($coupon->min_amount !== null && $cartData['subtotal'] < $coupon->min_amount) {
+            return response()->json(['success' => false, 'message' => "You must spend at least ৳{$coupon->min_amount} to use this coupon."], 422);
+        }
+
+        if (Auth::check() && $coupon->user_type !== 'all') {
+            $orderCount = Auth::user()->customer->orders()->count();
+            if ($coupon->user_type === 'new_user' && $orderCount > 0) {
+                return response()->json(['success' => false, 'message' => 'This coupon is for new customers only.'], 422);
+            }
+            if ($coupon->user_type === 'existing_user' && $orderCount === 0) {
+                return response()->json(['success' => false, 'message' => 'This coupon is for existing customers only.'], 422);
+            }
+        } elseif (!Auth::check() && $coupon->user_type !== 'all') {
+             return response()->json(['success' => false, 'message' => 'You must be logged in to use this coupon.'], 401);
+        }
+
+        $eligibleItemsFound = false;
+        if (empty($coupon->product_ids) && empty($coupon->category_ids)) {
+            $eligibleItemsFound = true; // Coupon applies to all items if no restrictions are set
+        } else {
+            $productIdsInCart = collect($cartData['cart'])->where('is_bundle', false)->pluck('product_id')->unique()->all();
+            if(!empty($productIdsInCart)){
+                $products = Product::whereIn('id', $productIdsInCart)->get()->keyBy('id');
+                foreach ($cartData['cart'] as $item) {
+                     if (isset($item['is_bundle']) && !$item['is_bundle'] && isset($products[$item['product_id']])) {
+                        $product = $products[$item['product_id']];
+                        if ((!empty($coupon->product_ids) && in_array($product->id, $coupon->product_ids)) || 
+                            (!empty($coupon->category_ids) && in_array($product->category_id, $coupon->category_ids))) {
+                            $eligibleItemsFound = true;
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+        
+        if (!$eligibleItemsFound) {
+            return response()->json(['success' => false, 'message' => 'This coupon is not valid for the items in your cart.'], 422);
+        }
+        
         Session::put('coupon', $coupon);
 
-        return $this->getMainCartContent()->setData(['success' => true, 'message' => 'Coupon applied successfully!']);
+        $response = $this->getMainCartContent();
+        $responseData = $response->getData(true);
+        $responseData['success'] = true;
+        $responseData['message'] = 'Coupon applied successfully!';
+
+        return response()->json($responseData);
     }
 
     /**
@@ -307,7 +376,13 @@ public function getMainCartContent()
     public function removeCoupon()
     {
         Session::forget('coupon');
-        return $this->getMainCartContent()->setData(['success' => true, 'message' => 'Coupon removed.']);
+        
+        $response = $this->getMainCartContent();
+        $responseData = $response->getData(true);
+        $responseData['success'] = true;
+        $responseData['message'] = 'Coupon removed.';
+
+        return response()->json($responseData);
     }
     /**
      * Update an item's quantity for the MAIN cart page.
