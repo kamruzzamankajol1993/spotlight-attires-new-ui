@@ -10,6 +10,8 @@ use App\Models\SliderControl;
 use Illuminate\Support\Facades\DB;
 use App\Models\Category;
 use App\Models\Subcategory;
+use App\Models\HighlightProduct;
+
 use App\Models\BundleOffer;
 use App\Models\AssignCategory;
 use App\Models\Size;
@@ -195,7 +197,11 @@ class FrontController extends Controller
         // 3. Fetch all the product models for those IDs in a single query
         $productsbun = Product::whereIn('id', $allProductIds)->get()->keyBy('id');
 
-        return view('front.index', compact('productsbun','offerDeals','latestProducts', 'topBannerProduct', 'bottomBannerProducts', 'products', 'randomLatestProducts', 'randomProducts', 'featuredCategories'));
+        // Fetch Highlight Products
+        $firstHighlight = HighlightProduct::with('product.category')->where('section', 'first_section')->first();
+        $secondHighlight = HighlightProduct::with('product.category')->where('section', 'second_section')->first();
+
+        return view('front.index', compact('firstHighlight', 'secondHighlight', 'productsbun', 'offerDeals', 'latestProducts', 'topBannerProduct', 'bottomBannerProducts', 'products', 'randomLatestProducts', 'randomProducts', 'featuredCategories'));
     }
 
 

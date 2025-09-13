@@ -196,15 +196,32 @@
                     <div class="row">
                         <!-- Left side: Banner -->
                         <div class="col-lg-4 mb-4 mb-lg-0 d-flex">
-                            <div class="featured-banner flex-grow-1">
-                                <img src="{{asset('/')}}public/front/assets/img/slider/banner1.jpg" alt="Men's Premium T-Shirt">
-                                <div class="content">
-                                    <h4 class="mb-3">MEN'S PREMIUM<br>ACID WASH</h4>
-                                    <p class="mb-4">"Itachi Uchiha <br>Retro vibes and faded dreams—this acid wash tee
-                                        brings the vintage feels to your closet."</p>
-                                    <a href="#" class="btn btn-outline-light">Buy Now</a>
+                             @if($firstHighlight && $firstHighlight->product)
+                                @php
+                                    $highlightImage = (is_array($firstHighlight->product->main_image) && count($firstHighlight->product->main_image) > 0)
+                                        ? $front_ins_url . 'public/uploads/' . $firstHighlight->product->main_image[0]
+                                        : asset('/').'public/front/assets/img/slider/banner1.jpg';
+                                @endphp
+                                <div class="featured-banner flex-grow-1">
+                                    <img src="{{ $highlightImage }}" alt="{{ $firstHighlight->title ?? $firstHighlight->product->name }}">
+                                    <div class="content">
+                                        <h4 class="mb-3">{!! nl2br(e($firstHighlight->title)) !!}</h4>
+                                        <p class="mb-4">"{!! nl2br(e(Str::limit($firstHighlight->product->name, 80))) !!}"</p>
+                                        <a href="{{ route('product.show', $firstHighlight->product->slug) }}" class="btn btn-outline-light">Buy Now</a>
+                                    </div>
                                 </div>
-                            </div>
+                            @else
+                                {{-- Fallback content if nothing is set in the admin panel --}}
+                                <div class="featured-banner flex-grow-1">
+                                    <img src="{{asset('/')}}public/front/assets/img/slider/banner1.jpg" alt="Men's Premium T-Shirt">
+                                    <div class="content">
+                                        <h4 class="mb-3">MEN'S PREMIUM<br>ACID WASH</h4>
+                                        <p class="mb-4">"Itachi Uchiha <br>Retro vibes and faded dreams—this acid wash tee
+                                            brings the vintage feels to your closet."</p>
+                                        <a href="#" class="btn btn-outline-light">Buy Now</a>
+                                    </div>
+                                </div>
+                            @endif
                         </div>
                         <!-- Right side: Product Slider -->
                         <div class="col-lg-8">
@@ -287,15 +304,32 @@
                     <div class="row">
                         <!-- Left side: Banner -->
                         <div class="col-lg-4 mb-4 mb-lg-0 d-flex">
-                            <div class="featured-banner flex-grow-1">
-                                <img src="{{asset('/')}}public/front/assets/img/slider/banner1.jpg" alt="Men's Premium T-Shirt">
-                                <div class="content">
-                                    <h4 class="mb-3">MEN'S PREMIUM<br>ACID WASH</h4>
-                                    <p class="mb-4">"Itachi Uchiha <br>Retro vibes and faded dreams—this acid wash tee
-                                        brings the vintage feels to your closet."</p>
-                                    <a href="#" class="btn btn-outline-light">Buy Now</a>
+                              @if($secondHighlight && $secondHighlight->product)
+                                @php
+                                    $highlightImage = (is_array($secondHighlight->product->main_image) && count($secondHighlight->product->main_image) > 0)
+                                        ? $front_ins_url . 'public/uploads/' . $secondHighlight->product->main_image[0]
+                                        : asset('/').'public/front/assets/img/slider/banner1.jpg';
+                                @endphp
+                                <div class="featured-banner flex-grow-1">
+                                    <img src="{{ $highlightImage }}" alt="{{ $secondHighlight->title ?? $secondHighlight->product->name }}">
+                                    <div class="content">
+                                        <h4 class="mb-3">{!! nl2br(e($secondHighlight->title)) !!}</h4>
+                                        <p class="mb-4">"{!! nl2br(e(Str::limit($secondHighlight->product->name, 80))) !!}"</p>
+                                        <a href="{{ route('product.show', $secondHighlight->product->slug) }}" class="btn btn-outline-light">Buy Now</a>
+                                    </div>
                                 </div>
-                            </div>
+                            @else
+                                {{-- Fallback content --}}
+                                <div class="featured-banner flex-grow-1">
+                                    <img src="{{asset('/')}}public/front/assets/img/slider/banner1.jpg" alt="Men's Premium T-Shirt">
+                                    <div class="content">
+                                        <h4 class="mb-3">MEN'S PREMIUM<br>ACID WASH</h4>
+                                        <p class="mb-4">"Itachi Uchiha <br>Retro vibes and faded dreams—this acid wash tee
+                                            brings the vintage feels to your closet."</p>
+                                        <a href="#" class="btn btn-outline-light">Buy Now</a>
+                                    </div>
+                                </div>
+                            @endif
                         </div>
                         <!-- Right side: Product Slider -->
                         <div class="col-lg-8">

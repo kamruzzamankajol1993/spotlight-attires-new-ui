@@ -202,14 +202,20 @@
                                         <span>Add to wishlist</span>
                                     </a>
                                 </div>
+                                 @php
+                                    $shareUrl = urlencode(url()->current());
+                                    $shareTitle = urlencode($product->name);
+                                    $facebookShareUrl = "https://www.facebook.com/sharer/sharer.php?u=" . $shareUrl;
+                                    $twitterShareUrl = "https://twitter.com/intent/tweet?url=" . $shareUrl . "&text=" . $shareTitle;
+                                    $linkedinShareUrl = "https://www.linkedin.com/sharing/share-offsite/?url=" . $shareUrl;
+                                    $whatsappShareUrl = "https://api.whatsapp.com/send?text=" . $shareTitle . "%20" . $shareUrl;
+                                @endphp
                                 <div class="d-flex align-items-center text-secondary">
                                     <span>Share:</span>
-                                    <a href="#" class="ms-2 text-decoration-none text-secondary"><i
-                                            class="bi bi-facebook fs-5"></i></a>
-                                    <a href="#" class="ms-2 text-decoration-none text-secondary"><i
-                                            class="bi bi-instagram fs-5"></i></a>
-                                    <a href="#" class="ms-2 text-decoration-none text-secondary"><i
-                                            class="bi bi-linkedin fs-5"></i></a>
+                                    <a href="{{ $facebookShareUrl }}" target="_blank" class="ms-2 text-decoration-none text-secondary" title="Share on Facebook"><i class="bi bi-facebook fs-5"></i></a>
+                                    <a href="{{ $twitterShareUrl }}" target="_blank" class="ms-2 text-decoration-none text-secondary" title="Share on X"><i class="bi bi-twitter-x fs-5"></i></a>
+                                    <a href="{{ $linkedinShareUrl }}" target="_blank" class="ms-2 text-decoration-none text-secondary" title="Share on LinkedIn"><i class="bi bi-linkedin fs-5"></i></a>
+                                    <a href="{{ $whatsappShareUrl }}" target="_blank" class="ms-2 text-decoration-none text-secondary" title="Share on WhatsApp"><i class="bi bi-whatsapp fs-5"></i></a>
                                 </div>
                             </div>
 
