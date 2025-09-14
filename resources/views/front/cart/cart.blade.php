@@ -33,6 +33,8 @@ Your Cart
                         <span>Add **৳ 1,901.0** to cart and get free shipping!</span>
                     </div> --}}
 
+                    @include('flash_message')
+
                     <div class="row g-4">
                         <div class="col-12 col-lg-8">
                             <div class="spotlight_cart_summary_card">

@@ -19,6 +19,22 @@ Route::get('/clear', function() {
     return redirect()->back();
 });
 
+Route::controller(CheckoutController::class)->group(function () {
+   // --- ADDED: SSLCOMMERZ PAYMENT GATEWAY ROUTES ---
+         Route::post('/pay', 'pay')->name('pay');
+        Route::post('/ssl/success', 'sslSuccess')->name('sslcommerz.success');
+        Route::post('/ssl/fail', 'sslFail')->name('sslcommerz.fail');
+        Route::post('/ssl/cancel', 'sslCancel')->name('sslcommerz.cancel');
+        Route::post('/ssl/ipn', 'sslIpn')->name('sslcommerz.ipn');
+
+        // --- ADDED: BKASH PAYMENT GATEWAY ROUTES (PLACEHOLDER) ---
+        Route::get('/bkash/success', 'bkashSuccess')->name('bkash.success');
+        Route::get('/bkash/fail', 'bkashFail')->name('bkash.fail');
+
+        // --- ADD THIS NEW ROUTE FOR BKASH ---
+    Route::get('/bkash-callback', 'bkashCallback')->name('bkash.callback');
+});
+Route::get('/order-success/{orderId}', [CheckoutController::class, 'orderSuccess'])->name('order.success');
 // --- Product Compare ---
 Route::controller(CompareController::class)->prefix('compare')->name('compare.')->group(function () {
     Route::get('/', 'index')->name('index');
@@ -52,7 +68,9 @@ Route::middleware('auth')->group(function () {
         Route::post('/get-shipping-charge', 'getShippingCharge')->name('get.shipping.charge');
 
         Route::post('/place-order', 'placeOrder')->name('place.order');
-        Route::get('/order-success/{orderId}', 'orderSuccess')->name('order.success');
+        
+
+      
     });
 
     Route::controller(AuthController::class)->group(function () {

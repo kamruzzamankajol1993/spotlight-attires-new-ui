@@ -6,7 +6,9 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
 use App\Models\Wishlist;
-
+use App\Models\Product;
+use App\Models\ProductVariant;
+use Session;
 class WishlistController extends Controller
 {
 

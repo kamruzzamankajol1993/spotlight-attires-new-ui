@@ -11,7 +11,16 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        //
+         // Add CSRF token exceptions here
+        $middleware->validateCsrfTokens(except: [
+            'ssl/success',
+            'ssl/fail',
+            'ssl/cancel',
+            'ssl/ipn',
+            'bkash/success', // bKash Success URL
+            'bkash/fail',    // bKash Fail URL
+            'bkash/callback',  // bKash Callback URL
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

@@ -27,6 +27,7 @@ return new class extends Migration
             $table->string('status')->default('pending'); // e.g., pending, processing, shipped, delivered, cancelled
             $table->text('shipping_address');
             $table->text('billing_address')->nullable();
+            $table->string('currency')->default('BDT');
             $table->string('payment_method')->nullable();
             $table->string('payment_status')->default('pending'); // e.g., pending, paid, failed
             $table->string('payment_term')->nullable(); // e.g., COD, Online

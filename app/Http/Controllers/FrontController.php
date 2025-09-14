@@ -166,7 +166,7 @@ class FrontController extends Controller
           $products = Product::where('status', 1)
                            ->with(['category', 'variants']) // Eager load relationships
                            ->latest()
-                           ->skip(5)
+                           //->skip(5)
                            ->take(6)
                            ->get();
 

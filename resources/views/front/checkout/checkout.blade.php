@@ -19,10 +19,31 @@
     <section class="section">
         <div class="container">
             <div class="spotlight_checkout_container">
-                <form id="checkout-form">
+
+                {{-- Section to display validation errors and session messages --}}
+                @if ($errors->any())
+                    <div class="alert alert-danger">
+                        <ul>
+                            @foreach ($errors->all() as $error)
+                                <li>{{ $error }}</li>
+                            @endforeach
+                        </ul>
+                    </div>
+                @endif
+                @if (session('error'))
+                    <div class="alert alert-danger">{{ session('error') }}</div>
+                @endif
+                @if (session('success'))
+                     <div class="alert alert-success">{{ session('success') }}</div>
+                @endif
+
+                {{-- MODIFIED: Added method and action to the form tag --}}
+                <form id="checkout-form" method="POST" action="{{ route('place.order') }}">
                     @csrf
+                    {{-- ADDED: Hidden input to hold the shipping cost --}}
+                    <input type="hidden" name="shipping_cost" id="shipping_cost_input" value="0">
+                    
                     <div class="row">
-                        <!-- Left Column -->
                         <div class="col-lg-7 mb-4">
                             <h3 class="spotlight_checkout_section-title">BILLING DETAILS</h3>
                              <div class="row">
@@ -67,7 +88,6 @@
                             </div>
                         </div>
 
-                        <!-- Right Column -->
                         <div class="col-lg-5">
                             <div class="spotlight_checkout_order-summary">
                                 <h3 class="spotlight_checkout_section-title">YOUR ORDER</h3>
@@ -113,7 +133,10 @@
                                             <label class="custom-checkbox-card" data-name="payment_method"><input type="radio" name="payment_method" value="cod" checked><div class="d-flex align-items-center"><i class="bi bi-cash-coin icon me-3"></i><div><div class="title">Cash on Delivery</div><div class="description">Pay upon arrival</div></div></div></label>
                                         </div>
                                         <div class="col-6">
-                                            <label class="custom-checkbox-card" data-name="payment_method"><input type="radio" name="payment_method" value="online_payment"><div class="d-flex align-items-center"><i class="bi bi-credit-card-2-front-fill icon me-3"></i><div><div class="title">Online Payment</div><div class="description">SSLCommerz</div></div></div></label>
+                                            <label class="custom-checkbox-card" data-name="payment_method"><input type="radio" name="payment_method" value="sslcommerz"><div class="d-flex align-items-center"><i class="bi bi-credit-card-2-front-fill icon me-3"></i><div><div class="title">SSLCommerz</div><div class="description">Card, MFS, Banking</div></div></div></label>
+                                        </div>
+                                         <div class="col-6 mt-2">
+                                            <label class="custom-checkbox-card" data-name="payment_method"><input type="radio" name="payment_method" value="bkash"><div class="d-flex align-items-center"><i class="bi bi-wallet2 icon me-3"></i><div><div class="title">bKash</div><div class="description">Pay with bKash</div></div></div></label>
                                         </div>
                                     </div>
                                 </div>
@@ -139,6 +162,10 @@ $(document).ready(function() {
         const grandTotal = subtotalWithDiscount + shippingCharge;
         $('#shipping-charge-text').text(`৳ ${shippingCharge.toFixed(2)}`);
         $('#grand-total-text').text(`৳ ${grandTotal.toFixed(2)}`);
+
+        // MODIFIED: Update the hidden input's value
+        $('#shipping_cost_input').val(shippingCharge);
+
         $('#place-order-btn').prop('disabled', false);
     }
 
@@ -151,6 +178,7 @@ $(document).ready(function() {
         $('#shipping-charge-text').html('<span class="spinner-border spinner-border-sm"></span>');
         $('#place-order-btn').prop('disabled', true);
 
+        // This AJAX call is still needed to fetch the shipping charge dynamically
         $.ajax({
             url: '{{ route("get.shipping.charge") }}',
             method: 'POST',
@@ -162,21 +190,19 @@ $(document).ready(function() {
                 }
             },
             error: function(xhr) {
-                shippingCharge = 130;
+                shippingCharge = 130; // Default fallback
                 updateTotals();
-                Swal.fire({icon: 'error', title: 'Error', text: xhr.responseJSON.message || 'Could not calculate shipping.'});
+                // You can optionally show a non-blocking notification here
             }
         });
     }
 
-    // Custom checkbox/radio card logic
     $('.custom-checkbox-card').on('click', function() {
         const radioName = $(this).find('input[type="radio"]').attr('name');
         $(`.custom-checkbox-card input[name="${radioName}"]`).closest('.custom-checkbox-card').removeClass('selected');
         $(this).addClass('selected').find('input[type="radio"]').prop('checked', true).trigger('change');
     });
     
-    // Set initial selection visually
     $('input[type="radio"]:checked').closest('.custom-checkbox-card').addClass('selected');
 
     $('.shipping-address-radio').on('change', function() {
@@ -193,27 +219,7 @@ $(document).ready(function() {
         $('#place-order-btn').prop('disabled', true);
     }
     
-    $('#checkout-form').on('submit', function(e) {
-        e.preventDefault();
-        const button = $('#place-order-btn');
-        button.prop('disabled', true).html('<span class="spinner-border spinner-border-sm"></span> Placing Order...');
-
-        $.ajax({
-            url: '{{ route("place.order") }}',
-            method: 'POST',
-            data: $(this).serialize() + '&shipping_cost=' + shippingCharge,
-            success: function(response) {
-                if(response.success) {
-                    window.location.href = response.redirect_url;
-                }
-            },
-            error: function(xhr) {
-                Swal.fire({icon: 'error', title: 'Order Failed', text: xhr.responseJSON.message || 'Something went wrong.'});
-                button.prop('disabled', false).text('Place Order');
-            }
-        });
-    });
+    // REMOVED: The entire AJAX form submission block is gone.
 });
 </script>
 @endsection
-

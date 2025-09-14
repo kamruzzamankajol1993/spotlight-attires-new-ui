@@ -17,6 +17,7 @@ use Illuminate\Support\Facades\File;
 use Mpdf\Mpdf;
 use Exception;
 use GuzzleHttp\Client; 
+use Illuminate\Support\Facades\Cookie;
 class AuthController extends Controller
 {
 
@@ -272,7 +273,7 @@ class AuthController extends Controller
     {
         // Get the authenticated User model instance
         $user = Auth::user();
-
+//dd($user->id);
         if (!$user) {
             return redirect()->route('home.index');
         }
@@ -284,6 +285,8 @@ class AuthController extends Controller
              // Handle cases where a user might exist without a customer profile
             return redirect()->route('home.index')->with('error', 'Customer profile not found.');
         }
+
+        Cookie::queue('user_phone_for_login', $user->phone, 120);
 
         $customer->load([
             'orders' => function ($query) {

@@ -12,9 +12,101 @@ use App\Models\RedexArea;
 use App\Models\Order;
 use App\Models\OrderDetail;
 use Exception;
-
+use App\Library\SslCommerz\SslCommerzNotification;
+use Illuminate\Support\Facades\Cookie; // ADDED: For handling cookies
+use App\Models\User;
 class CheckoutController extends Controller
 {
+
+     private $base_url;
+    private $app_key;
+    private $app_secret;
+    private $username;
+    private $password;
+
+
+    public function __construct()
+    {
+        // Sandbox
+        $this->base_url = 'https://tokenized.sandbox.bka.sh/v1.2.0-beta';
+        // Live
+//     $this->base_url = 'https://tokenized.pay.bka.sh/v1.2.0-beta'; 
+// $BKASH_CHECKOUT_URL_USER_NAME ='01965665880';
+// $BKASH_CHECKOUT_URL_PASSWORD = 'iRI:SK7tWbz';
+// $BKASH_CHECKOUT_URL_APP_KEY = 'JTKshr429pkbVxT6sJYjUrDPtc';
+// $BKASH_CHECKOUT_URL_APP_SECRET ='cdjFKfCvfzZxReRTogc60eASv9ZnNDZrtu3K5GzXCUunTyW1CxYz';
+
+//sandbox
+$BKASH_CHECKOUT_URL_USER_NAME ='sandboxTokenizedUser02';
+$BKASH_CHECKOUT_URL_PASSWORD = 'sandboxTokenizedUser02@12345';
+$BKASH_CHECKOUT_URL_APP_KEY = '4f6o0cjiki2rfm34kfdadl1eqq';
+$BKASH_CHECKOUT_URL_APP_SECRET ='2is7hdktrekvrbljjh44ll3d9l1dtjo4pasmjvs5vl5qr3fug4b';
+
+
+        $this->app_key = $BKASH_CHECKOUT_URL_APP_KEY;
+        $this->app_secret = $BKASH_CHECKOUT_URL_APP_SECRET;
+        $this->username = $BKASH_CHECKOUT_URL_USER_NAME;
+        $this->password = $BKASH_CHECKOUT_URL_PASSWORD;
+        
+        
+    }
+
+    // BKASH HELPER: Get bKash auth token
+    private function bkashGetToken()
+    {
+        $post_token = [
+            'app_key' => $this->app_key,
+            'app_secret' => $this->app_secret,
+        ];
+
+        $url = $this->base_url . '/tokenized/checkout/token/grant';
+        $header = [
+            'Content-Type:application/json',
+            'username:' . $this->username,
+            'password:' . $this->password,
+        ];
+
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, $url);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, $header);
+        curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "POST");
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($post_token));
+        curl_setopt($ch, CURLOPT_FOLLOWLOCATION, 1);
+        curl_setopt($ch, CURLOPT_IPRESOLVE, CURL_IPRESOLVE_V4);
+        $resultdata = curl_exec($ch);
+        curl_close($ch);
+
+        $response = json_decode($resultdata, true);
+
+        if (isset($response['id_token'])) {
+            return $response['id_token'];
+        }
+        return null;
+    }
+
+    // BKASH HELPER: Make an API call to bKash
+    private function bkashApiCall($url, $post_data, $token)
+    {
+        $header = [
+            'Content-Type:application/json',
+            'Authorization:' . $token,
+            'X-App-Key:' . $this->app_key,
+        ];
+
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, $url);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, $header);
+        curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "POST");
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($post_data));
+        curl_setopt($ch, CURLOPT_FOLLOWLOCATION, 1);
+        curl_setopt($ch, CURLOPT_IPRESOLVE, CURL_IPRESOLVE_V4);
+        $resultdata = curl_exec($ch);
+        curl_close($ch);
+
+        return json_decode($resultdata, true);
+    }
     private function getCartData()
     {
         $cart = Session::get('cart', []);
@@ -117,124 +209,326 @@ class CheckoutController extends Controller
         ]);
     }
     
-    public function placeOrder(Request $request)
+     public function placeOrder(Request $request)
     {
-        $validator = Validator::make($request->all(), [
+        // Use request->validate() which handles redirects automatically on failure
+        $request->validate([
             'shipping_address_id' => 'required|exists:customer_addresses,id',
-            'payment_method'      => 'required|string|in:cod,online_payment',
+            'payment_method'      => 'required|string|in:cod,sslcommerz,bkash',
             'delivery_type'       => 'required|string|in:regular,express',
             'notes'               => 'nullable|string',
             'shipping_cost'       => 'required|numeric|min:0',
         ]);
 
-        if ($validator->fails()) {
-            return response()->json(['success' => false, 'message' => $validator->errors()->first()], 422);
-        }
-
         $cartData = $this->getCartData();
         if (count($cartData['cart']) == 0) {
-            return response()->json(['success' => false, 'message' => 'Your cart is empty.'], 400);
+            return redirect()->route('cart.show')->with('error', 'Your cart is empty.');
         }
 
-        $customer = Auth::user()->customer;
+       
+
+        $user = Auth::user();
+        $customer = $user->customer;
         $shippingAddress = $customer->addresses()->findOrFail($request->shipping_address_id);
 
+         // ADDED: Store user's phone in a temporary cookie (10 minutes)
+        // This cookie will be used to log them back in after payment.
+        //dd($user->phone);
+            
+        
+        //dd(Cookie::get('user_phone_for_login'));
+        $totalAmount = ($cartData['subtotal'] - $cartData['discount']) + $request->shipping_cost;
+
+        DB::beginTransaction();
         try {
-            DB::beginTransaction();
-
-
-            if($request->payment_method =="cod"){
-                $payment_status ="unpaid";
-                $total_pay =0;
-                $cod =($cartData['subtotal'] - $cartData['discount']) + $request->shipping_cost;
-                $payment_term ="cod";
-            }else{
-                $payment_status ="paid";
-                $total_pay =($cartData['subtotal'] - $cartData['discount']) + $request->shipping_cost;
-                $cod =0;
-                $payment_term ="online_payment";
-            }
-
-
-
             $order = Order::create([
                 'customer_id'      => $customer->id,
                 'invoice_no'       => 'INV-' . time() . $customer->id,
                 'subtotal'         => $cartData['subtotal'],
                 'shipping_cost'    => $request->shipping_cost,
                 'discount'         => $cartData['discount'],
-                'total_amount'     => ($cartData['subtotal'] - $cartData['discount']) + $request->shipping_cost,
+                'total_amount'     => $totalAmount,
                 'status'           => 'pending',
-                'shipping_address' => $shippingAddress->address,
-                'billing_address'  => $shippingAddress->address,
+                'shipping_address' => $shippingAddress->address . ', ' . $shippingAddress->phone,
+                'billing_address'  => $shippingAddress->address . ', ' . $shippingAddress->phone,
                 'payment_method'   => $request->payment_method,
                 'delivery_type'    => $request->delivery_type,
-                'payment_term'      => $payment_term,
-                'total_pay' => $total_pay,
-                'cod' => $cod,
-                'due' => ($cartData['subtotal'] - $cartData['discount']) + $request->shipping_cost - $total_pay,
+                'payment_term'     => $request->payment_method == 'cod' ? 'cod' : 'online_payment',
+                'total_pay'        => 0,
+                'cod'              => $request->payment_method == 'cod' ? $totalAmount : 0,
+                'due'              => $totalAmount,
                 'order_from'       => 'web',
-                'payment_status'   => $payment_status,
+                   'currency'         => 'BDT',
+                'payment_status'   => 'unpaid',
                 'notes'            => $request->notes,
             ]);
 
-            // --- START OF FIX ---
             foreach ($cartData['cart'] as $item) {
-                if (isset($item['is_bundle']) && $item['is_bundle']) {
-                    // This is a bundle product, loop through its selected items
+                 if (isset($item['is_bundle']) && $item['is_bundle']) {
                     foreach ($item['selected_products'] as $bundleProduct) {
                         OrderDetail::create([
-                            'order_id'           => $order->id,
-                            'product_id'         => $bundleProduct['product_id'],
-                            'product_variant_id' => $bundleProduct['variant_id'],
-                            'color'              => $bundleProduct['color'],
-                            'size'               => $bundleProduct['size'],
-                            'quantity'           => $item['quantity'], // Use the main bundle quantity
-                            'unit_price'         => $bundleProduct['price'],
-                            'subtotal'           => $bundleProduct['price'] * $item['quantity'],
+                            'order_id' => $order->id, 'product_id' => $bundleProduct['product_id'], 'product_variant_id' => $bundleProduct['variant_id'],
+                            'color' => $bundleProduct['color'], 'size' => $bundleProduct['size'], 'quantity' => $item['quantity'],
+                            'unit_price' => $bundleProduct['price'], 'subtotal' => $bundleProduct['price'] * $item['quantity'],
                         ]);
                     }
                 } else {
-                    // This is a single product
                     OrderDetail::create([
-                        'order_id'           => $order->id,
-                        'product_id'         => $item['product_id'],
-                        'product_variant_id' => $item['variant_id'],
-                        'color'              => $item['color'],
-                        'size'               => $item['size'],
-                        'quantity'           => $item['quantity'],
-                        'unit_price'         => $item['price'],
-                        'subtotal'           => $item['price'] * $item['quantity'],
+                        'order_id' => $order->id, 'product_id' => $item['product_id'], 'product_variant_id' => $item['variant_id'],
+                        'color' => $item['color'], 'size' => $item['size'], 'quantity' => $item['quantity'],
+                        'unit_price' => $item['price'], 'subtotal' => $item['price'] * $item['quantity'],
                     ]);
                 }
             }
-            // --- END OF FIX ---
             
             DB::commit();
 
-            Session::forget('cart');
-            Session::forget('coupon');
+            // --- Payment Gateway Logic ---
+            if ($request->payment_method == 'sslcommerz') {
+                $post_data = array();
+                $post_data['total_amount'] = $order->total_amount;
+                $post_data['currency'] = "BDT";
+                $post_data['tran_id'] = $order->invoice_no;
 
-            return response()->json([
-                'success' => true, 
-                'redirect_url' => route('order.success', ['orderId' => $order->id])
-            ]);
+                $post_data['cus_name'] = $user->name;
+                $post_data['cus_email'] = $user->email ?? 'customer@example.com';
+                $post_data['cus_add1'] = $shippingAddress->address;
+                $post_data['cus_city'] = "Dhaka";
+                $post_data['cus_state'] = "Dhaka";
+                $post_data['cus_postcode'] = "1200";
+                $post_data['cus_country'] = "Bangladesh";
+                $post_data['cus_phone'] = $user->phone;
+                
+                $post_data['shipping_method'] = "NO";
+                $post_data['product_name'] = "E-commerce Product";
+                $post_data['product_category'] = "General";
+                $post_data['product_profile'] = "general";
+
+                $sslc = new SslCommerzNotification();
+                $payment_options = $sslc->makePayment($post_data, 'hosted');
+
+                if (is_array($payment_options) && array_key_exists('GatewayPageURL', $payment_options)) {
+                    // Redirect the user to the payment gateway
+                    return redirect($payment_options['GatewayPageURL']);
+                } else {
+                    DB::rollBack();
+                    return redirect()->back()->with('error', 'Payment gateway failed. Please try again.');
+                }
+
+            } else if ($request->payment_method == 'bkash') {
+              $token = $this->bkashGetToken();
+                if (!$token) {
+                    return redirect()->back()->with('error', 'bKash token generation failed. Please try again.');
+                }
+
+                $request_data = [
+                    'mode' => '0011',
+                    'payerReference' => ' ',
+                    'callbackURL' => route('bkash.callback'),
+                    'amount' => $order->total_amount,
+                    'currency' => 'BDT',
+                    'intent' => 'sale',
+                    'merchantInvoiceNumber' => $order->invoice_no,
+                ];
+
+                $url = $this->base_url . '/tokenized/checkout/create';
+                $response = $this->bkashApiCall($url, $request_data, $token);
+
+                if (isset($response['bkashURL'])) {
+                    // Store the paymentID to verify in the callback
+                    $order->trxID = $response['paymentID'];
+                    $order->save();
+                    return redirect($response['bkashURL']);
+                }
+                
+                return redirect()->back()->with('error', $response['statusMessage'] ?? 'bKash payment creation failed.');
+            } else { // COD
+                Session::forget('cart');
+                Session::forget('coupon');
+                // Redirect to the order success page
+                return redirect()->route('order.success', ['orderId' => $order->id])->with('success', 'Your order has been placed successfully!');
+            }
 
         } catch (Exception $e) {
             DB::rollBack();
             \Log::error('Order placement failed: ' . $e->getMessage());
-            return response()->json(['success' => false, 'message' => 'Could not place order. Please try again.'], 500);
+            return redirect()->back()->with('error', 'Could not place order. Please try again.');
         }
     }
     
+  
+    // NEW BKASH CALLBACK METHOD
+    public function bkashCallback(Request $request)
+    {
+        if ($request->status != 'success' || !$request->paymentID) {
+            return redirect()->route('cart.show')->with('error', 'bKash payment was cancelled or failed.');
+        }
+
+        $paymentID = $request->paymentID;
+        $order = Order::where('trxID', $paymentID)->where('payment_status', 'unpaid')->first();
+
+        if (!$order) {
+            return redirect()->route('cart.show')->with('error', 'Invalid bKash payment ID or order already processed.');
+        }
+
+        $token = $this->bkashGetToken();
+        if (!$token) {
+            return redirect()->route('cart.show')->with('error', 'bKash token generation failed while executing payment.');
+        }
+
+        $request_data = ['paymentID' => $paymentID];
+        $url = $this->base_url . '/tokenized/checkout/execute';
+        $response = $this->bkashApiCall($url, $request_data, $token);
+
+        if (isset($response['statusCode']) && $response['statusCode'] == '0000') {
+            // Verify amount
+            if ($response['amount'] != $order->total_amount) {
+                // You should handle this case by refunding the payment via bKash API and marking the order as failed.
+                \Log::error('bKash amount mismatch for order: '.$order->id);
+                return redirect()->route('cart.show')->with('error', 'Payment amount mismatch. Please contact support.');
+            }
+
+            // Update order status
+            $order->update([
+                'status' => 'processing',
+                'payment_status' => 'paid',
+                'trxID' => $response['trxID'], // Store the final transaction ID
+                'total_pay' => $response['amount'],
+                'due' => 0,
+                'cod' => 0,
+                'statusMessage' => $response['statusMessage']
+            ]);
+
+            Session::forget('cart');
+            Session::forget('coupon');
+
+            return redirect()->route('order.success', ['orderId' => $order->id])->with('success', 'Payment successful!');
+        }
+        
+        return redirect()->route('cart.show')->with('error', $response['statusMessage'] ?? 'bKash payment execution failed.');
+    }
+
+
     public function orderSuccess($orderId)
     {
+
+
+      
+           // Retrieve the cookie value from the request
+    $phone = Cookie::get('user_phone_for_login');
+
+    if ($phone) {
+        // Now you can use the phone number
+        // For example: find the user and log them in
+        $user = User::where('phone', $phone)->first();
+        if ($user) {
+            Auth::login($user);
+        }
+    }
+
+            // Delete the cookie immediately after use for security
+            Cookie::queue(Cookie::forget('user_phone_for_login'));
+        
         $order = Order::with('customer', 'orderDetails.product')
                       ->where('id', $orderId)
                       ->where('customer_id', Auth::user()->customer->id)
                       ->firstOrFail();
 
         return view('front.checkout.order_success', compact('order'));
+    }
+
+
+
+
+     // --- ADDED: SSLCOMMERZ CALLBACK METHODS ---
+
+    public function sslSuccess(Request $request)
+    {
+
+        
+
+       
+        $tran_id = $request->input('tran_id');
+        $order = Order::where('invoice_no', $tran_id)->first();
+//dd($tran_id);
+       
+
+        if ($order) {
+            $sslc = new SslCommerzNotification();
+            $validation = $sslc->orderValidate($request->all(), $tran_id, $order->total_amount, $order->currency);
+
+            if ($validation) {
+                $order->update([
+                    'status' => 'processing',
+                    'payment_status' => 'paid',
+                    'total_pay' => $order->total_amount,
+                    'due' => 0,
+                    'cod' => 0
+                ]);
+  
+                Session::forget('cart');
+                Session::forget('coupon');
+
+                return redirect()->route('order.success', ['orderId' => $order->id])
+                                 ->with('success', 'Transaction is successfully completed!');
+            }
+        }
+        return redirect()->route('cart.show')->with('error', 'Payment validation failed.');
+    }
+
+
+
+
+    public function sslFail(Request $request)
+    {
+        $tran_id = $request->input('tran_id');
+        $order = Order::where('invoice_no', $tran_id)->first();
+        if ($order) {
+            $order->update(['status' => 'failed', 'payment_status' => 'failed']);
+        }
+        return redirect()->route('cart.show')->with('error', 'Transaction is failed.');
+    }
+
+
+
+
+
+    public function sslCancel(Request $request)
+    {
+        $tran_id = $request->input('tran_id');
+        $order = Order::where('invoice_no', $tran_id)->first();
+        if ($order) {
+            $order->update(['status' => 'cancelled', 'payment_status' => 'cancelled']);
+        }
+        return redirect()->route('cart.show')->with('error', 'Transaction is cancelled.');
+    }
+
+
+
+
+    public function sslIpn(Request $request)
+    {
+        // IPN is an important validation step for asynchronous payment updates.
+        // It's similar to the success callback but initiated by the SSLCommerz server.
+        $tran_id = $request->input('tran_id');
+        $order = Order::where('invoice_no', $tran_id)->where('payment_status', 'unpaid')->first();
+
+        if ($order) {
+             $sslc = new SslCommerzNotification();
+            $validation = $sslc->orderValidate($request->all(), $tran_id, $order->total_amount, $order->currency);
+            if ($validation) {
+                $order->update([
+                    'status' => 'processing',
+                    'payment_status' => 'paid',
+                    'total_pay' => $order->total_amount,
+                    'due' => 0,
+                    'cod' => 0
+                ]);
+                // You can add notifications (email, SMS) here
+                return;
+            }
+        }
+        // Log IPN failure if needed
     }
 }
 

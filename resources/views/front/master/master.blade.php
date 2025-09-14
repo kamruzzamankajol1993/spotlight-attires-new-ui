@@ -9,7 +9,7 @@
     <meta name="keywords" content="{{$front_ins_name}}">
     <meta name="author" content="{{$front_ins_name}}">
     <link rel="canonical" href="{{url()->current()}}">
-
+<meta name="csrf-token" content="{{ csrf_token() }}">
     <meta property="og:type" content="website">
     <meta property="og:url" content="{{url()->current()}}">
     <meta property="og:title" content="{{$front_ins_name}}">
