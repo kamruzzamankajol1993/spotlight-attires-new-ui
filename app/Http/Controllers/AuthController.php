@@ -26,6 +26,8 @@ class AuthController extends Controller
      */
     private function sendSmsOtp($phone, $otp)
     {
+$cleanPhoneNumber = trim($phone);
+       // dd($phone);
         try {
             $client = new Client();
             $url = 'https://portal.adnsms.com/api/v1/secure/send-sms';
@@ -36,7 +38,7 @@ class AuthController extends Controller
                     'api_secret' => 'jXxdbA3eiuj2EEGa',
                     'request_type' => 'OTP',
                     'message_type' => 'TEXT',
-                    'mobile'       => $phone,
+                    'mobile'       => (string) $cleanPhoneNumber,
                     'message_body' => 'Your Spotlight Attires verification code is: ' . $otp,
                 ]
             ]);
@@ -142,12 +144,24 @@ class AuthController extends Controller
      */
      public function register(Request $request)
     {
+          // === MODIFIED SECTION START ===
+
+        // Prepend '0' to the 10-digit phone number to make it 11 digits
+        if ($request->has('phone')) {
+            $request->merge([
+                'phone' => '0' . $request->phone
+            ]);
+        }
+
+        // The validation logic now correctly checks for an 11-digit unique number
         $validator = Validator::make($request->all(), [
-            'name'                  => 'required|string|max:255',
-            'email'                 => 'nullable|string|email|max:255|unique:users,email|unique:customers,email',
-            'phone'                 => 'required|string|digits:11|unique:users,phone|unique:customers,phone',
-            'password'              => 'required|string|min:8|confirmed',
+            'name'      => 'required|string|max:255',
+            'email'     => 'nullable|string|email|max:255|unique:users,email|unique:customers,email',
+            'phone'     => 'required|string|digits:11|unique:users,phone|unique:customers,phone',
+            'password'  => 'required|string|min:8|confirmed',
         ]);
+
+        // === MODIFIED SECTION END ===
 
         if ($validator->fails()) {
             return response()->json(['success' => false, 'errors' => $validator->errors()], 422);
@@ -170,6 +184,8 @@ class AuthController extends Controller
         $tempUserData['otp'] = $otp;
 
         session(['temp_user_data' => $tempUserData]);
+
+       // dd($request->phone);
         
         if ($this->sendSmsOtp($request->phone, $otp)) {
             return response()->json(['success' => true, 'message' => 'A 6-digit OTP has been sent to your phone number.']);

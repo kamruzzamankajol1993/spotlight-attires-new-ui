@@ -11,6 +11,7 @@ class BundleOffer extends Model
 
     protected $fillable = [
         'name',
+           'slug',
         'title',
         'status',
         'image',

@@ -61,9 +61,48 @@
             <div class="mb-3"><label for="registerName" class="form-label">Full Name *</label><input type="text" class="form-control" id="registerName" name="name" required><div class="invalid-feedback"></div></div>
           
             <div class="mb-3"><label for="registerEmail" class="form-label">Email (Optional)</label><input type="email" class="form-control" id="registerEmail" name="email"><div class="invalid-feedback"></div></div>
-            <div class="mb-3"><label for="registerPhone" class="form-label">Phone *</label><input type="tel" class="form-control" id="registerPhone" name="phone" required pattern="[0-9]{11}" title="Please enter an 11-digit phone number."><div class="invalid-feedback">Please provide a valid 11-digit phone number.</div></div>
-            <div class="mb-3"><label for="registerPassword" class="form-label">Password *</label><div class="input-group"><input type="password" class="form-control" id="registerPassword" name="password" required minlength="8"><button class="btn btn-outline-secondary toggle-password" type="button"><i class="bi bi-eye"></i></button></div><div id="passwordHelp" class="form-text">Password must be at least 8 characters long.</div><div class="invalid-feedback"></div></div>
-            <div class="mb-3"><label for="confirmPassword" class="form-label">Confirm Password *</label><input type="password" class="form-control" id="confirmPassword" name="password_confirmation" required><div class="invalid-feedback"></div></div>
+            {{-- === MODIFIED SECTION START === --}}
+            <div class="mb-3">
+                <label for="registerPhone" class="form-label">Phone *</label>
+                <div class="input-group">
+                    <span class="input-group-text d-flex align-items-center gap-2">
+                        <img src="https://flagcdn.com/w20/bd.png" width="20" alt="Bangladesh Flag">
+                        +880
+                    </span>
+                    <input 
+                        type="number" 
+                        class="form-control" 
+                        id="registerPhone" 
+                        name="phone" 
+                        required 
+                        pattern="[0-9]{10}"
+                        maxlength="10" 
+                        oninput="javascript: if (this.value.length > this.maxLength) this.value = this.value.slice(0, this.maxLength);"
+                        title="Please enter a 10-digit phone number (without the leading 0).">
+                </div>
+                <div id="phoneHelp" class="form-text">
+                  Enter the 10 digits after +880 (e.g., 1712345678).
+                </div>
+                <div class="invalid-feedback">Please provide a valid 10-digit phone number.</div>
+            </div>
+            {{-- === MODIFIED SECTION END === --}}
+            <div class="mb-3">
+                <label for="registerPassword" class="form-label">Password *</label>
+                <div class="input-group">
+                    <input type="password" class="form-control" id="registerPassword" name="password" required minlength="8">
+                    <button class="btn btn-outline-secondary toggle-password" type="button"><i class="bi bi-eye"></i></button></div><div id="passwordHelp" class="form-text">Password must be at least 8 characters long.</div><div class="invalid-feedback"></div></div>
+            {{-- === MODIFIED SECTION START === --}}
+            <div class="mb-3">
+                <label for="confirmPassword" class="form-label">Confirm Password *</label>
+                <div class="input-group">
+                    <input type="password" class="form-control" id="confirmPassword" name="password_confirmation" required>
+                    <button class="btn btn-outline-secondary toggle-password" type="button">
+                        <i class="bi bi-eye"></i>
+                    </button>
+                </div>
+                <div class="invalid-feedback"></div>
+            </div>
+            {{-- === MODIFIED SECTION END === --}}
            
             <div class="d-grid mb-3">
                 <button type="submit" class="btn btn-dark">

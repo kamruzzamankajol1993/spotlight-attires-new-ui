@@ -11,15 +11,15 @@ class Category extends Model
     use HasFactory;
 
     protected $fillable = [
+        'parent_id',
         'name',
         'slug',
         'image',
         'status',
     ];
-public function subcategories()
-    {
-        return $this->hasMany(Subcategory::class);
-    }
+
+protected $guarded = ['id'];
+
     // Automatically create a slug from the name
     protected static function boot()
     {
@@ -36,5 +36,18 @@ public function subcategories()
                  $category->slug = Str::slug($category->name);
             }
         });
+    }
+
+     public function parent()
+    {
+        return $this->belongsTo(Category::class, 'parent_id');
+    }
+
+    /**
+     * Get the child categories.
+     */
+    public function children()
+    {
+        return $this->hasMany(Category::class, 'parent_id');
     }
 }
