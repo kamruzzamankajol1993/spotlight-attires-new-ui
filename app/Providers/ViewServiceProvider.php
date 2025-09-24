@@ -5,13 +5,14 @@ namespace App\Providers;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 use App\Models\Setting;
-use App\Models\MenuItem; // <-- Add this
-use App\Models\SidebarMenu; // <-- Add this
-use App\Models\Category;    // <-- Add this
-use App\Models\OffersectionSetting; // <-- Add this
-use App\Models\BundleOfferProduct;  // <-- Add this
+use App\Models\MenuItem;
+use App\Models\SidebarMenu;
+use App\Models\Category;
+use App\Models\OffersectionSetting;
+use App\Models\BundleOfferProduct;
 use App\Models\Product;  
 use Carbon\Carbon;
+
 class ViewServiceProvider extends ServiceProvider
 {
     public function boot(): void
@@ -55,54 +56,49 @@ class ViewServiceProvider extends ServiceProvider
             $view->with('sidebarCategories', $sidebarCategories);
         });
 
-           View::composer('front.*', function ($view) {
-            $offerSectionSetting = OffersectionSetting::with('bundleOffer')->first();
+        View::composer('front.*', function ($view) {
+            $timezone = 'Asia/Dhaka';
+            $now = Carbon::now($timezone);
+
+            // MODIFIED QUERY: Only load the 'bundleOffer' if its 'enddate' is in the future.
+            $offerSectionSetting = OffersectionSetting::with(['bundleOffer' => function ($query) use ($now) {
+                $query->where('status', 1)->where('enddate', '>=', $now);
+            }])->first();
             
             $offerDealsGlobal = collect();
             $products = collect();
+            $remaining = ['days' => 0, 'hours' => 0, 'minutes' => 0, 'seconds' => 0];
+            $dealEndDateISO = null;
 
+            // This condition now automatically handles expired offers,
+            // because $offerSectionSetting->bundleOffer will be null if the date has passed.
             if ($offerSectionSetting && $offerSectionSetting->bundleOffer) {
                 $offerDealsGlobal = BundleOfferProduct::where('bundle_offer_id', $offerSectionSetting->bundleOffer->id)->get();
                 $allProductIds = $offerDealsGlobal->pluck('product_id')->flatten()->unique()->all();
                 $products = Product::whereIn('id', $allProductIds)->get()->keyBy('id');
-            }
 
+                // --- Timer & Date Logic ---
+                $sellEndDateObject = Carbon::parse($offerSectionSetting->bundleOffer->enddate, $timezone)->endOfDay();
 
-            // --- Timer & Date Logic ---
-
- 
-    $timezone = 'Asia/Dhaka'; // Set your application's timezone
-    $now = Carbon::now($timezone);
-
-    // Parse the 'sellEndDate' from the database and set the time to the very end of that day.
-    // This creates the specific target for the countdown.
-    $sellEndDateObject = Carbon::parse($offerSectionSetting->bundleOffer->enddate, $timezone)->endOfDay();
-
-    // Initialize remaining time in case the date has passed
-    $remaining = [
-        'days' => 0, 'hours' => 0, 'minutes' => 0, 'seconds' => 0
-    ];
-
-    // Only calculate the difference if the end date is in the future
-    if ($now->lt($sellEndDateObject)) {
-        $diff = $now->diff($sellEndDateObject);
-        $remaining = [
-            'days' => $diff->d,
-            'hours' => $diff->h,
-            'minutes' => $diff->i,
-            'seconds' => $diff->s
-        ];
-    }
+                if ($now->lt($sellEndDateObject)) {
+                    $diff = $now->diff($sellEndDateObject);
+                    $remaining = [
+                        'days' => $diff->d,
+                        'hours' => $diff->h,
+                        'minutes' => $diff->i,
+                        'seconds' => $diff->s
+                    ];
+                }
     
-    // Get the exact end timestamp in a universal format for the client-side script
-    $dealEndDateISO = $sellEndDateObject->toIso8601String();
-    $view->with('dealEndDateISO', $dealEndDateISO);
-    // --- Timer Logic End ---
- //dd($remaining['days'], $remaining['hours'], $remaining['minutes'], $remaining['seconds']);
+                $dealEndDateISO = $sellEndDateObject->toIso8601String();
+                // --- Timer Logic End ---
+            }
+            
+            $view->with('dealEndDateISO', $dealEndDateISO);
             $view->with('remaining', $remaining);
             $view->with('offerSectionSetting', $offerSectionSetting);
             $view->with('offerDealsGlobal', $offerDealsGlobal);
-            $view->with('offerProducts', $products); // Pass products with a different name to avoid conflicts
+            $view->with('offerProducts', $products);
         });
     }
 }

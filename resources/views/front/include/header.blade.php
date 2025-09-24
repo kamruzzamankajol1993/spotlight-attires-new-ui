@@ -70,7 +70,7 @@
                 <div class="d-flex align-items-center">
                     <i class="bi bi-headset me-2 fs-4"></i>
                     <div>
-                        <div class="fw-bold">24 Support</div>
+                        <div class="fw-bold">Support(10am - 8pm)</div>
                         <div>+880 1872-094599</div>
                     </div>
                 </div>
@@ -86,8 +86,7 @@
                         <i class="bi bi-list me-2"></i> All Category
                     </button>
                     <!-- Added the Menu link here -->
-                    <a class="nav-link text-dark mx-2 d-none d-xl-block" href="#" data-bs-toggle="offcanvas"
-                        data-bs-target="#menuOffcanvas" aria-controls="menuOffcanvas">Menu</a>
+                    <a class="nav-link text-dark mx-2 d-none d-xl-block" href="{{route('shop.show')}}" >All Product</a>
                     @if(isset($menuItems) && $menuItems->count() > 0)
     @foreach($menuItems as $item)
         <a class="nav-link text-dark mx-2 d-none d-xl-block" href="{{ url($item->route) }}">{{ $item->name }}</a>

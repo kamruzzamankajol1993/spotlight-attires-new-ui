@@ -1,3 +1,5 @@
+@if(count($bundleDeals)>0)
+
 @forelse($bundleDeals as $deal)
     <div class="col">
         <div class="product-card card h-100">
@@ -62,3 +64,159 @@
         <p>There are no special deals for this offer at the moment.</p>
     </div>
 @endforelse
+
+@else
+<!-- Example product card -->
+                                <div class="col">
+                                    <div class="product-card card">
+                                        <img src="https://placehold.co/300x300" class="card-img-top" alt="Product 6">
+                                        <div class="product-details-body">
+                                            <h5 class="product-title mb-1">Product Name 6</h5>
+                                            <p class="product-meta mb-1">Category: Home Goods</p>
+                                            <p class="product-meta mb-1">SKU: PN-006</p>
+                                            <p class="product-meta text-success fw-bold mb-1"><i
+                                                    class="bi bi-check-circle-fill"></i> In stock</p>
+                                            <div class="rating-stars mb-2">
+                                                <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i
+                                                    class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i
+                                                    class="bi bi-star-fill"></i>
+                                            </div>
+                                            <p class="price-tag mb-2">৳ 1100.0</p>
+                                            <a href="#" class="btn btn-primary btn-add-cart">Add to Cart</a>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col">
+                                    <div class="product-card card">
+                                        <img src="https://placehold.co/300x300" class="card-img-top" alt="Product 6">
+                                        <div class="product-details-body">
+                                            <h5 class="product-title mb-1">Product Name 6</h5>
+                                            <p class="product-meta mb-1">Category: Home Goods</p>
+                                            <p class="product-meta mb-1">SKU: PN-006</p>
+                                            <p class="product-meta text-success fw-bold mb-1"><i
+                                                    class="bi bi-check-circle-fill"></i> In stock</p>
+                                            <div class="rating-stars mb-2">
+                                                <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i
+                                                    class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i
+                                                    class="bi bi-star-fill"></i>
+                                            </div>
+                                            <p class="price-tag mb-2">৳ 1100.0</p>
+                                            <a href="#" class="btn btn-primary btn-add-cart">Add to Cart</a>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col">
+                                    <div class="product-card card">
+                                        <img src="https://placehold.co/300x300" class="card-img-top" alt="Product 6">
+                                        <div class="product-details-body">
+                                            <h5 class="product-title mb-1">Product Name 6</h5>
+                                            <p class="product-meta mb-1">Category: Home Goods</p>
+                                            <p class="product-meta mb-1">SKU: PN-006</p>
+                                            <p class="product-meta text-success fw-bold mb-1"><i
+                                                    class="bi bi-check-circle-fill"></i> In stock</p>
+                                            <div class="rating-stars mb-2">
+                                                <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i
+                                                    class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i
+                                                    class="bi bi-star-fill"></i>
+                                            </div>
+                                            <p class="price-tag mb-2">৳ 1100.0</p>
+                                            <a href="#" class="btn btn-primary btn-add-cart">Add to Cart</a>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col">
+                                    <div class="product-card card">
+                                        <img src="https://placehold.co/300x300" class="card-img-top" alt="Product 6">
+                                        <div class="product-details-body">
+                                            <h5 class="product-title mb-1">Product Name 6</h5>
+                                            <p class="product-meta mb-1">Category: Home Goods</p>
+                                            <p class="product-meta mb-1">SKU: PN-006</p>
+                                            <p class="product-meta text-success fw-bold mb-1"><i
+                                                    class="bi bi-check-circle-fill"></i> In stock</p>
+                                            <div class="rating-stars mb-2">
+                                                <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i
+                                                    class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i
+                                                    class="bi bi-star-fill"></i>
+                                            </div>
+                                            <p class="price-tag mb-2">৳ 1100.0</p>
+                                            <a href="#" class="btn btn-primary btn-add-cart">Add to Cart</a>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col">
+                                    <div class="product-card card">
+                                        <img src="https://placehold.co/300x300" class="card-img-top" alt="Product 6">
+                                        <div class="product-details-body">
+                                            <h5 class="product-title mb-1">Product Name 6</h5>
+                                            <p class="product-meta mb-1">Category: Home Goods</p>
+                                            <p class="product-meta mb-1">SKU: PN-006</p>
+                                            <p class="product-meta text-success fw-bold mb-1"><i
+                                                    class="bi bi-check-circle-fill"></i> In stock</p>
+                                            <div class="rating-stars mb-2">
+                                                <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i
+                                                    class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i
+                                                    class="bi bi-star-fill"></i>
+                                            </div>
+                                            <p class="price-tag mb-2">৳ 1100.0</p>
+                                            <a href="#" class="btn btn-primary btn-add-cart">Add to Cart</a>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col">
+                                    <div class="product-card card">
+                                        <img src="https://placehold.co/300x300" class="card-img-top" alt="Product 6">
+                                        <div class="product-details-body">
+                                            <h5 class="product-title mb-1">Product Name 6</h5>
+                                            <p class="product-meta mb-1">Category: Home Goods</p>
+                                            <p class="product-meta mb-1">SKU: PN-006</p>
+                                            <p class="product-meta text-success fw-bold mb-1"><i
+                                                    class="bi bi-check-circle-fill"></i> In stock</p>
+                                            <div class="rating-stars mb-2">
+                                                <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i
+                                                    class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i
+                                                    class="bi bi-star-fill"></i>
+                                            </div>
+                                            <p class="price-tag mb-2">৳ 1100.0</p>
+                                            <a href="#" class="btn btn-primary btn-add-cart">Add to Cart</a>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col">
+                                    <div class="product-card card">
+                                        <img src="https://placehold.co/300x300" class="card-img-top" alt="Product 6">
+                                        <div class="product-details-body">
+                                            <h5 class="product-title mb-1">Product Name 6</h5>
+                                            <p class="product-meta mb-1">Category: Home Goods</p>
+                                            <p class="product-meta mb-1">SKU: PN-006</p>
+                                            <p class="product-meta text-success fw-bold mb-1"><i
+                                                    class="bi bi-check-circle-fill"></i> In stock</p>
+                                            <div class="rating-stars mb-2">
+                                                <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i
+                                                    class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i
+                                                    class="bi bi-star-fill"></i>
+                                            </div>
+                                            <p class="price-tag mb-2">৳ 1100.0</p>
+                                            <a href="#" class="btn btn-primary btn-add-cart">Add to Cart</a>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col">
+                                    <div class="product-card card">
+                                        <img src="https://placehold.co/300x300" class="card-img-top" alt="Product 6">
+                                        <div class="product-details-body">
+                                            <h5 class="product-title mb-1">Product Name 6</h5>
+                                            <p class="product-meta mb-1">Category: Home Goods</p>
+                                            <p class="product-meta mb-1">SKU: PN-006</p>
+                                            <p class="product-meta text-success fw-bold mb-1"><i
+                                                    class="bi bi-check-circle-fill"></i> In stock</p>
+                                            <div class="rating-stars mb-2">
+                                                <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i
+                                                    class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i
+                                                    class="bi bi-star-fill"></i>
+                                            </div>
+                                            <p class="price-tag mb-2">৳ 1100.0</p>
+                                            <a href="#" class="btn btn-primary btn-add-cart">Add to Cart</a>
+                                        </div>
+                                    </div>
+                                </div>
+@endif

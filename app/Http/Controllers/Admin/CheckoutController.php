@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
 use App\Models\RedexArea;
 use App\Models\Order;
+use App\Models\Product;
 use App\Models\OrderDetail;
 use Exception;
 use App\Library\SslCommerz\SslCommerzNotification;
@@ -108,55 +109,60 @@ $BKASH_CHECKOUT_URL_APP_SECRET ='2is7hdktrekvrbljjh44ll3d9l1dtjo4pasmjvs5vl5qr3f
         return json_decode($resultdata, true);
     }
     private function getCartData()
-    {
-        $cart = Session::get('cart', []);
-        $subtotal = 0;
-        foreach ($cart as $item) {
-            $subtotal += $item['price'] * $item['quantity'];
-        }
+{
+    $cart = Session::get('cart', []);
+    $subtotal = 0;
+    foreach ($cart as $item) {
+        $subtotal += $item['price'] * $item['quantity'];
+    }
 
-        $coupon = Session::get('coupon');
-        $discount = 0;
+    $coupon = Session::get('coupon');
+    $discount = 0;
+    
+    if ($coupon) {
+        $eligibleSubtotal = 0;
+        $productIdsInCart = collect($cart)->where('is_bundle', false)->pluck('product_id')->unique()->all();
         
-        if ($coupon) {
-            $eligibleSubtotal = $subtotal;
+        if(!empty($productIdsInCart)){
+            $products = Product::whereIn('id', $productIdsInCart)->get()->keyBy('id');
+            foreach ($cart as $item) {
+                // Skip bundles or items whose product details couldn't be fetched
+                if (isset($item['is_bundle']) && $item['is_bundle']) continue;
+                if (!isset($products[$item['product_id']])) continue;
 
-            if (!empty($coupon->product_ids) || !empty($coupon->category_ids)) {
-                $eligibleSubtotal = 0;
-                $productIdsInCart = collect($cart)->where('is_bundle', false)->pluck('product_id')->unique()->all();
+                $product = $products[$item['product_id']];
+
+                // --- CORE CHANGE: Skip products that are already on discount ---
+                if (isset($product->discount_price) && $product->discount_price > 0) {
+                    continue;
+                }
+
+                $isCouponForAll = empty($coupon->product_ids) && empty($coupon->category_ids);
+                $isProductEligible = !empty($coupon->product_ids) && in_array($product->id, $coupon->product_ids);
+                $isCategoryEligible = !empty($coupon->category_ids) && in_array($product->category_id, $coupon->category_ids);
                 
-                if(!empty($productIdsInCart)){
-                    $products = Product::whereIn('id', $productIdsInCart)->get()->keyBy('id');
-                    foreach ($cart as $item) {
-                        if (isset($item['is_bundle']) && !$item['is_bundle'] && isset($products[$item['product_id']])) {
-                            $product = $products[$item['product_id']];
-                            $isProductEligible = !empty($coupon->product_ids) && in_array($product->id, $coupon->product_ids);
-                            $isCategoryEligible = !empty($coupon->category_ids) && in_array($product->category_id, $coupon->category_ids);
-                            
-                            if ($isProductEligible || $isCategoryEligible) {
-                                $eligibleSubtotal += $item['price'] * $item['quantity'];
-                            }
-                        }
-                    }
+                if ($isCouponForAll || $isProductEligible || $isCategoryEligible) {
+                    $eligibleSubtotal += $item['price'] * $item['quantity'];
                 }
             }
-            
-            if ($coupon->type === 'fixed') {
-                $discount = $coupon->value;
-            } elseif ($coupon->type === 'percentage') {
-                $discount = ($eligibleSubtotal * $coupon->value) / 100;
-            }
-            
-            $discount = min($discount, $eligibleSubtotal);
         }
         
-        return [
-            'cart'       => $cart,
-            'subtotal'   => $subtotal,
-            'discount'   => $discount,
-            'coupon'     => $coupon,
-        ];
+        if ($coupon->type === 'fixed') {
+            $discount = $coupon->value;
+        } elseif ($coupon->type === 'percentage') {
+            $discount = ($eligibleSubtotal * $coupon->value) / 100;
+        }
+        
+        $discount = min($discount, $eligibleSubtotal);
     }
+    
+    return [
+        'cart'       => $cart,
+        'subtotal'   => $subtotal,
+        'discount'   => $discount,
+        'coupon'     => $coupon,
+    ];
+}
 
     public function checkout()
     {

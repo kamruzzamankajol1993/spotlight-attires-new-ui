@@ -214,58 +214,63 @@ class CartController extends Controller
      * A private helper function to get all cart data in a consistent format.
      */
      private function getCartData()
-    {
-        $cart = Session::get('cart', []);
-        $subtotal = 0;
-        foreach ($cart as $item) {
-            $subtotal += $item['price'] * $item['quantity'];
-        }
+{
+    $cart = Session::get('cart', []);
+    $subtotal = 0;
+    foreach ($cart as $item) {
+        $subtotal += $item['price'] * $item['quantity'];
+    }
 
-        $coupon = Session::get('coupon');
-        $discount = 0;
+    $coupon = Session::get('coupon');
+    $discount = 0;
+    
+    if ($coupon) {
+        $eligibleSubtotal = 0;
+        $productIdsInCart = collect($cart)->where('is_bundle', false)->pluck('product_id')->unique()->all();
         
-        if ($coupon) {
-            $eligibleSubtotal = $subtotal;
+        if(!empty($productIdsInCart)){
+            $products = Product::whereIn('id', $productIdsInCart)->get()->keyBy('id');
+            foreach ($cart as $item) {
+                // Skip bundles or items whose product details couldn't be fetched
+                if (isset($item['is_bundle']) && $item['is_bundle']) continue;
+                if (!isset($products[$item['product_id']])) continue;
 
-            if (!empty($coupon->product_ids) || !empty($coupon->category_ids)) {
-                $eligibleSubtotal = 0;
-                $productIdsInCart = collect($cart)->where('is_bundle', false)->pluck('product_id')->unique()->all();
+                $product = $products[$item['product_id']];
+
+                // --- CORE CHANGE: Skip products that are already on discount ---
+                if (isset($product->discount_price) && $product->discount_price > 0) {
+                    continue;
+                }
+
+                $isCouponForAll = empty($coupon->product_ids) && empty($coupon->category_ids);
+                $isProductEligible = !empty($coupon->product_ids) && in_array($product->id, $coupon->product_ids);
+                $isCategoryEligible = !empty($coupon->category_ids) && in_array($product->category_id, $coupon->category_ids);
                 
-                if(!empty($productIdsInCart)){
-                    $products = Product::whereIn('id', $productIdsInCart)->get()->keyBy('id');
-                    foreach ($cart as $item) {
-                        if (isset($item['is_bundle']) && !$item['is_bundle'] && isset($products[$item['product_id']])) {
-                            $product = $products[$item['product_id']];
-                            $isProductEligible = !empty($coupon->product_ids) && in_array($product->id, $coupon->product_ids);
-                            $isCategoryEligible = !empty($coupon->category_ids) && in_array($product->category_id, $coupon->category_ids);
-                            
-                            if ($isProductEligible || $isCategoryEligible) {
-                                $eligibleSubtotal += $item['price'] * $item['quantity'];
-                            }
-                        }
-                    }
+                if ($isCouponForAll || $isProductEligible || $isCategoryEligible) {
+                    $eligibleSubtotal += $item['price'] * $item['quantity'];
                 }
             }
-            
-            if ($coupon->type === 'fixed') {
-                $discount = $coupon->value;
-            } elseif ($coupon->type === 'percentage') {
-                $discount = ($eligibleSubtotal * $coupon->value) / 100;
-            }
-            
-            $discount = min($discount, $eligibleSubtotal);
         }
         
-        $total = $subtotal - $discount;
-
-        return [
-            'cart'       => $cart,
-            'subtotal'   => $subtotal,
-            'discount'   => $discount,
-            'total'      => $total,
-            'coupon'     => $coupon,
-        ];
+        if ($coupon->type === 'fixed') {
+            $discount = $coupon->value;
+        } elseif ($coupon->type === 'percentage') {
+            $discount = ($eligibleSubtotal * $coupon->value) / 100;
+        }
+        
+        $discount = min($discount, $eligibleSubtotal);
     }
+    
+    $total = $subtotal - $discount;
+
+    return [
+        'cart'       => $cart,
+        'subtotal'   => $subtotal,
+        'discount'   => $discount,
+        'total'      => $total,
+        'coupon'     => $coupon,
+    ];
+}
 
 public function getMainCartContent()
     {
@@ -336,38 +341,47 @@ public function getMainCartContent()
              return response()->json(['success' => false, 'message' => 'You must be logged in to use this coupon.'], 401);
         }
 
-        $eligibleItemsFound = false;
-        if (empty($coupon->product_ids) && empty($coupon->category_ids)) {
-            $eligibleItemsFound = true; // Coupon applies to all items if no restrictions are set
-        } else {
-            $productIdsInCart = collect($cartData['cart'])->where('is_bundle', false)->pluck('product_id')->unique()->all();
-            if(!empty($productIdsInCart)){
-                $products = Product::whereIn('id', $productIdsInCart)->get()->keyBy('id');
-                foreach ($cartData['cart'] as $item) {
-                     if (isset($item['is_bundle']) && !$item['is_bundle'] && isset($products[$item['product_id']])) {
-                        $product = $products[$item['product_id']];
-                        if ((!empty($coupon->product_ids) && in_array($product->id, $coupon->product_ids)) || 
-                            (!empty($coupon->category_ids) && in_array($product->category_id, $coupon->category_ids))) {
-                            $eligibleItemsFound = true;
-                            break;
-                        }
-                    }
-                }
+         // --- START: MODIFIED ELIGIBILITY CHECK ---
+    $eligibleItemsFound = false;
+    $productIdsInCart = collect($cartData['cart'])->where('is_bundle', false)->pluck('product_id')->unique()->all();
+
+    if(!empty($productIdsInCart)){
+        $products = Product::whereIn('id', $productIdsInCart)->get()->keyBy('id');
+        foreach ($cartData['cart'] as $item) {
+             if (isset($item['is_bundle']) && $item['is_bundle']) continue;
+             if (!isset($products[$item['product_id']])) continue;
+             
+            $product = $products[$item['product_id']];
+
+            // --- CORE CHANGE: Skip products that are already on discount ---
+            if (isset($product->discount_price) && $product->discount_price > 0) {
+                continue;
+            }
+
+            $isCouponForAll = empty($coupon->product_ids) && empty($coupon->category_ids);
+            $isProductEligible = !empty($coupon->product_ids) && in_array($product->id, $coupon->product_ids);
+            $isCategoryEligible = !empty($coupon->category_ids) && in_array($product->category_id, $coupon->category_ids);
+
+            if ($isCouponForAll || $isProductEligible || $isCategoryEligible) {
+                $eligibleItemsFound = true;
+                break; // Found at least one eligible item, so we can stop checking
             }
         }
-        
-        if (!$eligibleItemsFound) {
-            return response()->json(['success' => false, 'message' => 'This coupon is not valid for the items in your cart.'], 422);
-        }
-        
-        Session::put('coupon', $coupon);
+    }
+    
+    if (!$eligibleItemsFound) {
+        return response()->json(['success' => false, 'message' => 'This coupon is not valid for the non-discounted items in your cart.'], 422);
+    }
+    // --- END: MODIFIED ELIGIBILITY CHECK ---
+    
+    Session::put('coupon', $coupon);
 
-        $response = $this->getMainCartContent();
-        $responseData = $response->getData(true);
-        $responseData['success'] = true;
-        $responseData['message'] = 'Coupon applied successfully!';
+    $response = $this->getMainCartContent();
+    $responseData = $response->getData(true);
+    $responseData['success'] = true;
+    $responseData['message'] = 'Coupon applied successfully!';
 
-        return response()->json($responseData);
+    return response()->json($responseData);
     }
 
     /**

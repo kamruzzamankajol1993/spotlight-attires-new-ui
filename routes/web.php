@@ -119,6 +119,9 @@ Route::controller(FrontController::class)->group(function () {
     Route::get('/product-search', 'productSearch')->name('products.search');
 
     Route::get('/', 'index')->name('home.index');
+Route::get('/offers', 'offers')->name('offers');
+      Route::get('/discount-filter', 'ajaxDiscountFilter')->name('discount.ajax_filter');
+
     Route::get('/category/{slug}', 'category')->name('category.show');
     Route::get('/subcategory/{slug}', 'subcategory')->name('subcategory.show');
     // ADD THESE NEW ROUTES FOR THE OFFER PAGE

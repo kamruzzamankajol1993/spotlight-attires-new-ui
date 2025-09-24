@@ -41,7 +41,23 @@
             @endforeach
         @else
             <div class="slider-item">
-                <img src="{{asset('/')}}public/front/assets/img/slider/banner.jpg" alt="Default Banner">
+                <img src="https://placehold.co/600x600" alt="Default Banner">
+                <div class="content">
+                    <h1 class="fw-bold">WELCOME</h1>
+                    <p>Check out our latest collections.</p>
+                    <button class="btn btn-outline-light">SHOP NOW</button>
+                </div>
+            </div>
+            <div class="slider-item">
+                <img src="https://placehold.co/600x600" alt="Default Banner">
+                <div class="content">
+                    <h1 class="fw-bold">WELCOME</h1>
+                    <p>Check out our latest collections.</p>
+                    <button class="btn btn-outline-light">SHOP NOW</button>
+                </div>
+            </div>
+            <div class="slider-item">
+                <img src="https://placehold.co/600x600" alt="Default Banner">
                 <div class="content">
                     <h1 class="fw-bold">WELCOME</h1>
                     <p>Check out our latest collections.</p>
@@ -79,6 +95,15 @@
                 <a href="{{ route('product.show', $topBannerProduct->slug) }}" class="btn btn-outline-light">VIEW DETAILS</a>
             </div>
         </div>
+    @else
+     <div class="banner-item top-banner mb-3">
+                            <img src="https://placehold.co/600x600" alt="Top Banner">
+                            <div class="content">
+                                <h4 class="fw-bold">INSTANT CAMERAS</h4>
+                                <p>VISUALIZE YOUR LOOKS</p>
+                                <button class="btn btn-outline-light">VIEW DETAILS</button>
+                            </div>
+                        </div>
     @endif
 
                           @if($bottomBannerProducts->count() > 0)
@@ -111,304 +136,642 @@
                 </div>
             @endforeach
         </div>
+        @else
+        <div class="row">
+            <div class="col-6 pe-2">
+                                <div class="banner-item bottom-banner">
+                                    <img src="https://placehold.co/300x300" alt="Exclusive Oversized Tee">
+                                    <div class="content">
+                                        <h5 class="fw-bold">EXCLUSIVE OVERSIZED TEE</h5>
+                                        <p>SAVE UP TO 60%</p>
+                                        <button class="btn btn-outline-light btn-sm">VIEW DETAILS</button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-6 ps-2">
+                                <div class="banner-item bottom-banner">
+                                    <img src="https://placehold.co/300x300" alt="Sale Banner">
+                                    <div class="content">
+                                        <h5 class="fw-bold">LIMITED OFFER</h5>
+                                        <p>50% OFF</p>
+                                        <button class="btn btn-outline-light btn-sm">SHOP NOW</button>
+                                    </div>
+                                </div>
+                            </div>
+        </div>
     @endif
                     </div>
                 </div>
             </div>
         </section>
-        <section class="section">
+        {{-- This entire section will only show if the status is active and products are available --}}
+@if(isset($topRatedTitle) && !empty($topRatedTitle) && $products->isNotEmpty())
+<section class="section">
+    <div class="product-section">
+        <div class="container">
+            {{-- The title is now dynamic based on your admin panel selection --}}
+            <h2 class="mb-4 text-center">{{ Str::upper($topRatedTitle) }}</h2>
+            <div class="product-slider">
+                {{-- The loop remains the same, but it now uses the data fetched based on your settings --}}
+                @foreach($products as $product)
+                <div class="product-card card">
+                    @php
+                        $mobileImage = (is_array($product->thumbnail_image) && count($product->thumbnail_image) > 0)
+                                        ? $front_ins_url . 'public/uploads/' . $product->thumbnail_image[0]
+                                        : 'https://placehold.co/800x400';
+                        $desktopImage = (is_array($product->main_image) && count($product->main_image) > 0)
+                                        ? $front_ins_url . 'public/uploads/' . $product->main_image[0]
+                                        : 'https://placehold.co/800x400';
+
+                        // Calculate total stock from all variants
+                        $totalStock = 0;
+                        if ($product->variants->isNotEmpty()) {
+                            foreach ($product->variants as $variant) {
+                                if (is_array($variant->sizes)) {
+                                    foreach ($variant->sizes as $sizeInfo) {
+                                        $totalStock += $sizeInfo['quantity'] ?? 0;
+                                    }
+                                }
+                            }
+                        }
+                    @endphp
+                    <a href="{{ route('product.show', $product->slug) }}">
+                        <picture>
+                            <source media="(min-width: 992px)" srcset="{{ $desktopImage }}">
+                            <source media="(max-width: 991px)" srcset="{{ $mobileImage }}">
+                            <img src="{{ $mobileImage }}" 
+                                 alt="{{ $product->name }}" 
+                                 class="card-img-top img-fluid">
+                        </picture>
+                    </a>
+                    <div class="product-details-body">
+                        <h5 class="product-title mb-1">{{ Str::limit($product->name, 25) }}</h5>
+                        <p class="product-meta mb-1">Category: {{ $product->category->name ?? 'N/A' }}</p>
+                        <p class="product-meta mb-1">SKU: {{ $product->product_code ?? 'N/A' }}</p>
+
+                        @if($totalStock > 0)
+                            <p class="product-meta text-success fw-bold mb-1"><i class="bi bi-check-circle-fill"></i> In stock</p>
+                        @else
+                            <p class="product-meta text-danger fw-bold mb-1"><i class="bi bi-x-circle-fill"></i> Out of stock</p>
+                        @endif
+
+                        <div class="rating-stars mb-2">
+                            <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-half"></i>
+                        </div>
+
+                        <p class="price-tag mb-2">
+                            @if($product->discount_price)
+                                <del class="text-muted">৳ {{ $product->base_price }}</del>
+                                <span class="fw-bold">৳ {{ $product->discount_price }}</span>
+                            @else
+                                <span class="fw-bold">৳ {{ $product->base_price }}</span>
+                            @endif
+                        </p>
+                        <a href="#" class="btn btn-primary btn-add-cart" data-product-id="{{ $product->id }}">Add to Cart</a>
+                    </div>
+                </div>
+                @endforeach
+            </div>
+        </div>
+    </div>
+</section>
+@else
+<section class="section">
             <div class="product-section">
                 <div class="container">
                     <h2 class="mb-4 text-center">Top Rated Products</h2>
                     <div class="product-slider">
-                       @if(isset($products) && $products->count() > 0)
-    @foreach($products as $product)
-    <div class="product-card card">
-        @php
-            $mobileImage = (is_array($product->thumbnail_image) && count($product->thumbnail_image) > 0)
-                            ? $front_ins_url . 'public/uploads/' . $product->thumbnail_image[0]
-                            : 'https://placehold.co/800x400';
-                        $desktopImage = (is_array($product->main_image) && count($product->main_image) > 0)
-                            ? $front_ins_url . 'public/uploads/' . $product->main_image[0]
-                            : 'https://placehold.co/800x400';
-
-            // Calculate total stock from all variants
-            $totalStock = 0;
-            if ($product->variants->isNotEmpty()) {
-                foreach ($product->variants as $variant) {
-                    if (is_array($variant->sizes)) {
-                        foreach ($variant->sizes as $sizeInfo) {
-                            $totalStock += $sizeInfo['quantity'] ?? 0;
-                        }
-                    }
-                }
-            }
-        @endphp
-<a href="{{ route('product.show', $product->slug) }}">
-        {{-- Picture element for responsive images --}}
-    <picture>
-        {{-- Desktop and laptop (≥992px) --}}
-        <source media="(min-width: 992px)" srcset="{{ $desktopImage }}">
-        {{-- Tablet and mobile (<992px) --}}
-        <source media="(max-width: 991px)" srcset="{{ $mobileImage }}">
-        {{-- Fallback for browsers without <picture> support --}}
-        <img src="{{ $mobileImage }}" 
-             alt="{{ $product->name }}" 
-             class="card-img-top img-fluid">
-    </picture>
-</a>
-        <div class="product-details-body">
-            <h5 class="product-title mb-1">{{ Str::limit($product->name, 25) }}</h5>
-            <p class="product-meta mb-1">Category: {{ $product->category->name ?? 'N/A' }}</p>
-            <p class="product-meta mb-1">SKU: {{ $product->product_code ?? 'N/A' }}</p>
-
-            @if($totalStock > 0)
-                <p class="product-meta text-success fw-bold mb-1"><i class="bi bi-check-circle-fill"></i> In stock</p>
-            @else
-                <p class="product-meta text-danger fw-bold mb-1"><i class="bi bi-x-circle-fill"></i> Out of stock</p>
-            @endif
-
-            <div class="rating-stars mb-2">
-                {{-- You can make this dynamic if you add a rating column --}}
-                <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-half"></i>
-            </div>
-
-            <p class="price-tag mb-2">
-                @if($product->discount_price)
-                    <del class="text-muted">৳ {{ $product->base_price }}</del>
-                    <span class="fw-bold">৳ {{ $product->discount_price }}</span>
-                @else
-                    <span class="fw-bold">৳ {{ $product->base_price }}</span>
-                @endif
-            </p>
-            <a href="#" class="btn btn-primary btn-add-cart" data-product-id="{{ $product->id }}">Add to Cart</a>
-        </div>
-    </div>
-    @endforeach
-@endif
-                    </div>
-                </div>
-            </div>
-        </section>
-        <section>
-            <div class="featured-product-section">
-                <div class="container">
-                    <div class="row">
-                        <!-- Left side: Banner -->
-                        <div class="col-lg-4 mb-4 mb-lg-0 d-flex">
-                             @if($firstHighlight && $firstHighlight->product)
-                                @php
-                                    $highlightImage = (is_array($firstHighlight->product->main_image) && count($firstHighlight->product->main_image) > 0)
-                                        ? $front_ins_url . 'public/uploads/' . $firstHighlight->product->main_image[0]
-                                        : asset('/').'public/front/assets/img/slider/banner1.jpg';
-                                @endphp
-                                <div class="featured-banner flex-grow-1">
-                                    <img src="{{ $highlightImage }}" alt="{{ $firstHighlight->title ?? $firstHighlight->product->name }}">
-                                    <div class="content">
-                                        <h4 class="mb-3">{!! nl2br(e($firstHighlight->title)) !!}</h4>
-                                        <p class="mb-4">"{!! nl2br(e(Str::limit($firstHighlight->product->name, 80))) !!}"</p>
-                                        <a href="{{ route('product.show', $firstHighlight->product->slug) }}" class="btn btn-outline-light">Buy Now</a>
-                                    </div>
+                        <!-- Product Card 1 -->
+                        <div class="product-card card">
+                            <img src="https://placehold.co/300x300" class="card-img-top" alt="Product 1">
+                            <div class="product-details-body">
+                                <h5 class="product-title mb-1">Product Name 1</h5>
+                                <p class="product-meta mb-1">Category: Men's Clothing</p>
+                                <p class="product-meta mb-1">SKU: PN-001</p>
+                                <p class="product-meta text-success fw-bold mb-1"><i
+                                        class="bi bi-check-circle-fill"></i> In stock</p>
+                                <div class="rating-stars mb-2">
+                                    <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i
+                                        class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i
+                                        class="bi bi-star-half"></i>
                                 </div>
-                            @else
-                                {{-- Fallback content if nothing is set in the admin panel --}}
-                                <div class="featured-banner flex-grow-1">
-                                    <img src="{{asset('/')}}public/front/assets/img/slider/banner1.jpg" alt="Men's Premium T-Shirt">
-                                    <div class="content">
-                                        <h4 class="mb-3">MEN'S PREMIUM<br>ACID WASH</h4>
-                                        <p class="mb-4">"Itachi Uchiha <br>Retro vibes and faded dreams—this acid wash tee
-                                            brings the vintage feels to your closet."</p>
-                                        <a href="#" class="btn btn-outline-light">Buy Now</a>
-                                    </div>
-                                </div>
-                            @endif
+                                <p class="price-tag mb-2">৳ 950.0</p>
+                                <a href="#" class="btn btn-primary btn-add-cart">Add to Cart</a>
+                            </div>
                         </div>
-                        <!-- Right side: Product Slider -->
-                        <div class="col-lg-8">
-                            <h2 class="mb-4 text-center">ALL COLLECTIONS</h2>
-                            <div class="product-carousel">
-                              @if(isset($randomLatestProducts) && $randomLatestProducts->count() > 0)
-    @foreach($randomLatestProducts as $product)
-    <div class="product-card card">
-        @php
-             $mobileImage = (is_array($product->thumbnail_image) && count($product->thumbnail_image) > 0)
-                            ? $front_ins_url . 'public/uploads/' . $product->thumbnail_image[0]
-                            : 'https://placehold.co/800x400';
-                        $desktopImage = (is_array($product->main_image) && count($product->main_image) > 0)
-                            ? $front_ins_url . 'public/uploads/' . $product->main_image[0]
-                            : 'https://placehold.co/800x400';
-
-            // Calculate total stock from all variants
-            $totalStock = 0;
-            if ($product->variants->isNotEmpty()) {
-                foreach ($product->variants as $variant) {
-                    if (is_array($variant->sizes)) {
-                        foreach ($variant->sizes as $sizeInfo) {
-                            $totalStock += $sizeInfo['quantity'] ?? 0;
-                        }
-                    }
-                }
-            }
-        @endphp
-<a href="{{ route('product.show', $product->slug) }}">
-        {{-- Picture element for responsive images --}}
-    <picture>
-        {{-- Desktop and laptop (≥992px) --}}
-        <source media="(min-width: 992px)" srcset="{{ $desktopImage }}">
-        {{-- Tablet and mobile (<992px) --}}
-        <source media="(max-width: 991px)" srcset="{{ $mobileImage }}">
-        {{-- Fallback for browsers without <picture> support --}}
-        <img src="{{ $mobileImage }}" 
-             alt="{{ $product->name }}" 
-             class="card-img-top img-fluid">
-    </picture>
-    </a>
-        <div class="product-details-body">
-            <h5 class="product-title mb-1">{{ Str::limit($product->name, 25) }}</h5>
-            <p class="product-meta mb-1">Category: {{ $product->category->name ?? 'N/A' }}</p>
-            <p class="product-meta mb-1">SKU: {{ $product->product_code ?? 'N/A' }}</p>
-
-            @if($totalStock > 0)
-                <p class="product-meta text-success fw-bold mb-1"><i class="bi bi-check-circle-fill"></i> In stock</p>
-            @else
-                <p class="product-meta text-danger fw-bold mb-1"><i class="bi bi-x-circle-fill"></i> Out of stock</p>
-            @endif
-
-            <div class="rating-stars mb-2">
-                {{-- You can make this dynamic if you add a rating column --}}
-                <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-half"></i>
-            </div>
-
-            <p class="price-tag mb-2">
-                @if($product->discount_price)
-                    <del class="text-muted">৳ {{ $product->base_price }}</del>
-                    <span class="fw-bold">৳ {{ $product->discount_price }}</span>
-                @else
-                    <span class="fw-bold">৳ {{ $product->base_price }}</span>
-                @endif
-            </p>
-            <a href="#" class="btn btn-primary btn-add-cart" data-product-id="{{ $product->id }}">Add to Cart</a>
-        </div>
-    </div>
-    @endforeach
-@endif
+                        <!-- Product Card 2 -->
+                        <div class="product-card card">
+                            <img src="https://placehold.co/300x300" class="card-img-top" alt="Product 2">
+                            <div class="product-details-body">
+                                <h5 class="product-title mb-1">Product Name 2</h5>
+                                <p class="product-meta mb-1">Category: Women's Wear</p>
+                                <p class="product-meta mb-1">SKU: PN-002</p>
+                                <p class="product-meta text-success fw-bold mb-1"><i
+                                        class="bi bi-check-circle-fill"></i> In stock</p>
+                                <div class="rating-stars mb-2">
+                                    <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i
+                                        class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i
+                                        class="bi bi-star"></i>
+                                </div>
+                                <p class="price-tag mb-2">৳ 1200.0</p>
+                                <a href="#" class="btn btn-primary btn-add-cart">Add to Cart</a>
+                            </div>
+                        </div>
+                        <!-- Product Card 3 -->
+                        <div class="product-card card">
+                            <img src="https://placehold.co/300x300" class="card-img-top" alt="Product 3">
+                            <div class="product-details-body">
+                                <h5 class="product-title mb-1">Product Name 3</h5>
+                                <p class="product-meta mb-1">Category: Accessories</p>
+                                <p class="product-meta mb-1">SKU: PN-003</p>
+                                <p class="product-meta text-success fw-bold mb-1"><i
+                                        class="bi bi-check-circle-fill"></i> In stock</p>
+                                <div class="rating-stars mb-2">
+                                    <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i
+                                        class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i
+                                        class="bi bi-star-fill"></i>
+                                </div>
+                                <p class="price-tag mb-2">৳ 850.0</p>
+                                <a href="#" class="btn btn-primary btn-add-cart">Add to Cart</a>
+                            </div>
+                        </div>
+                        <!-- Product Card 4 -->
+                        <div class="product-card card">
+                            <img src="https://placehold.co/300x300" class="card-img-top" alt="Product 4">
+                            <div class="product-details-body">
+                                <h5 class="product-title mb-1">Product Name 4</h5>
+                                <p class="product-meta mb-1">Category: Electronics</p>
+                                <p class="product-meta mb-1">SKU: PN-004</p>
+                                <p class="product-meta text-success fw-bold mb-1"><i
+                                        class="bi bi-check-circle-fill"></i> In stock</p>
+                                <div class="rating-stars mb-2">
+                                    <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i
+                                        class="bi bi-star-fill"></i><i class="bi bi-star"></i><i class="bi bi-star"></i>
+                                </div>
+                                <p class="price-tag mb-2">৳ 1500.0</p>
+                                <a href="#" class="btn btn-primary btn-add-cart">Add to Cart</a>
+                            </div>
+                        </div>
+                        <!-- Product Card 5 -->
+                        <div class="product-card card">
+                            <img src="https://placehold.co/300x300" class="card-img-top" alt="Product 5">
+                            <div class="product-details-body">
+                                <h5 class="product-title mb-1">Product Name 5</h5>
+                                <p class="product-meta mb-1">Category: Books</p>
+                                <p class="product-meta mb-1">SKU: PN-005</p>
+                                <p class="product-meta text-danger fw-bold mb-1"><i class="bi bi-x-circle-fill"></i> Out
+                                    of stock</p>
+                                <div class="rating-stars mb-2">
+                                    <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i
+                                        class="bi bi-star"></i><i class="bi bi-star"></i><i class="bi bi-star"></i>
+                                </div>
+                                <p class="price-tag mb-2">৳ 750.0</p>
+                                <a href="#" class="btn btn-primary btn-add-cart">Add to Cart</a>
+                            </div>
+                        </div>
+                        <!-- Product Card 6 -->
+                        <div class="product-card card">
+                            <img src="https://placehold.co/300x300" class="card-img-top" alt="Product 6">
+                            <div class="product-details-body">
+                                <h5 class="product-title mb-1">Product Name 6</h5>
+                                <p class="product-meta mb-1">Category: Home Goods</p>
+                                <p class="product-meta mb-1">SKU: PN-006</p>
+                                <p class="product-meta text-success fw-bold mb-1"><i
+                                        class="bi bi-check-circle-fill"></i> In stock</p>
+                                <div class="rating-stars mb-2">
+                                    <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i
+                                        class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i
+                                        class="bi bi-star-fill"></i>
+                                </div>
+                                <p class="price-tag mb-2">৳ 1100.0</p>
+                                <a href="#" class="btn btn-primary btn-add-cart">Add to Cart</a>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
         </section>
-        <section>
+@endif
+{{-- ADD THE NEW SECTION FOR THE SECOND ROW HERE --}}
+@if(isset($secondRowTitle) && !empty($secondRowTitle) && $secondRowProducts->isNotEmpty())
+<section class="section">
+    <div class="product-section">
+        <div class="container">
+            {{-- The title is dynamic based on your admin panel selection for the second row --}}
+            <h2 class="mb-4 text-center">{{ Str::upper($secondRowTitle) }}</h2>
+            <div class="product-slider">
+                @foreach($secondRowProducts as $product)
+                <div class="product-card card">
+                    @php
+                        $mobileImage = (is_array($product->thumbnail_image) && count($product->thumbnail_image) > 0)
+                                        ? $front_ins_url . 'public/uploads/' . $product->thumbnail_image[0]
+                                        : 'https://placehold.co/800x400';
+                        $desktopImage = (is_array($product->main_image) && count($product->main_image) > 0)
+                                        ? $front_ins_url . 'public/uploads/' . $product->main_image[0]
+                                        : 'https://placehold.co/800x400';
+                        $totalStock = 0;
+                        if ($product->variants->isNotEmpty()) {
+                            foreach ($product->variants as $variant) {
+                                if (is_array($variant->sizes)) {
+                                    foreach ($variant->sizes as $sizeInfo) {
+                                        $totalStock += $sizeInfo['quantity'] ?? 0;
+                                    }
+                                }
+                            }
+                        }
+                    @endphp
+                    <a href="{{ route('product.show', $product->slug) }}">
+                        <picture>
+                            <source media="(min-width: 992px)" srcset="{{ $desktopImage }}">
+                            <source media="(max-width: 991px)" srcset="{{ $mobileImage }}">
+                            <img src="{{ $mobileImage }}" 
+                                 alt="{{ $product->name }}" 
+                                 class="card-img-top img-fluid">
+                        </picture>
+                    </a>
+                    <div class="product-details-body">
+                        <h5 class="product-title mb-1">{{ Str::limit($product->name, 25) }}</h5>
+                        <p class="product-meta mb-1">Category: {{ $product->category->name ?? 'N/A' }}</p>
+                        <p class="product-meta mb-1">SKU: {{ $product->product_code ?? 'N/A' }}</p>
+
+                        @if($totalStock > 0)
+                            <p class="product-meta text-success fw-bold mb-1"><i class="bi bi-check-circle-fill"></i> In stock</p>
+                        @else
+                            <p class="product-meta text-danger fw-bold mb-1"><i class="bi bi-x-circle-fill"></i> Out of stock</p>
+                        @endif
+
+                        <div class="rating-stars mb-2">
+                            <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-half"></i>
+                        </div>
+
+                        <p class="price-tag mb-2">
+                            @if($product->discount_price)
+                                <del class="text-muted">৳ {{ $product->base_price }}</del>
+                                <span class="fw-bold">৳ {{ $product->discount_price }}</span>
+                            @else
+                                <span class="fw-bold">৳ {{ $product->base_price }}</span>
+                            @endif
+                        </p>
+                        <a href="#" class="btn btn-primary btn-add-cart" data-product-id="{{ $product->id }}">Add to Cart</a>
+                    </div>
+                </div>
+                @endforeach
+            </div>
+        </div>
+    </div>
+</section>
+@endif
+{{-- Continue with the rest of your homepage sections --}}
+       @if($homepageRow1 && $homepageRow1->category)
+       @if(count($row1Products) > 0)
+<section>
+    <div class="featured-product-section">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-4 mb-4 mb-lg-0 d-flex">
+                    <div class="featured-banner flex-grow-1">
+                        <img src="{{ $front_ins_url .$homepageRow1->image }}" alt="{{ $homepageRow1->title ?? $homepageRow1->category->name }}">
+                        <div class="content">
+                            <h4 class="mb-3">{!! nl2br(e($homepageRow1->title)) !!}</h4>
+                            <p class="mb-4">"Explore our {{ $homepageRow1->category->name }} collection"</p>
+                            <a href="{{ route('category.show', $homepageRow1->category->slug) }}" class="btn btn-outline-light">Buy Now</a>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-8">
+                    <h2 class="mb-4 text-center">{{ Str::upper($homepageRow1->category->name) }}</h2>
+                    <div class="product-carousel">
+                        @forelse($row1Products as $product)
+                            <div class="product-card card">
+                                @php
+                                    $mobileImage = (is_array($product->thumbnail_image) && count($product->thumbnail_image) > 0) ? $front_ins_url . 'public/uploads/' . $product->thumbnail_image[0] : 'https://placehold.co/800x400';
+                                    $desktopImage = (is_array($product->main_image) && count($product->main_image) > 0) ? $front_ins_url . 'public/uploads/' . $product->main_image[0] : 'https://placehold.co/800x400';
+                                @endphp
+                                <a href="{{ route('product.show', $product->slug) }}">
+                                    <picture>
+                                        <source media="(min-width: 992px)" srcset="{{ $desktopImage }}">
+                                        <source media="(max-width: 991px)" srcset="{{ $mobileImage }}">
+                                        <img src="{{ $mobileImage }}" alt="{{ $product->name }}" class="card-img-top img-fluid">
+                                    </picture>
+                                </a>
+                                <div class="product-details-body">
+                                    <h5 class="product-title mb-1">{{ Str::limit($product->name, 25) }}</h5>
+                                    <p class="price-tag mb-2">
+                                        @if($product->discount_price)
+                                            <del class="text-muted">৳ {{ $product->base_price }}</del>
+                                            <span class="fw-bold">৳ {{ $product->discount_price }}</span>
+                                        @else
+                                            <span class="fw-bold">৳ {{ $product->base_price }}</span>
+                                        @endif
+                                    </p>
+                                    <a href="#" class="btn btn-primary btn-add-cart" data-product-id="{{ $product->id }}">Add to Cart</a>
+                                </div>
+                            </div>
+                        @empty
+                            <p class="text-center w-100">No products found for this category.</p>
+                        @endforelse
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+@else
+
+ <section>
             <div class="featured-product-section">
                 <div class="container">
                     <div class="row">
                         <!-- Left side: Banner -->
                         <div class="col-lg-4 mb-4 mb-lg-0 d-flex">
-                              @if($secondHighlight && $secondHighlight->product)
-                                @php
-                                    $highlightImage = (is_array($secondHighlight->product->main_image) && count($secondHighlight->product->main_image) > 0)
-                                        ? $front_ins_url . 'public/uploads/' . $secondHighlight->product->main_image[0]
-                                        : asset('/').'public/front/assets/img/slider/banner1.jpg';
-                                @endphp
-                                <div class="featured-banner flex-grow-1">
-                                    <img src="{{ $highlightImage }}" alt="{{ $secondHighlight->title ?? $secondHighlight->product->name }}">
-                                    <div class="content">
-                                        <h4 class="mb-3">{!! nl2br(e($secondHighlight->title)) !!}</h4>
-                                        <p class="mb-4">"{!! nl2br(e(Str::limit($secondHighlight->product->name, 80))) !!}"</p>
-                                        <a href="{{ route('product.show', $secondHighlight->product->slug) }}" class="btn btn-outline-light">Buy Now</a>
-                                    </div>
+                            <div class="featured-banner flex-grow-1">
+                                <img src="https://placehold.co/410x530" alt="Men's Premium T-Shirt">
+                                <div class="content">
+                                    <h4 class="mb-3">MEN'S PREMIUM<br>ACID WASH</h4>
+                                    <p class="mb-4">"Itachi Uchiha <br>Retro vibes and faded dreams—this acid wash tee
+                                        brings the vintage feels to your closet."</p>
+                                    <a href="#" class="btn btn-outline-light">Buy Now</a>
                                 </div>
-                            @else
-                                {{-- Fallback content --}}
-                                <div class="featured-banner flex-grow-1">
-                                    <img src="{{asset('/')}}public/front/assets/img/slider/banner1.jpg" alt="Men's Premium T-Shirt">
-                                    <div class="content">
-                                        <h4 class="mb-3">MEN'S PREMIUM<br>ACID WASH</h4>
-                                        <p class="mb-4">"Itachi Uchiha <br>Retro vibes and faded dreams—this acid wash tee
-                                            brings the vintage feels to your closet."</p>
-                                        <a href="#" class="btn btn-outline-light">Buy Now</a>
-                                    </div>
-                                </div>
-                            @endif
+                            </div>
                         </div>
                         <!-- Right side: Product Slider -->
                         <div class="col-lg-8">
                             <h2 class="mb-4 text-center">ALL COLLECTIONS</h2>
                             <div class="product-carousel">
-                              @if(isset($randomProducts) && $randomProducts->count() > 0)
-    @foreach($randomProducts as $product)
-    <div class="product-card card">
-        @php
-            // Get the first thumbnail image or use a placeholder
-             $mobileImage = (is_array($product->thumbnail_image) && count($product->thumbnail_image) > 0)
-                            ? $front_ins_url . 'public/uploads/' . $product->thumbnail_image[0]
-                            : 'https://placehold.co/800x400';
-                        $desktopImage = (is_array($product->main_image) && count($product->main_image) > 0)
-                            ? $front_ins_url . 'public/uploads/' . $product->main_image[0]
-                            : 'https://placehold.co/800x400';
-
-            // Calculate total stock from all variants to check availability
-            $totalStock = 0;
-            if ($product->variants->isNotEmpty()) {
-                foreach ($product->variants as $variant) {
-                    if (is_array($variant->sizes)) {
-                        foreach ($variant->sizes as $sizeInfo) {
-                            $totalStock += $sizeInfo['quantity'] ?? 0;
-                        }
-                    }
-                }
-            }
-        @endphp
-<a href="{{ route('product.show', $product->slug) }}">
-        {{-- Picture element for responsive images --}}
-    <picture>
-        {{-- Desktop and laptop (≥992px) --}}
-        <source media="(min-width: 992px)" srcset="{{ $desktopImage }}">
-        {{-- Tablet and mobile (<992px) --}}
-        <source media="(max-width: 991px)" srcset="{{ $mobileImage }}">
-        {{-- Fallback for browsers without <picture> support --}}
-        <img src="{{ $mobileImage }}" 
-             alt="{{ $product->name }}" 
-             class="card-img-top img-fluid">
-    </picture>
-    </a>
-        <div class="product-details-body">
-            <h5 class="product-title mb-1">{{ Str::limit($product->name, 25) }}</h5>
-            <p class="product-meta mb-1">Category: {{ $product->category->name ?? 'N/A' }}</p>
-            <p class="product-meta mb-1">SKU: {{ $product->product_code ?? 'N/A' }}</p>
-
-            @if($totalStock > 0)
-                <p class="product-meta text-success fw-bold mb-1"><i class="bi bi-check-circle-fill"></i> In stock</p>
-            @else
-                <p class="product-meta text-danger fw-bold mb-1"><i class="bi bi-x-circle-fill"></i> Out of stock</p>
-            @endif
-
-            <div class="rating-stars mb-2">
-                {{-- This can be made dynamic if you add a rating system --}}
-                <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-half"></i>
-            </div>
-
-            <p class="price-tag mb-2">
-                @if($product->discount_price)
-                    <del class="text-muted">৳ {{ number_format($product->base_price, 2) }}</del>
-                    <span class="fw-bold">৳ {{ number_format($product->discount_price, 2) }}</span>
-                @else
-                    <span class="fw-bold">৳ {{ number_format($product->base_price, 2) }}</span>
-                @endif
-            </p>
-            <a href="#" class="btn btn-primary btn-add-cart" data-product-id="{{ $product->id }}">Add to Cart</a>
-        </div>
-    </div>
-    @endforeach
-@endif
+                                <div class="product-card card">
+                                    <img src="https://placehold.co/300x300" class="card-img-top" alt="Product 6">
+                                    <div class="product-details-body">
+                                        <h5 class="product-title mb-1">Product Name 6</h5>
+                                        <p class="product-meta mb-1">Category: Home Goods</p>
+                                        <p class="product-meta mb-1">SKU: PN-006</p>
+                                        <p class="product-meta text-success fw-bold mb-1"><i
+                                                class="bi bi-check-circle-fill"></i> In stock</p>
+                                        <div class="rating-stars mb-2">
+                                            <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i
+                                                class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i
+                                                class="bi bi-star-fill"></i>
+                                        </div>
+                                        <p class="price-tag mb-2">৳ 1100.0</p>
+                                        <a href="#" class="btn btn-primary btn-add-cart">Add to Cart</a>
+                                    </div>
+                                </div>
+                                <div class="product-card card">
+                                    <img src="https://placehold.co/300x300" class="card-img-top" alt="Product 6">
+                                    <div class="product-details-body">
+                                        <h5 class="product-title mb-1">Product Name 6</h5>
+                                        <p class="product-meta mb-1">Category: Home Goods</p>
+                                        <p class="product-meta mb-1">SKU: PN-006</p>
+                                        <p class="product-meta text-success fw-bold mb-1"><i
+                                                class="bi bi-check-circle-fill"></i> In stock</p>
+                                        <div class="rating-stars mb-2">
+                                            <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i
+                                                class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i
+                                                class="bi bi-star-fill"></i>
+                                        </div>
+                                        <p class="price-tag mb-2">৳ 1100.0</p>
+                                        <a href="#" class="btn btn-primary btn-add-cart">Add to Cart</a>
+                                    </div>
+                                </div>
+                                <div class="product-card card">
+                                    <img src="https://placehold.co/300x300" class="card-img-top" alt="Product 6">
+                                    <div class="product-details-body">
+                                        <h5 class="product-title mb-1">Product Name 6</h5>
+                                        <p class="product-meta mb-1">Category: Home Goods</p>
+                                        <p class="product-meta mb-1">SKU: PN-006</p>
+                                        <p class="product-meta text-success fw-bold mb-1"><i
+                                                class="bi bi-check-circle-fill"></i> In stock</p>
+                                        <div class="rating-stars mb-2">
+                                            <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i
+                                                class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i
+                                                class="bi bi-star-fill"></i>
+                                        </div>
+                                        <p class="price-tag mb-2">৳ 1100.0</p>
+                                        <a href="#" class="btn btn-primary btn-add-cart">Add to Cart</a>
+                                    </div>
+                                </div>
+                                <div class="product-card card">
+                                    <img src="https://placehold.co/300x300" class="card-img-top" alt="Product 6">
+                                    <div class="product-details-body">
+                                        <h5 class="product-title mb-1">Product Name 6</h5>
+                                        <p class="product-meta mb-1">Category: Home Goods</p>
+                                        <p class="product-meta mb-1">SKU: PN-006</p>
+                                        <p class="product-meta text-success fw-bold mb-1"><i
+                                                class="bi bi-check-circle-fill"></i> In stock</p>
+                                        <div class="rating-stars mb-2">
+                                            <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i
+                                                class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i
+                                                class="bi bi-star-fill"></i>
+                                        </div>
+                                        <p class="price-tag mb-2">৳ 1100.0</p>
+                                        <a href="#" class="btn btn-primary btn-add-cart">Add to Cart</a>
+                                    </div>
+                                </div>
+                                <div class="product-card card">
+                                    <img src="https://placehold.co/300x300" class="card-img-top" alt="Product 6">
+                                    <div class="product-details-body">
+                                        <h5 class="product-title mb-1">Product Name 6</h5>
+                                        <p class="product-meta mb-1">Category: Home Goods</p>
+                                        <p class="product-meta mb-1">SKU: PN-006</p>
+                                        <p class="product-meta text-success fw-bold mb-1"><i
+                                                class="bi bi-check-circle-fill"></i> In stock</p>
+                                        <div class="rating-stars mb-2">
+                                            <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i
+                                                class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i
+                                                class="bi bi-star-fill"></i>
+                                        </div>
+                                        <p class="price-tag mb-2">৳ 1100.0</p>
+                                        <a href="#" class="btn btn-primary btn-add-cart">Add to Cart</a>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
         </section>
+
+@endif
+@endif
+       {{-- This section is now powered by the Homepage Section settings for Row 2 --}}
+@if($homepageRow2 && $homepageRow2->category)
+ @if(count($row2Products) > 0)
+<section>
+    <div class="featured-product-section">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-4 mb-4 mb-lg-0 d-flex">
+                    <div class="featured-banner flex-grow-1">
+                        <img src="{{ $front_ins_url .$homepageRow2->image }}" alt="{{ $homepageRow2->title ?? $homepageRow2->category->name }}">
+                        <div class="content">
+                            <h4 class="mb-3">{!! nl2br(e($homepageRow2->title)) !!}</h4>
+                            <p class="mb-4">"Discover our {{ $homepageRow2->category->name }} selection"</p>
+                            <a href="{{ route('category.show', $homepageRow2->category->slug) }}" class="btn btn-outline-light">Buy Now</a>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-8">
+                    <h2 class="mb-4 text-center">{{ Str::upper($homepageRow2->category->name) }}</h2>
+                    <div class="product-carousel">
+                        @forelse($row2Products as $product)
+                            <div class="product-card card">
+                                @php
+                                    $mobileImage = (is_array($product->thumbnail_image) && count($product->thumbnail_image) > 0) ? $front_ins_url . 'public/uploads/' . $product->thumbnail_image[0] : 'https://placehold.co/800x400';
+                                    $desktopImage = (is_array($product->main_image) && count($product->main_image) > 0) ? $front_ins_url . 'public/uploads/' . $product->main_image[0] : 'https://placehold.co/800x400';
+                                @endphp
+                                <a href="{{ route('product.show', $product->slug) }}">
+                                    <picture>
+                                        <source media="(min-width: 992px)" srcset="{{ $desktopImage }}">
+                                        <source media="(max-width: 991px)" srcset="{{ $mobileImage }}">
+                                        <img src="{{ $mobileImage }}" alt="{{ $product->name }}" class="card-img-top img-fluid">
+                                    </picture>
+                                </a>
+                                <div class="product-details-body">
+                                    <h5 class="product-title mb-1">{{ Str::limit($product->name, 25) }}</h5>
+                                    <p class="price-tag mb-2">
+                                        @if($product->discount_price)
+                                            <del class="text-muted">৳ {{ $product->base_price }}</del>
+                                            <span class="fw-bold">৳ {{ $product->discount_price }}</span>
+                                        @else
+                                            <span class="fw-bold">৳ {{ $product->base_price }}</span>
+                                        @endif
+                                    </p>
+                                    <a href="#" class="btn btn-primary btn-add-cart" data-product-id="{{ $product->id }}">Add to Cart</a>
+                                </div>
+                            </div>
+                        @empty
+                            <p class="text-center w-100">No products found for this category.</p>
+                        @endforelse
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+@else
+
+ <section>
+            <div class="featured-product-section">
+                <div class="container">
+                    <div class="row">
+                        <!-- Left side: Banner -->
+                        <div class="col-lg-4 mb-4 mb-lg-0 d-flex">
+                            <div class="featured-banner flex-grow-1">
+                                <img src="https://placehold.co/410x530" alt="Men's Premium T-Shirt">
+                                <div class="content">
+                                    <h4 class="mb-3">MEN'S PREMIUM<br>ACID WASH</h4>
+                                    <p class="mb-4">"Itachi Uchiha <br>Retro vibes and faded dreams—this acid wash tee
+                                        brings the vintage feels to your closet."</p>
+                                    <a href="#" class="btn btn-outline-light">Buy Now</a>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Right side: Product Slider -->
+                        <div class="col-lg-8">
+                            <h2 class="mb-4 text-center">ALL COLLECTIONS</h2>
+                            <div class="product-carousel">
+                                <div class="product-card card">
+                                    <img src="https://placehold.co/300x300" class="card-img-top" alt="Product 6">
+                                    <div class="product-details-body">
+                                        <h5 class="product-title mb-1">Product Name 6</h5>
+                                        <p class="product-meta mb-1">Category: Home Goods</p>
+                                        <p class="product-meta mb-1">SKU: PN-006</p>
+                                        <p class="product-meta text-success fw-bold mb-1"><i
+                                                class="bi bi-check-circle-fill"></i> In stock</p>
+                                        <div class="rating-stars mb-2">
+                                            <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i
+                                                class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i
+                                                class="bi bi-star-fill"></i>
+                                        </div>
+                                        <p class="price-tag mb-2">৳ 1100.0</p>
+                                        <a href="#" class="btn btn-primary btn-add-cart">Add to Cart</a>
+                                    </div>
+                                </div>
+                                <div class="product-card card">
+                                    <img src="https://placehold.co/300x300" class="card-img-top" alt="Product 6">
+                                    <div class="product-details-body">
+                                        <h5 class="product-title mb-1">Product Name 6</h5>
+                                        <p class="product-meta mb-1">Category: Home Goods</p>
+                                        <p class="product-meta mb-1">SKU: PN-006</p>
+                                        <p class="product-meta text-success fw-bold mb-1"><i
+                                                class="bi bi-check-circle-fill"></i> In stock</p>
+                                        <div class="rating-stars mb-2">
+                                            <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i
+                                                class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i
+                                                class="bi bi-star-fill"></i>
+                                        </div>
+                                        <p class="price-tag mb-2">৳ 1100.0</p>
+                                        <a href="#" class="btn btn-primary btn-add-cart">Add to Cart</a>
+                                    </div>
+                                </div>
+                                <div class="product-card card">
+                                    <img src="https://placehold.co/300x300" class="card-img-top" alt="Product 6">
+                                    <div class="product-details-body">
+                                        <h5 class="product-title mb-1">Product Name 6</h5>
+                                        <p class="product-meta mb-1">Category: Home Goods</p>
+                                        <p class="product-meta mb-1">SKU: PN-006</p>
+                                        <p class="product-meta text-success fw-bold mb-1"><i
+                                                class="bi bi-check-circle-fill"></i> In stock</p>
+                                        <div class="rating-stars mb-2">
+                                            <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i
+                                                class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i
+                                                class="bi bi-star-fill"></i>
+                                        </div>
+                                        <p class="price-tag mb-2">৳ 1100.0</p>
+                                        <a href="#" class="btn btn-primary btn-add-cart">Add to Cart</a>
+                                    </div>
+                                </div>
+                                <div class="product-card card">
+                                    <img src="https://placehold.co/300x300" class="card-img-top" alt="Product 6">
+                                    <div class="product-details-body">
+                                        <h5 class="product-title mb-1">Product Name 6</h5>
+                                        <p class="product-meta mb-1">Category: Home Goods</p>
+                                        <p class="product-meta mb-1">SKU: PN-006</p>
+                                        <p class="product-meta text-success fw-bold mb-1"><i
+                                                class="bi bi-check-circle-fill"></i> In stock</p>
+                                        <div class="rating-stars mb-2">
+                                            <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i
+                                                class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i
+                                                class="bi bi-star-fill"></i>
+                                        </div>
+                                        <p class="price-tag mb-2">৳ 1100.0</p>
+                                        <a href="#" class="btn btn-primary btn-add-cart">Add to Cart</a>
+                                    </div>
+                                </div>
+                                <div class="product-card card">
+                                    <img src="https://placehold.co/300x300" class="card-img-top" alt="Product 6">
+                                    <div class="product-details-body">
+                                        <h5 class="product-title mb-1">Product Name 6</h5>
+                                        <p class="product-meta mb-1">Category: Home Goods</p>
+                                        <p class="product-meta mb-1">SKU: PN-006</p>
+                                        <p class="product-meta text-success fw-bold mb-1"><i
+                                                class="bi bi-check-circle-fill"></i> In stock</p>
+                                        <div class="rating-stars mb-2">
+                                            <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i
+                                                class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i
+                                                class="bi bi-star-fill"></i>
+                                        </div>
+                                        <p class="price-tag mb-2">৳ 1100.0</p>
+                                        <a href="#" class="btn btn-primary btn-add-cart">Add to Cart</a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+@endif
+@endif
 @if(isset($offerSectionSetting) && $offerSectionSetting->is_visible && $offerSectionSetting->bundleOffer)
-        <section class="section mega-offer-wrapper"  style="background-image: {{ $offerSectionSetting->background_color ?? '#f8f9fa' }} !important;">
+        @php
+                            
+                            $newGlobalCat = \App\Models\BundleOfferProduct::where('bundle_offer_id', $offerSectionSetting->bundleOffer->id)
+                            ->get();
+                            //dd($newGlobalCat);
+                        @endphp
+
+<section class="section mega-offer-wrapper"  style="background-image: {{ $offerSectionSetting->background_color ?? '#f8f9fa' }} !important;">
             <div class="mega-offer-section">
                 <div class="container">
                     <div class="row">
@@ -445,12 +808,7 @@
                                 </div>
                             </div>
                         </div>
-                        @php
-                            
-                            $newGlobalCat = \App\Models\BundleOfferProduct::where('bundle_offer_id', $offerSectionSetting->bundleOffer->id)
-                            ->get();
-                            //dd($newGlobalCat);
-                        @endphp
+                       
                         <!-- Product Slider Section -->
                         <div class="col-12 product-offer-slider-wrapper">
                             <div class="product-offer-slider">
@@ -475,7 +833,7 @@
 
                // dd($originalTotalPrice);
             @endphp
-
+@if(isset($firstProduct))
             <!-- Product Card -->
             <div class="product-card-offer card">
                 <img src="{{ $front_ins_url . 'public/uploads/' .$firstProduct->main_image[0] }}" class="card-img-left" alt="{{ $deal->title }}">
@@ -493,7 +851,7 @@
                     </p>
                 </div>
             </div>
-        
+        @endif
         @empty
             <div class="col-12">
                 <p class="text-center">No special offers available at the moment.</p>
@@ -515,6 +873,7 @@
             </div>
         </section>
 @endif
+ @if(isset($featuredCategories) && $featuredCategories->count() > 0)
         <section class="featured-category-section">
     <div class="container">
         <div class="category-header">
@@ -522,7 +881,7 @@
             <p>Hurry and get coupon with every product</p>
         </div>
 
-        @if(isset($featuredCategories) && $featuredCategories->count() > 0)
+       
         <div class="row category-layout g-3">
             <!-- Left side: Large Banner -->
             <div class="col-lg-6">
@@ -553,9 +912,10 @@
                 </div>
             </div>
         </div>
-        @endif
+       
     </div>
 </section>
+ @endif
         <section class="why-section">
         <div class="container">
             <div class="why-header">

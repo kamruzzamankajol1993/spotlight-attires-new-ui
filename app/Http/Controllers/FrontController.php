@@ -11,10 +11,11 @@ use Illuminate\Support\Facades\DB;
 use App\Models\Category;
 use App\Models\Subcategory;
 use App\Models\HighlightProduct;
-
-use App\Models\BundleOffer;
 use App\Models\AssignCategory;
+use App\Models\FeaturedCategory;
+use App\Models\BundleOffer;
 use App\Models\Size;
+use App\Models\HomepageSection; 
 class FrontController extends Controller
 {
 
@@ -123,85 +124,161 @@ class FrontController extends Controller
         return view('front.product.show', compact('product'));
     }
 
-    public function index()
+    public function offers(){
+
+    $getAllid = AssignCategory::where('category_name','discount')->pluck('product_id');
+
+    $products = Product::where('status', 1)
+        ->whereIn('id', $getAllid)
+        ->with(['category', 'variants'])
+        ->latest()
+        ->paginate(12);
+        
+    // --- MODIFIED: We only need sizes for the filter now ---
+    $sizes = Size::where('status', 1)->get();
+
+    // --- REMOVED: $categoryList and $animationCategoryList are no longer needed ---
+
+    return view('front.discount.list', compact('products', 'sizes'));
+}
+
+/**
+ * NEW method dedicated to filtering ONLY discount products.
+ */
+public function ajaxDiscountFilter(Request $request)
+{
+    // First, get the IDs of all products assigned to the 'discount' category.
+    $discountProductIds = AssignCategory::where('category_name', 'discount')->pluck('product_id');
+    
+    // The main query now starts from ONLY the discount products.
+    $query = Product::whereIn('id', $discountProductIds)->where('status', 1);
+    
+    // Filter by Price Range
+    if ($request->filled('min_price') && $request->filled('max_price')) {
+        $query->whereBetween('base_price', [(float)$request->min_price, (float)$request->max_price]);
+    }
+
+    // Filter by Stock Status
+    if ($request->filled('stock_status')) {
+        if ($request->stock_status === 'on_sale') {
+            $query->whereNotNull('discount_price')->where('discount_price', '>', 0);
+        } elseif ($request->stock_status === 'in_stock') {
+            $query->whereHas('variants', fn($q) => $q->whereJsonLength('sizes', '>', 0));
+        }
+    }
+
+    // Filter by Size
+    if ($request->filled('sizes') && is_array($request->sizes)) {
+        $selectedSizeNames = $request->sizes;
+        $sizeIds = Size::whereIn('name', $selectedSizeNames)->pluck('id')->toArray();
+
+        if (!empty($sizeIds)) {
+            $query->whereHas('variants', function ($variantQuery) use ($sizeIds) {
+                $variantQuery->where(function ($q) use ($sizeIds) {
+                    foreach ($sizeIds as $sizeId) {
+                        $q->orWhereJsonContains('sizes', ['size_id' => (string)$sizeId]);
+                    }
+                });
+            });
+        }
+    }
+
+    // Sorting Logic
+    $sortBy = $request->input('sort_by', 'newest');
+    switch ($sortBy) {
+        case 'price_asc':
+            $query->orderByRaw('ISNULL(discount_price), discount_price ASC, base_price ASC');
+            break;
+        case 'price_desc':
+            $query->orderByRaw('ISNULL(discount_price), discount_price DESC, base_price DESC');
+            break;
+        case 'name_asc':
+            $query->orderBy('name', 'asc');
+            break;
+        case 'popularity':
+            $query->latest(); // Placeholder for popularity
+            break;
+        case 'newest':
+        default:
+            $query->latest();
+            break;
+    }
+
+    $products = $query->with(['category', 'variants'])->paginate(12);
+
+    $html = view('front.category.product_card_partial', compact('products'))->render();
+
+    return response()->json([
+        'html' => $html,
+        'hasMorePages' => $products->hasMorePages(),
+    ]);
+}
+
+     public function index()
     {
+        // --- START: MODIFIED SECTION ---
 
+        // Fetch Featured Category (Trending/New/Discount) sections
+        $featuredCategorySettings = FeaturedCategory::pluck('value', 'key')->all();
+        $titles = ['trending' => 'Trending Products', 'new' => 'New Arrivals', 'discount' => 'On Discount'];
+        
+        $topProductsType = $featuredCategorySettings['first_row_category'] ?? null;
+        $topProductsStatus = $featuredCategorySettings['first_row_status'] ?? false;
+        $products = collect();
+        $topRatedTitle = '';
+        if ($topProductsStatus && $topProductsType) {
+            $topRatedTitle = $titles[$topProductsType] ?? 'Top Rated Products';
+            $productIds = AssignCategory::where('category_name', $topProductsType)->pluck('product_id');
+            if ($productIds->isNotEmpty()) {
+                $products = Product::whereIn('id', $productIds)->where('status', 1)->with(['category', 'variants'])->latest()->take(8)->get();
+            }
+        }
+        
+        $secondRowType = $featuredCategorySettings['second_row_category'] ?? null;
+        $secondRowStatus = $featuredCategorySettings['second_row_status'] ?? false;
+        $secondRowProducts = collect();
+        $secondRowTitle = '';
+        if ($secondRowStatus && $secondRowType) {
+            $secondRowTitle = $titles[$secondRowType] ?? 'More For You';
+            $productIds = AssignCategory::where('category_name', $secondRowType)->pluck('product_id');
+            if ($productIds->isNotEmpty()) {
+                $secondRowProducts = Product::whereIn('id', $productIds)->where('status', 1)->with(['category', 'variants'])->latest()->take(8)->get();
+            }
+        }
 
-        $getMainPreoductIds = SliderControl::where('section_key', 'main_slider')
-            ->where('is_visible', 1)
-            ->pluck('product_ids')
-            ->flatten()
-            ->unique()
-            ->all();
+        // Fetch Homepage Section (Category-based) data
+        $homepageRow1 = HomepageSection::with('category')->where('row_identifier', 'row_1')->where('status', 1)->first();
+        $homepageRow2 = HomepageSection::with('category')->where('row_identifier', 'row_2')->where('status', 1)->first();
+        
+        $row1Products = collect();
+        if ($homepageRow1 && $homepageRow1->category) {
+            $row1Products = Product::where('category_id', $homepageRow1->category_id)->where('status', 1)->with('variants')->latest()->take(8)->get();
+        }
 
-            $getMainPreoductIdsLast = SliderControl::where('section_key', 'bottom_banners')
-            ->where('is_visible', 1)
-            ->pluck('product_ids')
-            ->flatten()
-            ->unique()
-            ->all();
+        $row2Products = collect();
+        if ($homepageRow2 && $homepageRow2->category) {
+            $row2Products = Product::where('category_id', $homepageRow2->category_id)->where('status', 1)->with('variants')->latest()->take(8)->get();
+        }
 
-             $getMainTopBannerProduct = SliderControl::where('section_key', 'top_banner')
-            ->where('is_visible', 1)
-            ->pluck('product_ids')
-            ->flatten()
-            ->unique()
-            ->all();
+        // --- END: MODIFIED SECTION ---
 
-
-         // Fetch the latest 2 products from the database
-        $latestProducts = Product::where('status', 1)
-        ->whereIn('id', $getMainPreoductIds) // Filter by the product IDs from the slider
-                                 ->latest() // Orders by created_at descending
-                               
-                                 ->get();
-
-                                  // Query 1: For the top banner (skip 2, take the 3rd)
-        $topBannerProduct = Product::where('id',(int) $getMainTopBannerProduct[0])->where('status', 1)->first();
-
-        // Query 2: For the bottom two banners (skip the next 3 to get the 7th and 8th)
-        // We skip a total of 6 (2 from slider + 1 from top banner + 3 specified)
-        $bottomBannerProducts = Product::where('status', 1) ->whereIn('id', $getMainPreoductIdsLast)->latest()->get();
-
-          $products = Product::where('status', 1)
-                           ->with(['category', 'variants']) // Eager load relationships
-                           ->latest()
-                           //->skip(5)
-                           ->take(6)
-                           ->get();
-
-                            // Query for 5 random latest products
-        $randomLatestProducts = Product::where('status', 1)
-                                       ->with(['category', 'variants']) // Eager load relationships
-                                       ->latest() // Get the most recent ones first
-                                       ->take(20) // Take a pool of the latest 20 products
-                                       ->get()
-                                       ->random(5); // Pick 5 randomly from that pool
-                                       // Query for 5 random products from the entire list
-        $randomProducts = Product::where('status', 1)
-                                 ->with(['category', 'variants']) // Eager load relationships
-                                 ->inRandomOrder() // Efficiently get random rows
-                                 ->take(5)
-                                 ->get();
-
-                                 $featuredCategories = AnimationCategory::where('status', 1)
-                                            
-                                               ->take(5)
-                                               ->get();
-    // 1. Fetch all deal records for a specific main offer (e.g., where bundle_offer_id is 1)
+        // Fetch other necessary data for the homepage
+        $getMainPreoductIds = SliderControl::where('section_key', 'main_slider')->where('is_visible', 1)->pluck('product_ids')->flatten()->unique()->all();
+        $getMainPreoductIdsLast = SliderControl::where('section_key', 'bottom_banners')->where('is_visible', 1)->pluck('product_ids')->flatten()->unique()->all();
+        $getMainTopBannerProduct = SliderControl::where('section_key', 'top_banner')->where('is_visible', 1)->pluck('product_ids')->flatten()->unique()->all();
+        $latestProducts = Product::where('status', 1)->whereIn('id', $getMainPreoductIds)->latest()->get();
+        $topBannerProduct = Product::where('id', (int)($getMainTopBannerProduct[0] ?? 0))->where('status', 1)->first();
+        $bottomBannerProducts = Product::where('status', 1)->whereIn('id', $getMainPreoductIdsLast)->latest()->get();
+        $featuredCategories = AnimationCategory::where('status', 1)->take(5)->get();
         $offerDeals = BundleOfferProduct::where('bundle_offer_id', 1)->get();
-
-        // 2. Get all unique product IDs from all the deals
         $allProductIds = $offerDeals->pluck('product_id')->flatten()->unique()->all();
-
-        // 3. Fetch all the product models for those IDs in a single query
         $productsbun = Product::whereIn('id', $allProductIds)->get()->keyBy('id');
 
-        // Fetch Highlight Products
-        $firstHighlight = HighlightProduct::with('product.category')->where('section', 'first_section')->first();
-        $secondHighlight = HighlightProduct::with('product.category')->where('section', 'second_section')->first();
-
-        return view('front.index', compact('firstHighlight', 'secondHighlight', 'productsbun', 'offerDeals', 'latestProducts', 'topBannerProduct', 'bottomBannerProducts', 'products', 'randomLatestProducts', 'randomProducts', 'featuredCategories'));
+        return view('front.index', compact(
+            'productsbun', 'offerDeals', 'latestProducts', 'topBannerProduct', 'bottomBannerProducts', 
+            'products', 'topRatedTitle', 'featuredCategories', 'secondRowProducts', 'secondRowTitle',
+            'homepageRow1', 'row1Products', 'homepageRow2', 'row2Products' // Add new variables
+        ));
     }
 
 

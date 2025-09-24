@@ -1,21 +1,18 @@
 @extends('front.master.master')
 
-@section('title', $subcategory->name ?? 'Subcategory')
+@section('title', 'Shop All Products')
 
 @section('css')
 <style>
-    /* Styles are the same as the category page */
-    #loading-spinner {
-        display: none;
-        text-align: center;
-        padding: 20px 0;
-    }
+    #loading-spinner { display: none; text-align: center; padding: 20px 0; }
     .main-category-filter.active,
-    .subcategory-filter.active {
-        font-weight: bold;
-        color: #0d6efd !important;
+    .subcategory-filter.active,
+    .animation-category-filter.active { 
+        font-weight: bold; 
+        color: #0d6efd !important; 
     }
-      /* --- NEW CSS FOR STICKY SIDEBAR --- */
+
+       /* --- NEW CSS FOR STICKY SIDEBAR --- */
     .sticky-filter {
         position: -webkit-sticky; /* For Safari */
         position: sticky;
@@ -26,26 +23,33 @@
     }
     /* --- END OF NEW CSS --- */
 </style>
+
 @endsection
 
 @section('body')
 <main>
     <section class="section">
         <div class="container py-4">
+
+             <div class="row mb-4">
+                <div class="col-12 text-center">
+                    <h1 class="fw-bold">Offer Product</h1>
+                </div>
+            </div>
+          
             <div class="row">
                 <div class="col-12 d-block d-md-none mb-3">
-                    <button class="btn btn-dark w-100" type="button" data-bs-toggle="offcanvas" data-bs-target="#mobile-filter-menu" aria-controls="mobile-filter-menu">
-                        <i class="bi bi-funnel-fill"></i> Filter Products
+                    <button class="btn btn-dark w-100" type="button" data-bs-toggle="offcanvas" data-bs-target="#mobile-filter-menu">
+                        <i class="bi bi-funnel-fill"></i> Filters
                     </button>
                 </div>
 
-                <div class="col-md-3 d-none d-md-block sticky-filter" id="desktop-filter">
-                    {{-- The same filter sidebar works here perfectly --}}
-                    @include('front.category.filter_sidebar')
+                <div class="col-md-3 d-none d-md-block sticky-filter">
+                    @include('front.discount.filter_sidebar')
                 </div>
 
                 <div class="col-md-9">
-                       <!--- new filter section --->
+                     <!--- new filter section --->
                     <div class="d-flex justify-content-end">
                     <div class="row mb-3">
                         <div class="col">
@@ -64,8 +68,7 @@
                     </div>
                     <!--- end new filter section ---->
                     <div class="product-grid">
-                        <div id="product-list" class="row row-cols-2 row-cols-sm-2 row-cols-lg-3 row-cols-xl-4 g-3" data-base-subcategory-id="{{ $subcategory->id }}">
-                            {{-- Load the initial products for the subcategory --}}
+                        <div id="product-list" class="row row-cols-2 row-cols-sm-2 row-cols-lg-3 row-cols-xl-4 g-3">
                             @include('front.category.product_card_partial', ['products' => $products])
                         </div>
                     </div>
@@ -78,18 +81,13 @@
             </div>
         </div>
 
-        <div class="offcanvas offcanvas-start" tabindex="-1" id="mobile-filter-menu" aria-labelledby="mobile-filter-menu-label">
-            <div class="offcanvas-header">
-                <h5 class="offcanvas-title" id="mobile-filter-menu-label">Filter Products</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
-            </div>
-            <div class="offcanvas-body">
-                @include('front.category.filter_sidebar')
-            </div>
+        <div class="offcanvas offcanvas-start" tabindex="-1" id="mobile-filter-menu">
+            <div class="offcanvas-header"><h5 class="offcanvas-title">Filters</h5><button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button></div>
+            <div class="offcanvas-body">@include('front.discount.filter_sidebar')</div>
         </div>
     </section>
 </main>
-  <!-- Quick View Modal -->
+ <!-- Quick View Modal -->
     <div class="modal fade" id="quickViewModal" tabindex="-1" aria-labelledby="quickViewModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content">
@@ -155,127 +153,97 @@ $(document).ready(function() {
     let isLoading = false;
     let currentRequest = null;
 
-    /**
-     * MODIFIED: This function now checks for active filters first.
-     * If none are active, it falls back to the initial subcategory of the page.
-     */
     function getFilters() {
 
-         const selectedSizes = $('.size-filter:checked').map(function() {
+         // --- NEW: Collect selected sizes ---
+        const selectedSizes = $('.size-filter:checked').map(function() {
             return $(this).val();
         }).get(); // .get() converts jQuery object to a plain array
-        let filters = {
+        return {
+            category_id: $('.main-category-filter.active').data('id'),
+            subcategory_id: $('.subcategory-filter.active').data('id'),
+            animation_category_id: $('.animation-category-filter.active').data('id'),
             min_price: $('#min-price-slider').val(),
             max_price: $('#max-price-slider').val(),
             stock_status: $('input[name="stock-status"]:checked').val(),
-             sort_by: $('#sort-select-new').val() ,
-                sizes: selectedSizes
+             sort_by: $('#sort-select-new').val(),
+             sizes: selectedSizes 
         };
-
-        const activeMainCategory = $('.main-category-filter.active').data('id');
-        const activeSubcategory = $('.subcategory-filter.active').data('id');
-
-        // Prioritize a manually selected filter
-        if (activeMainCategory) {
-            filters.category_id = activeMainCategory;
-        } else if (activeSubcategory) {
-            filters.subcategory_id = activeSubcategory;
-        } else {
-            // If no filter is active, use the base context of the page for on-scroll loading
-            const baseSubcategoryId = $('#product-list').data('base-subcategory-id');
-            if (baseSubcategoryId) {
-                filters.subcategory_id = baseSubcategoryId;
-            }
-        }
-
-        return filters;
     }
 
-    // The rest of the script is identical to the one in category.blade.php
     function loadProducts(reset = false) {
-        if (isLoading) return;
-         if (reset) {
+    if (isLoading) return;
+    if (reset) {
         page = 1;
-        $('#product-list').html(''); // Clears the current products
-
-        // ADD THIS LINE TO SCROLL UP
-       // $('html, body').animate({ scrollTop: $('.product-grid').offset().top - 80 }, 300);
+        $('#product-list').html('');
     }
 
-        isLoading = true;
-        $('#loading-spinner').show();
-        if (currentRequest) currentRequest.abort();
+    isLoading = true;
+    $('#loading-spinner').show();
+    if (currentRequest) currentRequest.abort();
 
-        currentRequest = $.ajax({
-            url: `{{ route('products.filter') }}?page=${page}`,
-            type: 'GET',
-            data: getFilters(), // This now sends the correct context
-            success: function(response) {
-                if (reset) {
-                    $('#product-list').html(response.html);
-                } else {
-                    $('#product-list').append(response.html);
-                }
-                hasMorePages = response.hasMorePages;
-                page++;
-                if (!hasMorePages) $('#loading-spinner').hide();
-            },
-            error: function(xhr, status, error) {
-                if (status !== 'abort') console.error("Error:", error);
-            },
-            complete: function() {
-                isLoading = false;
-                if (hasMorePages) $('#loading-spinner').hide();
+    currentRequest = $.ajax({
+        // --- START: MODIFIED LINE ---
+        // Use the new, dedicated route for discount filtering
+        url: `{{ route('discount.ajax_filter') }}?page=${page}`,
+        // --- END: MODIFIED LINE ---
+        type: 'GET',
+        data: getFilters(),
+        success: function(response) {
+            if (reset) $('#product-list').html(response.html);
+            else $('#product-list').append(response.html);
+            hasMorePages = response.hasMorePages;
+            page++;
+            if (!hasMorePages) $('#loading-spinner').hide();
+        },
+        error: function(xhr, status, error) {
+            if (status !== 'abort') console.error("Error:", error);
+        },
+        complete: function() {
+            isLoading = false;
+            if (hasMorePages) $('#loading-spinner').hide();
+        }
+    });
+}
+
+    // On-scroll loader
+    $(window).scroll(function() {
+        if ($('#product-list').length > 0 && ($(window).scrollTop() + $(window).height() >= $('#product-list').offset().top + $('#product-list').height() - 500)) {
+            if (hasMorePages && !isLoading) loadProducts();
+        }
+    });
+
+    // --- Event Listeners ---
+    function handleCategoryClick(selector, otherSelectors) {
+        $(document).on('click', selector, function(e) {
+            e.preventDefault();
+            otherSelectors.forEach(sel => $(sel).removeClass('active'));
+            const $el = $(this);
+            if ($el.hasClass('active')) $el.removeClass('active');
+            else {
+                $(selector).removeClass('active');
+                $el.addClass('active');
             }
+            loadProducts(true);
         });
     }
 
-    $(window).scroll(function() {
-        if ($('#product-list').length) {
-            const productListBottom = $('#product-list').offset().top + $('#product-list').height();
-            const screenBottom = $(window).scrollTop() + $(window).height();
-            if (screenBottom >= productListBottom - 500) {
-                if (hasMorePages && !isLoading) {
-                    loadProducts();
-                }
-            }
-        }
-    });
+    handleCategoryClick('.main-category-filter', ['.subcategory-filter', '.animation-category-filter']);
+    handleCategoryClick('.subcategory-filter', ['.main-category-filter', '.animation-category-filter']);
+    handleCategoryClick('.animation-category-filter', ['.main-category-filter', '.subcategory-filter']);
 
     $('#sort-select-new').on('change', function() {
         loadProducts(true); // Reset and load products with the new sorting
     });
-    
-    $('#price-filter-btn').on('click', function() { loadProducts(true); });
-    $(document).on('change', '.stock-status-filter', function() { loadProducts(true); });
-    $(document).on('click', '.main-category-filter', function(e) {
-        e.preventDefault();
-        $('.subcategory-filter').removeClass('active');
-        if ($(this).hasClass('active')) {
-             $(this).removeClass('active');
-        } else {
-             $('.main-category-filter').removeClass('active');
-             $(this).addClass('active');
-        }
-        loadProducts(true);
-    });
-    $(document).on('click', '.subcategory-filter', function(e) {
-        e.preventDefault();
-        $('.main-category-filter').removeClass('active');
-        if ($(this).hasClass('active')) {
-            $(this).removeClass('active');
-        } else {
-            $('.subcategory-filter').removeClass('active');
-            $(this).addClass('active');
-        }
-        loadProducts(true);
-    });
+    // Listeners for Price and Stock
+    $('#price-filter-btn').on('click', () => loadProducts(true));
+    $('.stock-status-filter').on('change', () => loadProducts(true));
     $('#min-price-slider, #max-price-slider').on('input', function() {
-        let minPrice = parseInt($('#min-price-slider').val());
-        let maxPrice = parseInt($('#max-price-slider').val());
-        if (minPrice > maxPrice) [minPrice, maxPrice] = [maxPrice, minPrice];
-        $('#price-range-display').text(`Price: ৳${minPrice} - ৳${maxPrice}`);
+        let min = parseInt($('#min-price-slider').val()), max = parseInt($('#max-price-slider').val());
+        if (min > max) [min, max] = [max, min];
+        $('#price-range-display').text(`Price: ৳${min} - ৳${max}`);
     });
+
     // --- NEW: Listener for size checkboxes ---
     $(document).on('change', '.size-filter', function() {
         loadProducts(true);

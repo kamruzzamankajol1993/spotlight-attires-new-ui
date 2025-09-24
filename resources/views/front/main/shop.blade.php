@@ -11,7 +11,19 @@
         font-weight: bold; 
         color: #0d6efd !important; 
     }
+
+       /* --- NEW CSS FOR STICKY SIDEBAR --- */
+    .sticky-filter {
+        position: -webkit-sticky; /* For Safari */
+        position: sticky;
+        top: 100px; /* Adjust this value based on your header's height */
+        align-self: flex-start; /* Prevents the column from stretching */
+        height: calc(100vh - 100px); /* Sets a max-height for the sidebar */
+        overflow-y: auto; /* Adds a scrollbar if the filters are too long */
+    }
+    /* --- END OF NEW CSS --- */
 </style>
+
 @endsection
 
 @section('body')
@@ -158,7 +170,7 @@ $(document).ready(function() {
         if (reset) {
             page = 1;
             $('#product-list').html('');
-            $('html, body').animate({ scrollTop: $('.product-grid').offset().top - 80 }, 300);
+           // $('html, body').animate({ scrollTop: $('.product-grid').offset().top - 80 }, 300);
         }
 
         isLoading = true;
