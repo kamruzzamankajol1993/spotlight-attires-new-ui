@@ -67,13 +67,15 @@
             </div>
 
                 <!-- Support -->
+                @if(isset($supportInfo))
                 <div class="d-flex align-items-center">
                     <i class="bi bi-headset me-2 fs-4"></i>
                     <div>
-                        <div class="fw-bold">Support(10am - 8pm)</div>
-                        <div>+880 1872-094599</div>
+                        <div class="fw-bold">{{ $supportInfo->title }}</div>
+                        <div>{{ $supportInfo->phone }}</div>
                     </div>
                 </div>
+                @endif
             </div>
         </div>
         <!-- Bottom Section -->

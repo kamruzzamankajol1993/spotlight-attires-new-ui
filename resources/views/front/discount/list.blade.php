@@ -31,11 +31,11 @@
     <section class="section">
         <div class="container py-4">
 
-             <div class="row mb-4">
+             {{-- <div class="row mb-4">
                 <div class="col-12 text-center">
                     <h1 class="fw-bold">Offer Product</h1>
                 </div>
-            </div>
+            </div> --}}
           
             <div class="row">
                 <div class="col-12 d-block d-md-none mb-3">
@@ -153,23 +153,26 @@ $(document).ready(function() {
     let isLoading = false;
     let currentRequest = null;
 
-    function getFilters() {
+    // --- START: MODIFIED PART ---
+    // Capture the current category slug from the controller
+    const EXTRA_CATEGORY_SLUG = '{{ $extraCategory->slug ?? '' }}';
 
-         // --- NEW: Collect selected sizes ---
+    function getFilters() {
         const selectedSizes = $('.size-filter:checked').map(function() {
             return $(this).val();
-        }).get(); // .get() converts jQuery object to a plain array
+        }).get();
+
         return {
-            category_id: $('.main-category-filter.active').data('id'),
-            subcategory_id: $('.subcategory-filter.active').data('id'),
-            animation_category_id: $('.animation-category-filter.active').data('id'),
+            // Add the slug to the data sent in the AJAX request
+            extra_category_slug: EXTRA_CATEGORY_SLUG, 
             min_price: $('#min-price-slider').val(),
             max_price: $('#max-price-slider').val(),
             stock_status: $('input[name="stock-status"]:checked').val(),
-             sort_by: $('#sort-select-new').val(),
-             sizes: selectedSizes 
+            sort_by: $('#sort-select-new').val(),
+            sizes: selectedSizes 
         };
     }
+    // --- END: MODIFIED PART ---
 
     function loadProducts(reset = false) {
     if (isLoading) return;

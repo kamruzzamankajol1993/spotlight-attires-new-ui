@@ -1211,7 +1211,7 @@ section,
 
 .left-banner {
     position: relative;
-    background-image: url('https://placehold.co/800x1200/2e433f/fff?text=Spotlight+Attires');
+    
     background-size: cover;
     background-position: center;
     border-radius: 0.75rem;

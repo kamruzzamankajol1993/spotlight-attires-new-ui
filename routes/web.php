@@ -123,6 +123,8 @@ Route::get('/offers', 'offers')->name('offers');
       Route::get('/discount-filter', 'ajaxDiscountFilter')->name('discount.ajax_filter');
 
     Route::get('/category/{slug}', 'category')->name('category.show');
+    Route::get('/extra-category/{slug}', 'extra_category_offer')->name('extra_category_offer.show');
+    Route::get('/extra_category/{slug}', 'extra_category')->name('extra_category.show');
     Route::get('/subcategory/{slug}', 'subcategory')->name('subcategory.show');
     // ADD THESE NEW ROUTES FOR THE OFFER PAGE
     Route::get('/offer/{slug}','offer')->name('offer.show');

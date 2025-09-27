@@ -246,7 +246,7 @@
                                         </div>
                                         <div class="d-flex align-items-center small text-muted">
                                             <span>4-6 Days</span>
-                                            <span class="fw-semibold text-dark ms-3">Outside Dhaka BDT 130</span>
+                                            <span class="fw-semibold text-dark ms-3">Outside Dhaka BDT 150</span>
                                         </div>
                                     </div>
                                 </div>

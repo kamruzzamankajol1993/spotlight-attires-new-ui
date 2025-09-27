@@ -8,7 +8,7 @@
                             <i class="bi bi-geo-alt-fill"></i>
                         </div>
                         <div class="contact-info">
-                            Dhaka
+                            {{$front_ins_add}}
                         </div>
                     </div>
                 </div>
@@ -18,7 +18,7 @@
                             <i class="bi bi-envelope-fill"></i>
                         </div>
                         <div class="contact-info">
-                            info@spotlightattires.com
+                           {{$front_ins_email}}
                         </div>
                     </div>
                 </div>
@@ -28,7 +28,7 @@
                             <i class="bi bi-telephone-fill"></i>
                         </div>
                         <div class="contact-info">
-                            +88 01833 320355
+                         {{$front_ins_phone}}
                         </div>
                     </div>
                 </div>

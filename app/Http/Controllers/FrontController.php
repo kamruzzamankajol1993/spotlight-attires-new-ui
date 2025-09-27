@@ -16,6 +16,10 @@ use App\Models\FeaturedCategory;
 use App\Models\BundleOffer;
 use App\Models\Size;
 use App\Models\HomepageSection; 
+use App\Models\HeroLeftSlider;
+use App\Models\HeroRightSlider;
+use App\Models\FooterBanner;
+use App\Models\ExtraCategory; 
 class FrontController extends Controller
 {
 
@@ -97,49 +101,127 @@ class FrontController extends Controller
         ));
     }
 
-    public function quickView($id)
+   public function quickView($id)
 {
-    $product = Product::with(['variants.color', 'category'])
+    // 1. Fetch the product without the old 'category' relationship
+    $product = Product::with(['variants.color'])
         ->findOrFail($id);
     
-    // We will create this new view file in the next step
+    // 2. Find the category assignment from the pivot table
+    $assignedCategory = AssignCategory::where('product_id', $product->id)->first();
+    
+    // 3. If an assignment exists, load the full Category model
+    if ($assignedCategory) {
+        $category = Category::find($assignedCategory->category_id);
+        if ($category) {
+            // Manually set the 'category' relation on the product object
+            // This allows the view to still use `$product->category`
+            $product->setRelation('category', $category);
+        }
+    }
+    
     return view('front.include.quick_view_modal_content', compact('product'));
 }
 
      public function product($slug)
-    {
-        $product = Product::where('slug', $slug)
-            ->with([
-                'category',                 // For breadcrumbs
-                'subcategory',              // For breadcrumbs
-                'variants.color',           // Eager load variants AND their associated colors
-                'assignChart.entries',       // Eager load the assigned size chart AND its entries
-                'reviews.user', // Eager load approved reviews and the user who wrote them
-                'reviews.images'
-            ])
-             ->withCount('reviews') // Get the total number of reviews
-            ->withAvg('reviews', 'rating') // Calculate the average rating directly in the query
-            ->firstOrFail();
+{
+    // 1. Fetch the product, removing 'category' and 'subcategory' from the with() array.
+    $product = Product::where('slug', $slug)
+        ->with([
+            'variants.color',
+            'assignChart.entries',
+            'reviews.user',
+            'reviews.images'
+        ])
+        ->withCount('reviews')
+        ->withAvg('reviews', 'rating')
+        ->firstOrFail();
 
-        return view('front.product.show', compact('product'));
+    // 2. Get all category IDs assigned to this product from the pivot table.
+    $assignedCategoryIds = AssignCategory::where('product_id', $product->id)->pluck('category_id');
+
+    if ($assignedCategoryIds->isNotEmpty()) {
+        // 3. Fetch the actual Category models for all assignments, eager-loading their parents.
+        $assignedCategories = Category::whereIn('id', $assignedCategoryIds)->with('parent')->get();
+
+        // 4. Find the most specific category (the one with a parent) to use as the "subcategory".
+        $subcategory = $assignedCategories->firstWhere('parent_id', '!=', null);
+
+        // 5. Determine the parent "category".
+        // If a subcategory was found, its parent is the main category.
+        // Otherwise, fall back to the first assigned category.
+        $category = $subcategory ? $subcategory->parent : $assignedCategories->first();
+        
+        // 6. Manually set the relations on the product object.
+        // This allows your view to use `$product->category` and `$product->subcategory` without any changes.
+        if ($category) {
+            $product->setRelation('category', $category);
+        }
+        if ($subcategory) {
+            $product->setRelation('subcategory', $subcategory);
+        }
     }
 
-    public function offers(){
+    return view('front.product.show', compact('product'));
+}
 
-    $getAllid = AssignCategory::where('category_name','discount')->pluck('product_id');
+    public function offers()
+{
+    // Find the 'discount' category details to pass to the view for context
+    $extraCategory = ExtraCategory::where('slug', 'discount')->firstOrFail();
+
+    // The rest of the function remains the same...
+    $getAllid = AssignCategory::where('category_name', 'discount')->pluck('product_id');
 
     $products = Product::where('status', 1)
         ->whereIn('id', $getAllid)
-        ->with(['category', 'variants'])
+        ->with(['variants'])
+        ->latest()
+        ->paginate(12);
+
+    $productIdsOnPage = $products->pluck('id');
+    if ($productIdsOnPage->isNotEmpty()) {
+        $assignments = AssignCategory::whereIn('product_id', $productIdsOnPage)->get()->keyBy('product_id');
+        $categoryIds = $assignments->pluck('category_id')->unique();
+        $categories = Category::whereIn('id', $categoryIds)->get()->keyBy('id');
+
+        foreach ($products as $product) {
+            $assignment = $assignments->get($product->id);
+            if ($assignment) {
+                $category = $categories->get($assignment->category_id);
+                $product->setRelation('category', $category);
+            }
+        }
+    }
+        
+    $sizes = Size::where('status', 1)->get();
+
+    // Pass the new $extraCategory variable to the view
+    return view('front.discount.list', compact('products', 'sizes', 'extraCategory'));
+}
+
+
+public function extra_category_offer($slug)
+{
+    // 1. Find the details of the extra category itself (e.g., for the page title).
+    $extraCategory = ExtraCategory::where('slug', $slug)->firstOrFail();
+
+    // 2. Get all product IDs from the pivot table where 'category_name' matches the slug.
+    $productIds = AssignCategory::where('category_name', $slug)->pluck('product_id');
+
+    // 3. Fetch and paginate all products that match the retrieved IDs.
+    $products = Product::whereIn('id', $productIds)
+        ->where('status', 1)
+        ->with('variants') // Eager load variants for efficiency
         ->latest()
         ->paginate(12);
         
-    // --- MODIFIED: We only need sizes for the filter now ---
+    // 4. Fetch available sizes for the filter sidebar.
     $sizes = Size::where('status', 1)->get();
 
-    // --- REMOVED: $categoryList and $animationCategoryList are no longer needed ---
-
-    return view('front.discount.list', compact('products', 'sizes'));
+    // 5. Return the view, passing the products, sizes, and category details.
+    // Note: You will need to create a view file at: resources/views/front/extra_category/list.blade.php
+    return view('front.discount.list', compact('products', 'sizes', 'extraCategory'));
 }
 
 /**
@@ -147,18 +229,19 @@ class FrontController extends Controller
  */
 public function ajaxDiscountFilter(Request $request)
 {
-    // First, get the IDs of all products assigned to the 'discount' category.
-    $discountProductIds = AssignCategory::where('category_name', 'discount')->pluck('product_id');
+    // Get the category slug from the request, fallback to 'discount' for safety.
+    $slug = $request->input('extra_category_slug', 'discount');
+
+    // **UPDATED LINE:** Get product IDs based on the dynamic slug.
+    $productIds = AssignCategory::where('category_name', $slug)->pluck('product_id');
     
-    // The main query now starts from ONLY the discount products.
-    $query = Product::whereIn('id', $discountProductIds)->where('status', 1);
+    // The main query now starts from the correct set of products.
+    $query = Product::whereIn('id', $productIds)->where('status', 1);
     
-    // Filter by Price Range
+    // ... (All other filter and sorting logic remains the same)
     if ($request->filled('min_price') && $request->filled('max_price')) {
         $query->whereBetween('base_price', [(float)$request->min_price, (float)$request->max_price]);
     }
-
-    // Filter by Stock Status
     if ($request->filled('stock_status')) {
         if ($request->stock_status === 'on_sale') {
             $query->whereNotNull('discount_price')->where('discount_price', '>', 0);
@@ -166,12 +249,9 @@ public function ajaxDiscountFilter(Request $request)
             $query->whereHas('variants', fn($q) => $q->whereJsonLength('sizes', '>', 0));
         }
     }
-
-    // Filter by Size
     if ($request->filled('sizes') && is_array($request->sizes)) {
         $selectedSizeNames = $request->sizes;
         $sizeIds = Size::whereIn('name', $selectedSizeNames)->pluck('id')->toArray();
-
         if (!empty($sizeIds)) {
             $query->whereHas('variants', function ($variantQuery) use ($sizeIds) {
                 $variantQuery->where(function ($q) use ($sizeIds) {
@@ -182,8 +262,6 @@ public function ajaxDiscountFilter(Request $request)
             });
         }
     }
-
-    // Sorting Logic
     $sortBy = $request->input('sort_by', 'newest');
     switch ($sortBy) {
         case 'price_asc':
@@ -196,15 +274,33 @@ public function ajaxDiscountFilter(Request $request)
             $query->orderBy('name', 'asc');
             break;
         case 'popularity':
-            $query->latest(); // Placeholder for popularity
+            $query->latest();
             break;
         case 'newest':
         default:
             $query->latest();
             break;
     }
+    // --- END: Filter and sort logic ---
 
-    $products = $query->with(['category', 'variants'])->paginate(12);
+    // Fetch paginated products, but remove the incorrect 'category' relationship.
+    $products = $query->with(['variants'])->paginate(12);
+
+    // Manually load the correct category for each product on the current page.
+    $productIdsOnPage = $products->pluck('id');
+    if ($productIdsOnPage->isNotEmpty()) {
+        $assignments = AssignCategory::whereIn('product_id', $productIdsOnPage)->get()->keyBy('product_id');
+        $categoryIds = $assignments->pluck('category_id')->unique();
+        $categories = Category::whereIn('id', $categoryIds)->get()->keyBy('id');
+
+        foreach ($products as $product) {
+            $assignment = $assignments->get($product->id);
+            if ($assignment) {
+                $category = $categories->get($assignment->category_id);
+                $product->setRelation('category', $category);
+            }
+        }
+    }
 
     $html = view('front.category.product_card_partial', compact('products'))->render();
 
@@ -215,132 +311,216 @@ public function ajaxDiscountFilter(Request $request)
 }
 
      public function index()
-    {
-        // --- START: MODIFIED SECTION ---
+{
+    // --- START: NEW HERO SECTION LOGIC ---
+    // Fetch active left sliders, ordered by latest, with their linked item (product, category, etc.)
+    $heroLeftSliders = HeroLeftSlider::where('status', 1)->with('linkable')->latest()->get();
 
-        // Fetch Featured Category (Trending/New/Discount) sections
-        $featuredCategorySettings = FeaturedCategory::pluck('value', 'key')->all();
-        $titles = ['trending' => 'Trending Products', 'new' => 'New Arrivals', 'discount' => 'On Discount'];
-        
-        $topProductsType = $featuredCategorySettings['first_row_category'] ?? null;
-        $topProductsStatus = $featuredCategorySettings['first_row_status'] ?? false;
-        $products = collect();
-        $topRatedTitle = '';
-        if ($topProductsStatus && $topProductsType) {
-            $topRatedTitle = $titles[$topProductsType] ?? 'Top Rated Products';
-            $productIds = AssignCategory::where('category_name', $topProductsType)->pluck('product_id');
-            if ($productIds->isNotEmpty()) {
-                $products = Product::whereIn('id', $productIds)->where('status', 1)->with(['category', 'variants'])->latest()->take(8)->get();
-            }
+    // Fetch all active right sliders/banners with their linked items
+    $allRightSliders = HeroRightSlider::where('status', 1)->with('linkable')->get();
+
+    // Separate the right-side banners by their designated position
+    $heroTopBanner = $allRightSliders->where('position', 'top')->first();
+    // Assuming bottom banner positions are 'bottom_1' and 'bottom_2'
+    $heroBottomBanners = $allRightSliders->whereIn('position', ['bottom_left', 'bottom_right'])->take(2);
+    // --- END: NEW HERO SECTION LOGIC ---
+
+    // Fetch Featured Category (Trending/New/Discount) sections
+    $featuredCategorySettings = FeaturedCategory::pluck('value', 'key')->all();
+    $titles = ExtraCategory::where('status', 1)->pluck('name', 'slug');
+    
+    $topProductsType = $featuredCategorySettings['first_row_category'] ?? null;
+    $topProductsStatus = $featuredCategorySettings['first_row_status'] ?? false;
+    $products = collect();
+    $topRatedTitle = '';
+    if ($topProductsStatus && $topProductsType) {
+        $topRatedTitle = $titles[$topProductsType] ?? 'Top Rated Products';
+        $productIds = AssignCategory::where('category_name', $topProductsType)->pluck('product_id');
+        if ($productIds->isNotEmpty()) {
+            $products = Product::whereIn('id', $productIds)->where('status', 1)->with(['category', 'variants'])->latest()->take(8)->get();
         }
-        
-        $secondRowType = $featuredCategorySettings['second_row_category'] ?? null;
-        $secondRowStatus = $featuredCategorySettings['second_row_status'] ?? false;
-        $secondRowProducts = collect();
-        $secondRowTitle = '';
-        if ($secondRowStatus && $secondRowType) {
-            $secondRowTitle = $titles[$secondRowType] ?? 'More For You';
-            $productIds = AssignCategory::where('category_name', $secondRowType)->pluck('product_id');
-            if ($productIds->isNotEmpty()) {
-                $secondRowProducts = Product::whereIn('id', $productIds)->where('status', 1)->with(['category', 'variants'])->latest()->take(8)->get();
-            }
-        }
-
-        // Fetch Homepage Section (Category-based) data
-        $homepageRow1 = HomepageSection::with('category')->where('row_identifier', 'row_1')->where('status', 1)->first();
-        $homepageRow2 = HomepageSection::with('category')->where('row_identifier', 'row_2')->where('status', 1)->first();
-        
-        $row1Products = collect();
-        if ($homepageRow1 && $homepageRow1->category) {
-            $row1Products = Product::where('category_id', $homepageRow1->category_id)->where('status', 1)->with('variants')->latest()->take(8)->get();
-        }
-
-        $row2Products = collect();
-        if ($homepageRow2 && $homepageRow2->category) {
-            $row2Products = Product::where('category_id', $homepageRow2->category_id)->where('status', 1)->with('variants')->latest()->take(8)->get();
-        }
-
-        // --- END: MODIFIED SECTION ---
-
-        // Fetch other necessary data for the homepage
-        $getMainPreoductIds = SliderControl::where('section_key', 'main_slider')->where('is_visible', 1)->pluck('product_ids')->flatten()->unique()->all();
-        $getMainPreoductIdsLast = SliderControl::where('section_key', 'bottom_banners')->where('is_visible', 1)->pluck('product_ids')->flatten()->unique()->all();
-        $getMainTopBannerProduct = SliderControl::where('section_key', 'top_banner')->where('is_visible', 1)->pluck('product_ids')->flatten()->unique()->all();
-        $latestProducts = Product::where('status', 1)->whereIn('id', $getMainPreoductIds)->latest()->get();
-        $topBannerProduct = Product::where('id', (int)($getMainTopBannerProduct[0] ?? 0))->where('status', 1)->first();
-        $bottomBannerProducts = Product::where('status', 1)->whereIn('id', $getMainPreoductIdsLast)->latest()->get();
-        $featuredCategories = AnimationCategory::where('status', 1)->take(5)->get();
-        $offerDeals = BundleOfferProduct::where('bundle_offer_id', 1)->get();
-        $allProductIds = $offerDeals->pluck('product_id')->flatten()->unique()->all();
-        $productsbun = Product::whereIn('id', $allProductIds)->get()->keyBy('id');
-
-        return view('front.index', compact(
-            'productsbun', 'offerDeals', 'latestProducts', 'topBannerProduct', 'bottomBannerProducts', 
-            'products', 'topRatedTitle', 'featuredCategories', 'secondRowProducts', 'secondRowTitle',
-            'homepageRow1', 'row1Products', 'homepageRow2', 'row2Products' // Add new variables
-        ));
     }
+    
+    $secondRowType = $featuredCategorySettings['second_row_category'] ?? null;
+    $secondRowStatus = $featuredCategorySettings['second_row_status'] ?? false;
+    $secondRowProducts = collect();
+    $secondRowTitle = '';
+    if ($secondRowStatus && $secondRowType) {
+        $secondRowTitle = $titles[$secondRowType] ?? 'More For You';
+        $productIds = AssignCategory::where('category_name', $secondRowType)->pluck('product_id');
+        if ($productIds->isNotEmpty()) {
+            $secondRowProducts = Product::whereIn('id', $productIds)->where('status', 1)->with(['category', 'variants'])->latest()->take(8)->get();
+        }
+    }
+
+    // Fetch Homepage Section (Category-based) data
+    // Fetch Homepage Section (Category-based) data
+$homepageRow1 = HomepageSection::with('category')->where('row_identifier', 'row_1')->where('status', 1)->first();
+$homepageRow2 = HomepageSection::with('category')->where('row_identifier', 'row_2')->where('status', 1)->first();
+
+$row1Products = collect();
+if ($homepageRow1 && $homepageRow1->category) {
+    // Get product IDs from the assignment table for the first row's category
+    $productIds = AssignCategory::where('category_id', $homepageRow1->category_id)->pluck('product_id');
+    $row1Products = Product::whereIn('id', $productIds)
+        ->where('status', 1)
+        ->with('variants')
+        ->latest()
+        ->take(8)
+        ->get();
+}
+
+$row2Products = collect();
+if ($homepageRow2 && $homepageRow2->category) {
+    // Get product IDs from the assignment table for the second row's category
+    $productIds = AssignCategory::where('category_id', $homepageRow2->category_id)->pluck('product_id');
+    $row2Products = Product::whereIn('id', $productIds)
+        ->where('status', 1)
+        ->with('variants')
+        ->latest()
+        ->take(8)
+        ->get();
+}
+
+// Manually load categories for all fetched homepage products for efficiency
+$allHomepageProducts = $row1Products->merge($row2Products);
+$productIdsOnPage = $allHomepageProducts->pluck('id')->unique();
+
+if ($productIdsOnPage->isNotEmpty()) {
+    $assignments = AssignCategory::whereIn('product_id', $productIdsOnPage)->get()->keyBy('product_id');
+    $categoryIds = $assignments->pluck('category_id')->unique();
+    $categories = Category::whereIn('id', $categoryIds)->get()->keyBy('id');
+
+    // This loop attaches the correct category to each product object,
+    // which updates the products within both $row1Products and $row2Products collections.
+    foreach ($allHomepageProducts as $product) {
+        $assignment = $assignments->get($product->id);
+        if ($assignment) {
+            $category = $categories->get($assignment->category_id);
+            if ($category) {
+                // This ensures your view can still use `$product->category`
+                $product->setRelation('category', $category);
+            }
+        }
+    }
+}
+// --- END: UPDATED HOMEPAGE SECTION LOGIC ---
+
+    // Fetch other necessary data for the homepage
+    $featuredCategories = AnimationCategory::where('status', 1)->take(5)->get();
+    $offerDeals = BundleOfferProduct::where('bundle_offer_id', 1)->get();
+    $allProductIds = $offerDeals->pluck('product_id')->flatten()->unique()->all();
+    $productsbun = Product::whereIn('id', $allProductIds)->get()->keyBy('id');
+$footerBanner = FooterBanner::latest()->first();
+    // Pass all data, including the new hero variables, to the view
+    return view('front.index', compact(
+        'productsbun', 'offerDeals', 'featuredCategories',
+        'products', 'topRatedTitle', 'secondRowProducts', 'secondRowTitle',
+        'homepageRow1', 'row1Products', 'homepageRow2', 'row2Products','footerBanner',
+        'heroLeftSliders', 'heroTopBanner', 'heroBottomBanners' // <-- New variables for the hero section
+    ));
+}
 
 
     
 /**
      * Display the initial category page with the first set of products.
      */
-    public function category($slug)
+     public function category($slug)
     {
         $category = Category::where('slug', $slug)->firstOrFail();
-        
-        // Load the initial batch of products (first page)
-        $products = Product::where('category_id', $category->id)
+
+        // 1. Get all product IDs assigned to this category from the pivot table.
+        $productIds = AssignCategory::where('category_id', $category->id)->pluck('product_id');
+
+        // 2. Fetch and paginate the products using the retrieved IDs.
+        $products = Product::whereIn('id', $productIds)
             ->where('status', 1)
             ->with(['variants'])
             ->latest()
-            ->paginate(12); // Use pagination
+            ->paginate(12);
 
         // Fetch all categories and their subcategories for the filter sidebar
-        $categoryList = Category::where('status', 1)->with('subcategories')->get();
-
+        $categoryList = Category::where('status', 1)->whereNull('parent_id')->with('children')->get();
         $sizes = Size::where('status', 1)->get();
 
         return view('front.category.category', compact('category', 'products', 'categoryList', 'sizes'));
     }
 
     public function productSearch(Request $request)
-    {
-        $searchQuery = $request->input('query');
+{
+    $searchQuery = $request->input('query');
 
-        if (!$searchQuery) {
-            return redirect()->route('shop.show');
-        }
-
-        $products = Product::where('status', 1)
-                           ->where('name', 'LIKE', "%{$searchQuery}%")
-                           ->with(['category', 'variants'])
-                           ->latest()
-                           ->paginate(16);
-
-        // Fetch filter data for a potential sidebar on the search page
-        $categoryList = Category::where('status', 1)->with('subcategories')->get();
-        $animationCategoryList = AnimationCategory::where('status', 1)->get();
-
-        return view('front.main.search_results', compact('products', 'categoryList', 'animationCategoryList', 'searchQuery'));
+    if (!$searchQuery) {
+        return redirect()->route('shop.show');
     }
+
+    // 1. Fetch products without the incorrect 'category' relationship
+    $products = Product::where('status', 1)
+                       ->where('name', 'LIKE', "%{$searchQuery}%")
+                       ->with(['variants']) // <-- CORRECTED
+                       ->latest()
+                       ->paginate(16);
+
+    // 2. Manually load categories for the products on the current page
+    $productIdsOnPage = $products->pluck('id');
+    if ($productIdsOnPage->isNotEmpty()) {
+        $assignments = AssignCategory::whereIn('product_id', $productIdsOnPage)->get()->keyBy('product_id');
+        $categoryIds = $assignments->pluck('category_id')->unique();
+        $categories = Category::whereIn('id', $categoryIds)->get()->keyBy('id');
+
+        foreach ($products as $product) {
+            $assignment = $assignments->get($product->id);
+            if ($assignment) {
+                $category = $categories->get($assignment->category_id);
+                if ($category) {
+                    // This allows your view to still use `$product->category`
+                    $product->setRelation('category', $category);
+                }
+            }
+        }
+    }
+
+    // Fetch filter data for the sidebar
+    $categoryList = Category::where('status', 1)->whereNull('parent_id')->with('children')->get();
+    $animationCategoryList = AnimationCategory::where('status', 1)->get();
+
+    return view('front.main.search_results', compact('products', 'categoryList', 'animationCategoryList', 'searchQuery'));
+}
 
     public function shop()
-    {
-        $products = Product::where('status', 1)
-            ->with(['category', 'variants'])
-            ->latest()
-            ->paginate(12);
-        // --- NEW: Fetch all available sizes for the filter ---
-        $sizes = Size::where('status', 1)->get();
+{
+    // 1. Fetch products without the incorrect 'category' relationship
+    $products = Product::where('status', 1)
+        ->with(['variants']) // <-- CORRECTED
+        ->latest()
+        ->paginate(12);
+        
+    // 2. Manually load categories for the products on the current page
+    $productIdsOnPage = $products->pluck('id');
+    if ($productIdsOnPage->isNotEmpty()) {
+        $assignments = AssignCategory::whereIn('product_id', $productIdsOnPage)->get()->keyBy('product_id');
+        $categoryIds = $assignments->pluck('category_id')->unique();
+        $categories = Category::whereIn('id', $categoryIds)->get()->keyBy('id');
 
-        // Fetch all filter groups for the sidebar
-        $categoryList = Category::where('status', 1)->with('subcategories')->get();
-        $animationCategoryList = AnimationCategory::where('status', 1)->get();
-
-        return view('front.main.shop', compact('products', 'categoryList', 'animationCategoryList', 'sizes'));
+        foreach ($products as $product) {
+            $assignment = $assignments->get($product->id);
+            if ($assignment) {
+                $category = $categories->get($assignment->category_id);
+                if ($category) {
+                    $product->setRelation('category', $category);
+                }
+            }
+        }
     }
+
+    // Fetch data for the filter sidebar
+    $sizes = Size::where('status', 1)->get();
+    $categoryList = Category::where('status', 1)->whereNull('parent_id')->with('children')->get();
+    $animationCategoryList = AnimationCategory::where('status', 1)->get();
+
+    return view('front.main.shop', compact('products', 'categoryList', 'animationCategoryList', 'sizes'));
+}
 
      /**
      * NEW dedicated function to handle AJAX filter requests for the shop page.
@@ -350,11 +530,16 @@ public function ajaxDiscountFilter(Request $request)
         $query = Product::where('status', 1);
 
         // Filter by Category or Subcategory
-        if ($request->filled('category_id')) {
-            $query->where('category_id', $request->category_id);
-        } elseif ($request->filled('subcategory_id')) {
-            $query->where('subcategory_id', $request->subcategory_id);
+             // --- START: UNIFIED CATEGORY/SUBCATEGORY FILTER ---
+        // Check for either 'category_id' or 'subcategory_id' from the request.
+        $categoryId = $request->input('category_id') ?: $request->input('subcategory_id');
+
+        // If either exists, use it to filter products via the AssignCategory table.
+        if ($categoryId) {
+            $productIds = AssignCategory::where('category_id', $categoryId)->pluck('product_id');
+            $query->whereIn('id', $productIds);
         }
+        // --- END: UNIFIED FILTER ---
         
         // Filter by Animation Category
         if ($request->filled('animation_category_id')) {
@@ -436,21 +621,28 @@ public function ajaxDiscountFilter(Request $request)
 
         public function subcategory($slug)
     {
-        $subcategory = Subcategory::where('slug', $slug)->firstOrFail();
-        
-        // Load the initial batch of products for this subcategory
-        $products = Product::where('subcategory_id', $subcategory->id)
+        // 1. Find the subcategory in the main CATEGORIES table by its slug.
+        // We ensure it has a parent_id to confirm it's a subcategory.
+        $subcategory = Category::where('slug', $slug)->whereNotNull('parent_id')->firstOrFail();
+
+        // 2. Get the parent category for breadcrumbs and display purposes.
+        $category = $subcategory->parent;
+
+        // 3. Get all product IDs assigned to THIS subcategory from the pivot table.
+        $productIds = AssignCategory::where('category_id', $subcategory->id)->pluck('product_id');
+
+        // 4. Fetch and paginate the products using the retrieved IDs.
+        $products = Product::whereIn('id', $productIds)
             ->where('status', 1)
             ->with(['variants'])
             ->latest()
             ->paginate(12);
 
         // Fetch all categories for the filter sidebar
-        // We pass the parent category to the view to help expand the sidebar correctly
-        $category = $subcategory->category;
-        $categoryList = Category::where('status', 1)->with('subcategories')->get();
+        $categoryList = Category::where('status', 1)->with('children')->get();
         $sizes = Size::where('status', 1)->get();
 
+        // Pass all necessary data to the original subcategory view
         return view('front.category.subcategory', compact('subcategory', 'category', 'products', 'categoryList', 'sizes'));
     }
 
@@ -515,17 +707,16 @@ public function ajaxDiscountFilter(Request $request)
 
        // dd(12);
         // Start with a broad query for all products.
-        $query = Product::where('status', 1)->with(['category', 'variants']);
+        $query = Product::where('status', 1);
 
         // Filter by Main Category if selected
-        if ($request->filled('category_id')) {
-            $query->where('category_id', $request->category_id);
+         // --- START: UNIFIED CATEGORY/SUBCATEGORY FILTER ---
+        $categoryId = $request->input('category_id') ?: $request->input('subcategory_id');
+        if ($categoryId) {
+            $productIds = AssignCategory::where('category_id', $categoryId)->pluck('product_id');
+            $query->whereIn('id', $productIds);
         }
-
-        // Filter by Subcategory if selected
-        if ($request->filled('subcategory_id')) {
-            $query->where('subcategory_id', $request->subcategory_id);
-        }
+        // --- END: UNIFIED FILTER ---
         
         // Filter by Price Range
         if ($request->filled('min_price') && $request->filled('max_price')) {
@@ -591,7 +782,7 @@ public function ajaxDiscountFilter(Request $request)
         }
         // --- END: NEW SORTING LOGIC ---
 
-        $products = $query->latest()->paginate(12);
+        $products = $query->with(['category', 'variants'])->paginate(12);
 
         $html = view('front.category.product_card_partial', compact('products'))->render();
 

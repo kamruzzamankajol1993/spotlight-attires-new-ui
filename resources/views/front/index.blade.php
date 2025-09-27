@@ -5,165 +5,146 @@
 @endsection
 @section('body')
     <main>
-        <section class="spotlighthero hero-section">
-            <div class="container">
-                <div class="row">
-                    <!-- Left side: Slider -->
-                    <div class="col-lg-7 mb-3 mb-lg-0">
-                        <div class="main-slider">
-                           @if(isset($latestProducts) && $latestProducts->count() > 0)
-            @foreach($latestProducts as $product)
-                <div class="slider-item">
-                    {{-- Use the first thumbnail image, or a placeholder --}}
+       <section class="spotlighthero hero-section">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-7 mb-3 mb-lg-0">
+                <div class="main-slider">
+                    {{-- Check if any left sliders exist and are active --}}
+                    @if(isset($heroLeftSliders) && $heroLeftSliders->count() > 0)
+                        @foreach($heroLeftSliders as $slider)
+                            <div class="slider-item">
+                                @php
+                                    // Determine the correct link for the polymorphic relationship
+                                    $link = '#';
+                                    if ($slider->linkable) {
+                                        if ($slider->linkable_type === 'App\Models\Product') {
+                                            $link = route('product.show', $slider->linkable->slug);
+                                        } elseif ($slider->linkable_type === 'App\Models\Category') {
+                                            $link = route('category.show', $slider->linkable->slug);
+                                        } elseif ($slider->linkable_type === 'App\Models\BundleOffer') {
+                                            $link = route('offer.show', $slider->linkable->slug);
+                                        }
+                                        // You can add more 'elseif' conditions here for other models
+                                    }
+                                @endphp
+                                {{-- The entire image is now a clickable link --}}
+                                <a href="{{ $link }}">
+                                    <img src="{{ $front_ins_url . 'public/' . $slider->image }}" alt="{{ $slider->title }}">
+                                </a>
+                                <div class="content">
+                                    <h1 class="fw-bold">{{ Str::upper($slider->title) }}</h1>
+                                    <p>{{ $slider->subtitle }}</p>
+                                    <a href="{{ $link }}" class="btn btn-outline-light">ORDER NOW</a>
+                                </div>
+                            </div>
+                        @endforeach
+                    @else
+                        {{-- Fallback content if no sliders are set up in the admin panel --}}
+                        <div class="slider-item">
+                            <img src="https://placehold.co/847x537" alt="Default Banner">
+                            <div class="content">
+                                <h1 class="fw-bold">WELCOME</h1>
+                                <p>Check out our latest collections.</p>
+                                <a href="{{ route('shop.show') }}" class="btn btn-outline-light">SHOP NOW</a>
+                            </div>
+                        </div>
+                    @endif
+                </div>
+            </div>
+
+            <div class="col-lg-5">
+                @if(isset($heroTopBanner))
                     @php
 
-                    $mobileImage = (is_array($product->thumbnail_image) && count($product->thumbnail_image) > 0)
-                            ? $front_ins_url . 'public/uploads/' . $product->thumbnail_image[0]
-                            : 'https://placehold.co/800x400';
-                        $desktopImage = (is_array($product->main_image) && count($product->main_image) > 0)
-                            ? $front_ins_url . 'public/uploads/' . $product->main_image[0]
-                            : 'https://placehold.co/800x400';
+                    $bundleSlug = \App\Models\BundleOffer::where('id',$heroTopBanner->bundle_offer_id)
+                    ->value('slug');
+                      
+                           
+                                $link = route('offer.show',$bundleSlug);
+                            
+                        
                     @endphp
-                    <picture>
-            <!-- This source will be used on screens 992px wide or larger (desktops/laptops) -->
-            <source media="(min-width: 992px)" srcset="{{ $desktopImage }}">
-            
-            <!-- This is the default image that will be used on smaller screens (mobile) -->
-            <img src="{{ $mobileImage }}" alt="{{ $product->name }}">
-        </picture>
-                    <div class="content">
-                        <h1 class="fw-bold">{{ Str::upper($product->name) }}</h1>
-                        {{-- You can use the product description or category name here --}}
-                        <p>{{ $product->category->name ?? 'New Arrival' }}</p>
-                        <a href="{{ route('product.show', $product->slug) }}" class="btn btn-outline-light">ORDER NOW</a>
-                    </div>
-                </div>
-            @endforeach
-        @else
-            <div class="slider-item">
-                <img src="https://placehold.co/600x600" alt="Default Banner">
-                <div class="content">
-                    <h1 class="fw-bold">WELCOME</h1>
-                    <p>Check out our latest collections.</p>
-                    <button class="btn btn-outline-light">SHOP NOW</button>
-                </div>
-            </div>
-            <div class="slider-item">
-                <img src="https://placehold.co/600x600" alt="Default Banner">
-                <div class="content">
-                    <h1 class="fw-bold">WELCOME</h1>
-                    <p>Check out our latest collections.</p>
-                    <button class="btn btn-outline-light">SHOP NOW</button>
-                </div>
-            </div>
-            <div class="slider-item">
-                <img src="https://placehold.co/600x600" alt="Default Banner">
-                <div class="content">
-                    <h1 class="fw-bold">WELCOME</h1>
-                    <p>Check out our latest collections.</p>
-                    <button class="btn btn-outline-light">SHOP NOW</button>
-                </div>
-            </div>
-        @endif
-                        </div>
-                    </div>
-
-                    <!-- Right side: Banners -->
-                    <div class="col-lg-5">
-                        <!-- Top banner -->
-                           @if($topBannerProduct)
-        <div class="banner-item top-banner mb-3">
-              @php
-
-                    $mobileImage = (is_array($topBannerProduct->thumbnail_image) && count($topBannerProduct->thumbnail_image) > 0)
-                            ? $front_ins_url . 'public/uploads/' . $topBannerProduct->thumbnail_image[0]
-                            : 'https://placehold.co/800x400';
-                        $desktopImage = (is_array($topBannerProduct->main_image) && count($topBannerProduct->main_image) > 0)
-                            ? $front_ins_url . 'public/uploads/' . $topBannerProduct->main_image[0]
-                            : 'https://placehold.co/800x400';
-                    @endphp
-                    <picture>
-            <!-- This source will be used on screens 992px wide or larger (desktops/laptops) -->
-            <source media="(min-width: 992px)" srcset="{{ $desktopImage }}">
-            
-            <!-- This is the default image that will be used on smaller screens (mobile) -->
-            <img src="{{ $mobileImage }}" alt="{{ $topBannerProduct->name }}">
-        </picture>
-            <div class="content">
-                <h4 class="fw-bold">{{ Str::upper(Str::limit($topBannerProduct->name, 20)) }}</h4>
-                <p>{{ $topBannerProduct->category->name ?? 'Featured Item' }}</p>
-                <a href="{{ route('product.show', $topBannerProduct->slug) }}" class="btn btn-outline-light">VIEW DETAILS</a>
-            </div>
-        </div>
-    @else
-     <div class="banner-item top-banner mb-3">
-                            <img src="https://placehold.co/600x600" alt="Top Banner">
-                            <div class="content">
-                                <h4 class="fw-bold">INSTANT CAMERAS</h4>
-                                <p>VISUALIZE YOUR LOOKS</p>
-                                <button class="btn btn-outline-light">VIEW DETAILS</button>
-                            </div>
-                        </div>
-    @endif
-
-                          @if($bottomBannerProducts->count() > 0)
-        <div class="row">
-            @foreach($bottomBannerProducts as $bottomProduct)
-                <div class="col-6 {{ $loop->first ? 'pe-2' : 'ps-2' }}">
-                    <div class="banner-item bottom-banner">
-                            @php
-
-                    $mobileImage = (is_array($bottomProduct->thumbnail_image) && count($bottomProduct->thumbnail_image) > 0)
-                            ? $front_ins_url . 'public/uploads/' . $bottomProduct->thumbnail_image[0]
-                            : 'https://placehold.co/800x400';
-                        $desktopImage = (is_array($bottomProduct->main_image) && count($bottomProduct->main_image) > 0)
-                            ? $front_ins_url . 'public/uploads/' . $bottomProduct->main_image[0]
-                            : 'https://placehold.co/800x400';
-                    @endphp
-                    <picture>
-            <!-- This source will be used on screens 992px wide or larger (desktops/laptops) -->
-            <source media="(min-width: 992px)" srcset="{{ $desktopImage }}">
-            
-            <!-- This is the default image that will be used on smaller screens (mobile) -->
-            <img src="{{ $mobileImage }}" alt="{{ $bottomProduct->name }}">
-        </picture>
+                    <div class="banner-item top-banner mb-3">
+                        <a href="{{ $link }}">
+                            <img src="{{ $front_ins_url . 'public/' . $heroTopBanner->image }}" alt="{{ $heroTopBanner->title }}">
+                        </a>
                         <div class="content">
-                            <h5 class="fw-bold">{{ Str::upper(Str::limit($bottomProduct->name, 18)) }}</h5>
-                            <p>LIMITED OFFER</p>
-                            <a href="{{ route('product.show', $bottomProduct->slug) }}" class="btn btn-outline-light btn-sm">SHOP NOW</a>
+                            <h4 class="fw-bold">{{ Str::upper($heroTopBanner->title) }}</h4>
+                            <p>{{ $heroTopBanner->subtitle }}</p>
+                            <a href="{{ $link }}" class="btn btn-outline-light">VIEW DETAILS</a>
                         </div>
                     </div>
-                </div>
-            @endforeach
-        </div>
-        @else
-        <div class="row">
-            <div class="col-6 pe-2">
-                                <div class="banner-item bottom-banner">
-                                    <img src="https://placehold.co/300x300" alt="Exclusive Oversized Tee">
-                                    <div class="content">
-                                        <h5 class="fw-bold">EXCLUSIVE OVERSIZED TEE</h5>
-                                        <p>SAVE UP TO 60%</p>
-                                        <button class="btn btn-outline-light btn-sm">VIEW DETAILS</button>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-6 ps-2">
-                                <div class="banner-item bottom-banner">
-                                    <img src="https://placehold.co/300x300" alt="Sale Banner">
-                                    <div class="content">
-                                        <h5 class="fw-bold">LIMITED OFFER</h5>
-                                        <p>50% OFF</p>
-                                        <button class="btn btn-outline-light btn-sm">SHOP NOW</button>
-                                    </div>
-                                </div>
-                            </div>
-        </div>
-    @endif
+                @else
+                    {{-- Fallback for Top Banner --}}
+                    <div class="banner-item top-banner mb-3">
+                        <img src="https://placehold.co/600x254" alt="Top Banner">
+                        <div class="content">
+                            <h4 class="fw-bold">FEATURED ITEMS</h4>
+                            <p>VISUALIZE YOUR LOOKS</p>
+                            <a href="{{ route('shop.show') }}" class="btn btn-outline-light">VIEW DETAILS</a>
+                        </div>
                     </div>
-                </div>
+                @endif
+
+                @if(isset($heroBottomBanners) && $heroBottomBanners->count() > 0)
+                    <div class="row">
+                        @foreach($heroBottomBanners as $banner)
+                            <div class="col-6 {{ $loop->first ? 'pe-2' : 'ps-2' }}">
+                                <div class="banner-item bottom-banner">
+                                    @php
+                                        $link = '#';
+                                        if ($banner->linkable) {
+                                            if ($banner->linkable_type === 'App\Models\ExtraCategory') {
+                                                $link = route('extra_category_offer.show', $banner->linkable->slug);
+                                            } elseif ($banner->linkable_type === 'App\Models\Category') {
+                                                $link = route('category.show', $banner->linkable->slug);
+                                            } elseif ($banner->linkable_type === 'App\Models\BundleOffer') {
+                                                $link = route('offer.show', $banner->linkable->slug);
+                                            }
+                                        }
+                                    @endphp
+                                    <a href="{{ $link }}">
+                                        <img src="{{ $front_ins_url . 'public/' . $banner->image }}" alt="{{ $banner->title }}">
+                                    </a>
+                                    <div class="content">
+                                        <h5 class="fw-bold">{{ Str::upper($banner->title) }}</h5>
+                                        <p>{{ $banner->subtitle }}</p>
+                                        <a href="{{ $link }}" class="btn btn-outline-light btn-sm">SHOP NOW</a>
+                                    </div>
+                                </div>
+                            </div>
+                        @endforeach
+                    </div>
+                @else
+                    {{-- Fallback for Bottom Banners --}}
+                    <div class="row">
+                        <div class="col-6 pe-2">
+                            <div class="banner-item bottom-banner">
+                                <img src="https://placehold.co/283x268" alt="Exclusive Tee">
+                                <div class="content">
+                                    <h5 class="fw-bold">EXCLUSIVE TEE</h5>
+                                    <p>SAVE UP TO 60%</p>
+                                    <a href="{{ route('shop.show') }}" class="btn btn-outline-light btn-sm">VIEW DETAILS</a>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-6 ps-2">
+                            <div class="banner-item bottom-banner">
+                                <img src="https://placehold.co/283x268" alt="Sale Banner">
+                                <div class="content">
+                                    <h5 class="fw-bold">LIMITED OFFER</h5>
+                                    <p>50% OFF</p>
+                                    <a href="{{ route('shop.show') }}" class="btn btn-outline-light btn-sm">SHOP NOW</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                @endif
             </div>
-        </section>
+        </div>
+    </div>
+</section>
         {{-- This entire section will only show if the status is active and products are available --}}
 @if(isset($topRatedTitle) && !empty($topRatedTitle) && $products->isNotEmpty())
 <section class="section">
@@ -205,7 +186,9 @@
                         </picture>
                     </a>
                     <div class="product-details-body">
-                        <h5 class="product-title mb-1">{{ Str::limit($product->name, 25) }}</h5>
+                        <h5 class="product-title mb-1"><a href="{{ route('product.show', $product->slug) }}">
+                                        {{ Str::limit($product->name, 25) }}
+                                        </a></h5>
                         <p class="product-meta mb-1">Category: {{ $product->category->name ?? 'N/A' }}</p>
                         <p class="product-meta mb-1">SKU: {{ $product->product_code ?? 'N/A' }}</p>
 
@@ -390,7 +373,9 @@
                         </picture>
                     </a>
                     <div class="product-details-body">
-                        <h5 class="product-title mb-1">{{ Str::limit($product->name, 25) }}</h5>
+                        <h5 class="product-title mb-1"><a href="{{ route('product.show', $product->slug) }}">
+                                        {{ Str::limit($product->name, 25) }}
+                                        </a></h5>
                         <p class="product-meta mb-1">Category: {{ $product->category->name ?? 'N/A' }}</p>
                         <p class="product-meta mb-1">SKU: {{ $product->product_code ?? 'N/A' }}</p>
 
@@ -455,7 +440,9 @@
                                     </picture>
                                 </a>
                                 <div class="product-details-body">
-                                    <h5 class="product-title mb-1">{{ Str::limit($product->name, 25) }}</h5>
+                                    <h5 class="product-title mb-1"><a href="{{ route('product.show', $product->slug) }}">
+                                        {{ Str::limit($product->name, 25) }}
+                                        </a></h5>
                                     <p class="price-tag mb-2">
                                         @if($product->discount_price)
                                             <del class="text-muted">৳ {{ $product->base_price }}</del>
@@ -626,7 +613,11 @@
                                     </picture>
                                 </a>
                                 <div class="product-details-body">
-                                    <h5 class="product-title mb-1">{{ Str::limit($product->name, 25) }}</h5>
+                                    <h5 class="product-title mb-1">
+                                        <a href="{{ route('product.show', $product->slug) }}">
+                                        {{ Str::limit($product->name, 25) }}
+                                        </a>
+                                    </h5>
                                     <p class="price-tag mb-2">
                                         @if($product->discount_price)
                                             <del class="text-muted">৳ {{ $product->base_price }}</del>
@@ -916,89 +907,23 @@
     </div>
 </section>
  @endif
-        <section class="why-section">
-        <div class="container">
-            <div class="why-header">
-                <h2>WHY Spotlight Attires STORE?</h2>
-            </div>
-            <div class="row why-layout">
-                <!-- Left side: Banner -->
-                <div class="col-lg-5">
-                    <div class="left-banner">
-                        <div class="left-banner-content">
-                            <img src="{{asset('/')}}public/front/assets/img/logo.png">
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Right side: Benefits Grid -->
-                <div class="col-lg-7">
-                    <div class="row right-benefits-grid">
-                        <!-- Benefit 1 -->
-                        <div class="col-md-6 mb-4">
-                            <div class="benefit-item">
-                                <div class="icon-container"><i class="bi bi-person-bounding-box"></i></div>
-                                <div class="benefit-item-content">
-                                    <h5>UNIQUENESS AND STYLE</h5>
-                                    <p>Stand out with exclusive designs that celebrate your individuality.</p>
-                                </div>
-                            </div>
-                        </div>
-                        <!-- Benefit 2 -->
-                        <div class="col-md-6 mb-4">
-                            <div class="benefit-item">
-                                <div class="icon-container"><i class="bi bi-tags-fill"></i></div>
-                                <div class="benefit-item-content">
-                                    <h5>QUALITY AND AFFORDABILITY</h5>
-                                    <p>High-quality fashion at prices that won't break the bank.</p>
-                                </div>
-                            </div>
-                        </div>
-                        <!-- Benefit 3 -->
-                        <div class="col-md-6 mb-4">
-                            <div class="benefit-item">
-                                <div class="icon-container"><i class="bi bi-toggles2"></i></div>
-                                <div class="benefit-item-content">
-                                    <h5>VERSATILITY FOR EVERYONE</h5>
-                                    <p>From casual to polished, find styles that fit every lifestyle.</p>
-                                </div>
-                            </div>
-                        </div>
-                        <!-- Benefit 4 -->
-                        <div class="col-md-6 mb-4">
-                            <div class="benefit-item">
-                                <div class="icon-container"><i class="bi bi-emoji-smile"></i></div>
-                                <div class="benefit-item-content">
-                                    <h5>CONFIDENCE AND COMFORT</h5>
-                                    <p>Feel confident and comfortable with every piece you wear.</p>
-                                </div>
-                            </div>
-                        </div>
-                        <!-- Benefit 5 -->
-                        <div class="col-md-6 mb-4">
-                            <div class="benefit-item">
-                                <div class="icon-container"><i class="bi bi-hand-thumbs-up"></i></div>
-                                <div class="benefit-item-content">
-                                    <h5>CUSTOMER-CENTRIC APPROACH</h5>
-                                    <p>Designed with you in mind, offering unmatched experiences.</p>
-                                </div>
-                            </div>
-                        </div>
-                        <!-- Benefit 6 -->
-                        <div class="col-md-6 mb-4">
-                            <div class="benefit-item">
-                                <div class="icon-container"><i class="bi bi-lightbulb-fill"></i></div>
-                                <div class="benefit-item-content">
-                                    <h5>DISCOVER THE UNEXPECTED</h5>
-                                    <p>Innovative pieces that refresh your style effortlessly.</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+        @if(isset($footerBanner))
+<section class="why-section">
+    <div class="container">
+        <div class="why-header">
+            <h2>WHY Spotlight Attires STORE?</h2>
+        </div>
+        <div class="row why-layout">
+            <div class="col-lg-12">
+                {{-- The background-image is now pulled from the database --}}
+                <div class="left-banner" style="background-image: url('{{ $front_ins_url . 'public/' . $footerBanner->image }}');">
+                    {{-- The inner logo div has been removed as requested --}}
                 </div>
             </div>
         </div>
-    </section>
+    </div>
+</section>
+@endif
 
     </main>
     <!-- Quick View Modal -->

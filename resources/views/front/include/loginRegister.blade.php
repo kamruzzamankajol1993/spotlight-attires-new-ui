@@ -11,12 +11,12 @@
         <form id="loginForm" novalidate>
              @csrf
             <div class="mb-3">
-                <label for="loginEmail" class="form-label">Email or Phone *</label>
+                <label for="loginEmail" class="form-label">Email or Phone <span class="text-danger">*</span></label>
                 <input type="text" class="form-control" name="email" id="loginEmail" required>
                 <div class="invalid-feedback"></div>
             </div>
             <div class="mb-3">
-                <label for="loginPassword" class="form-label">Password *</label>
+                <label for="loginPassword" class="form-label">Password <span class="text-danger">*</span></label>
                 <div class="input-group">
                     <input type="password" class="form-control" name="password" id="loginPassword" required>
                     <button class="btn btn-outline-secondary toggle-password" type="button">
@@ -42,7 +42,7 @@
             @csrf
             <p>Lost your password? Please enter your email address. You will receive a link to create a new password via email.</p>
             <div class="mb-3">
-                <label for="forgotEmail" class="form-label">Email Address *</label>
+                <label for="forgotEmail" class="form-label">Email Address <span class="text-danger">*</span></label>
                 <input type="email" class="form-control" name="email" id="forgotEmail" required>
                 <div class="invalid-feedback"></div>
             </div>
@@ -58,42 +58,40 @@
         {{-- Registration Form --}}
         <form id="registerForm" style="display: none;" novalidate>
              @csrf
-            <div class="mb-3"><label for="registerName" class="form-label">Full Name *</label><input type="text" class="form-control" id="registerName" name="name" required><div class="invalid-feedback"></div></div>
+            <div class="mb-3"><label for="registerName" class="form-label">Full Name <span class="text-danger">*</span></label><input type="text" class="form-control" id="registerName" name="name" required><div class="invalid-feedback"></div></div>
           
             <div class="mb-3"><label for="registerEmail" class="form-label">Email (Optional)</label><input type="email" class="form-control" id="registerEmail" name="email"><div class="invalid-feedback"></div></div>
             {{-- === MODIFIED SECTION START === --}}
-            <div class="mb-3">
-                <label for="registerPhone" class="form-label">Phone *</label>
+ <div class="mb-3">
+                <label for="registerPhone" class="form-label">Phone <span class="text-danger">*</span></label>
                 <div class="input-group">
                     <span class="input-group-text d-flex align-items-center gap-2">
                         <img src="https://flagcdn.com/w20/bd.png" width="20" alt="Bangladesh Flag">
                         +880
                     </span>
                     <input 
-                        type="number" 
+                        type="tel" 
                         class="form-control" 
                         id="registerPhone" 
                         name="phone" 
                         required 
-                        pattern="[0-9]{10}"
+                        pattern="\d{10}"
                         maxlength="10" 
-                        oninput="javascript: if (this.value.length > this.maxLength) this.value = this.value.slice(0, this.maxLength);"
                         title="Please enter a 10-digit phone number (without the leading 0).">
                 </div>
-                <div id="phoneHelp" class="form-text">
+                <div id="phoneHelp" class="form-text text-danger">
                   Enter the 10 digits after +880 (e.g., 1712345678).
                 </div>
                 <div class="invalid-feedback">Please provide a valid 10-digit phone number.</div>
             </div>
             {{-- === MODIFIED SECTION END === --}}
             <div class="mb-3">
-                <label for="registerPassword" class="form-label">Password *</label>
+                <label for="registerPassword" class="form-label">Password <span class="text-danger">*</span></label>
                 <div class="input-group">
                     <input type="password" class="form-control" id="registerPassword" name="password" required minlength="8">
-                    <button class="btn btn-outline-secondary toggle-password" type="button"><i class="bi bi-eye"></i></button></div><div id="passwordHelp" class="form-text">Password must be at least 8 characters long.</div><div class="invalid-feedback"></div></div>
-            {{-- === MODIFIED SECTION START === --}}
+                    <button class="btn btn-outline-secondary toggle-password" type="button"><i class="bi bi-eye"></i></button></div><div id="passwordHelp" class="form-text text-danger">Password must be at least 8 characters long.</div><div class="invalid-feedback"></div></div>
             <div class="mb-3">
-                <label for="confirmPassword" class="form-label">Confirm Password *</label>
+                <label for="confirmPassword" class="form-label">Confirm Password <span class="text-danger">*</span></label>
                 <div class="input-group">
                     <input type="password" class="form-control" id="confirmPassword" name="password_confirmation" required>
                     <button class="btn btn-outline-secondary toggle-password" type="button">
@@ -412,6 +410,47 @@ $(document).ready(function() {
                 $('#resendOtpLink').show();
             }
         });
+    });
+
+    // --- Live Password Matching Logic ---
+    const registerPassword = $('#registerPassword');
+    const confirmPassword = $('#confirmPassword');
+
+    function validatePasswords() {
+        const passVal = registerPassword.val();
+        const confirmVal = confirmPassword.val();
+        const confirmFeedback = confirmPassword.closest('.mb-3').find('.invalid-feedback');
+
+        if (confirmVal.length === 0) {
+            registerPassword.removeClass('is-valid is-invalid');
+            confirmPassword.removeClass('is-valid is-invalid');
+            return;
+        }
+
+        if (passVal === confirmVal) {
+            registerPassword.removeClass('is-invalid').addClass('is-valid');
+            confirmPassword.removeClass('is-invalid').addClass('is-valid');
+            confirmFeedback.text('');
+        } else {
+            registerPassword.removeClass('is-valid').addClass('is-invalid');
+            confirmPassword.removeClass('is-valid').addClass('is-invalid');
+            confirmFeedback.text('Passwords do not match.');
+        }
+    }
+    registerPassword.on('keyup', validatePasswords);
+    confirmPassword.on('keyup', validatePasswords);
+    
+    // --- Phone Number Input Formatting ---
+    $('#registerPhone').on('input', function() {
+        let value = $(this).val();
+        value = value.replace(/\D/g, '');
+        if (value.startsWith('0')) {
+            value = value.substring(1);
+        }
+        if (value.length > 10) {
+            value = value.slice(0, 10);
+        }
+        $(this).val(value);
     });
 });
 </script>

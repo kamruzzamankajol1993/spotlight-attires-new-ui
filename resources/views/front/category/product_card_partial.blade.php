@@ -32,7 +32,7 @@
             </a>
 
             <div class="product-details-body">
-                <h5 class="product-title mb-1">{{ Str::limit($product->name, 25) }}</h5>
+                <h5 class="product-title mb-1"><a href="{{ route('product.show', $product->slug) }}">{{ Str::limit($product->name, 25) }}</a></h5>
                 <p class="product-meta mb-1">SKU: {{ $product->product_code ?? 'N/A' }}</p>
 
                 @if($totalStock > 0)
