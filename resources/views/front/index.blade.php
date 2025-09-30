@@ -2,6 +2,38 @@
 
 @section('title', 'Home')
 @section('css')
+<style>
+    /* Container for the product images */
+    .product-image-container {
+        position: relative; /* Needed to position the hover image correctly */
+        display: block;
+        overflow: hidden; /* Ensures images stay within the card boundaries */
+    }
+
+    /* Styling for both default and hover images */
+    .product-image-container picture img {
+        transition: transform 0.3s ease-in-out; /* Optional: adds a slight zoom effect on hover */
+    }
+
+    /* The hover image is positioned directly on top of the default one */
+    .product-image-hover {
+        position: absolute;
+        top: 0;
+        left: 0;
+        opacity: 0; /* It's completely invisible by default */
+        transition: opacity 0.3s ease-in-out; /* This creates the smooth fade effect */
+    }
+
+    /* When you hover over the container... */
+    .product-image-container:hover .product-image-hover {
+        opacity: 1; /* ...the hover image fades in and becomes visible */
+    }
+    
+    /* Optional: Slight zoom effect on the image when hovering */
+    .product-image-container:hover picture img {
+        transform: scale(1.05);
+    }
+</style>
 @endsection
 @section('body')
     <main>
@@ -156,63 +188,84 @@
                 {{-- The loop remains the same, but it now uses the data fetched based on your settings --}}
                 @foreach($products as $product)
                 <div class="product-card card">
-                    @php
-                        $mobileImage = (is_array($product->thumbnail_image) && count($product->thumbnail_image) > 0)
-                                        ? $front_ins_url . 'public/uploads/' . $product->thumbnail_image[0]
-                                        : 'https://placehold.co/800x400';
-                        $desktopImage = (is_array($product->main_image) && count($product->main_image) > 0)
-                                        ? $front_ins_url . 'public/uploads/' . $product->main_image[0]
-                                        : 'https://placehold.co/800x400';
+    @php
+        // --- DEFAULT IMAGES (Image 1) ---
+        $mobileImage = (is_array($product->thumbnail_image) && count($product->thumbnail_image) > 0)
+                        ? $front_ins_url . 'public/uploads/' . $product->thumbnail_image[0]
+                        : 'https://placehold.co/400x400';
+        $desktopImage = (is_array($product->main_image) && count($product->main_image) > 0)
+                        ? $front_ins_url . 'public/uploads/' . $product->main_image[0]
+                        : 'https://placehold.co/400x400';
 
-                        // Calculate total stock from all variants
-                        $totalStock = 0;
-                        if ($product->variants->isNotEmpty()) {
-                            foreach ($product->variants as $variant) {
-                                if (is_array($variant->sizes)) {
-                                    foreach ($variant->sizes as $sizeInfo) {
-                                        $totalStock += $sizeInfo['quantity'] ?? 0;
-                                    }
-                                }
-                            }
-                        }
-                    @endphp
-                    <a href="{{ route('product.show', $product->slug) }}">
-                        <picture>
-                            <source media="(min-width: 992px)" srcset="{{ $desktopImage }}">
-                            <source media="(max-width: 991px)" srcset="{{ $mobileImage }}">
-                            <img src="{{ $mobileImage }}" 
-                                 alt="{{ $product->name }}" 
-                                 class="card-img-top img-fluid">
-                        </picture>
-                    </a>
-                    <div class="product-details-body">
-                        <h5 class="product-title mb-1"><a href="{{ route('product.show', $product->slug) }}">
-                                        {{ Str::limit($product->name, 25) }}
-                                        </a></h5>
-                        <p class="product-meta mb-1">Category: {{ $product->category->name ?? 'N/A' }}</p>
-                        <p class="product-meta mb-1">SKU: {{ $product->product_code ?? 'N/A' }}</p>
+        // --- HOVER IMAGES (Image 2) ---
+        // If the second image exists, use it. Otherwise, FALL BACK to the first image.
+        $mobileImageHover = (is_array($product->thumbnail_image) && count($product->thumbnail_image) > 1)
+                            ? $front_ins_url . 'public/uploads/' . $product->thumbnail_image[1]
+                            : $mobileImage;
+        $desktopImageHover = (is_array($product->main_image) && count($product->main_image) > 1)
+                             ? $front_ins_url . 'public/uploads/' . $product->main_image[1]
+                             : $desktopImage;
 
-                        @if($totalStock > 0)
-                            <p class="product-meta text-success fw-bold mb-1"><i class="bi bi-check-circle-fill"></i> In stock</p>
-                        @else
-                            <p class="product-meta text-danger fw-bold mb-1"><i class="bi bi-x-circle-fill"></i> Out of stock</p>
-                        @endif
+        // Calculate total stock
+        $totalStock = 0;
+        if ($product->variants->isNotEmpty()) {
+            foreach ($product->variants as $variant) {
+                if (is_array($variant->sizes)) {
+                    foreach ($variant->sizes as $sizeInfo) {
+                        $totalStock += $sizeInfo['quantity'] ?? 0;
+                    }
+                }
+            }
+        }
+    @endphp
 
-                        <div class="rating-stars mb-2">
-                            <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-half"></i>
-                        </div>
+    {{-- The link is now the main container for the images --}}
+    <a href="{{ route('product.show', $product->slug) }}" class="product-image-container">
+        <picture class="product-image-default">
+            <source media="(min-width: 992px)" srcset="{{ $desktopImage }}">
+            <source media="(max-width: 991px)" srcset="{{ $mobileImage }}">
+            <img src="{{ $mobileImage }}" 
+                 alt="{{ $product->name }}" 
+                 class="card-img-top img-fluid">
+        </picture>
 
-                        <p class="price-tag mb-2">
-                            @if($product->discount_price)
-                                <del class="text-muted">৳ {{ $product->base_price }}</del>
-                                <span class="fw-bold">৳ {{ $product->discount_price }}</span>
-                            @else
-                                <span class="fw-bold">৳ {{ $product->base_price }}</span>
-                            @endif
-                        </p>
-                        <a href="#" class="btn btn-primary btn-add-cart" data-product-id="{{ $product->id }}">Add to Cart</a>
-                    </div>
-                </div>
+        <picture class="product-image-hover">
+            <source media="(min-width: 992px)" srcset="{{ $desktopImageHover }}">
+            <source media="(max-width: 991px)" srcset="{{ $mobileImageHover }}">
+            <img src="{{ $mobileImageHover }}" 
+                 alt="{{ $product->name }} hover" 
+                 class="card-img-top img-fluid">
+        </picture>
+    </a>
+    
+    <div class="product-details-body">
+        <h5 class="product-title mb-1"><a href="{{ route('product.show', $product->slug) }}">
+                        {{ Str::limit($product->name, 25) }}
+                        </a></h5>
+        <p class="product-meta mb-1">Category: {{ $product->category->name ?? 'N/A' }}</p>
+        <p class="product-meta mb-1">SKU: {{ $product->product_code ?? 'N/A' }}</p>
+
+        @if($totalStock > 0)
+            <p class="product-meta text-success fw-bold mb-1"><i class="bi bi-check-circle-fill"></i> In stock</p>
+        @else
+            <p class="product-meta text-danger fw-bold mb-1"><i class="bi bi-x-circle-fill"></i> Out of stock</p>
+        @endif
+
+        <div class="rating-stars mb-2">
+            <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-half"></i>
+        </div>
+
+        <p class="price-tag mb-2">
+            @if($product->discount_price)
+                <del class="text-muted">৳ {{ $product->base_price }}</del>
+                <span class="fw-bold">৳ {{ $product->discount_price }}</span>
+            @else
+                <span class="fw-bold">৳ {{ $product->base_price }}</span>
+            @endif
+        </p>
+        <a href="#" class="btn btn-primary btn-add-cart" data-product-id="{{ $product->id }}">Add to Cart</a>
+    </div>
+</div>
                 @endforeach
             </div>
         </div>
@@ -345,61 +398,84 @@
             <div class="product-slider">
                 @foreach($secondRowProducts as $product)
                 <div class="product-card card">
-                    @php
-                        $mobileImage = (is_array($product->thumbnail_image) && count($product->thumbnail_image) > 0)
-                                        ? $front_ins_url . 'public/uploads/' . $product->thumbnail_image[0]
-                                        : 'https://placehold.co/800x400';
-                        $desktopImage = (is_array($product->main_image) && count($product->main_image) > 0)
-                                        ? $front_ins_url . 'public/uploads/' . $product->main_image[0]
-                                        : 'https://placehold.co/800x400';
-                        $totalStock = 0;
-                        if ($product->variants->isNotEmpty()) {
-                            foreach ($product->variants as $variant) {
-                                if (is_array($variant->sizes)) {
-                                    foreach ($variant->sizes as $sizeInfo) {
-                                        $totalStock += $sizeInfo['quantity'] ?? 0;
-                                    }
-                                }
-                            }
-                        }
-                    @endphp
-                    <a href="{{ route('product.show', $product->slug) }}">
-                        <picture>
-                            <source media="(min-width: 992px)" srcset="{{ $desktopImage }}">
-                            <source media="(max-width: 991px)" srcset="{{ $mobileImage }}">
-                            <img src="{{ $mobileImage }}" 
-                                 alt="{{ $product->name }}" 
-                                 class="card-img-top img-fluid">
-                        </picture>
-                    </a>
-                    <div class="product-details-body">
-                        <h5 class="product-title mb-1"><a href="{{ route('product.show', $product->slug) }}">
-                                        {{ Str::limit($product->name, 25) }}
-                                        </a></h5>
-                        <p class="product-meta mb-1">Category: {{ $product->category->name ?? 'N/A' }}</p>
-                        <p class="product-meta mb-1">SKU: {{ $product->product_code ?? 'N/A' }}</p>
+    @php
+        // --- DEFAULT IMAGES (Image 1) ---
+        $mobileImage = (is_array($product->thumbnail_image) && count($product->thumbnail_image) > 0)
+                        ? $front_ins_url . 'public/uploads/' . $product->thumbnail_image[0]
+                        : 'https://placehold.co/400x400';
+        $desktopImage = (is_array($product->main_image) && count($product->main_image) > 0)
+                        ? $front_ins_url . 'public/uploads/' . $product->main_image[0]
+                        : 'https://placehold.co/400x400';
 
-                        @if($totalStock > 0)
-                            <p class="product-meta text-success fw-bold mb-1"><i class="bi bi-check-circle-fill"></i> In stock</p>
-                        @else
-                            <p class="product-meta text-danger fw-bold mb-1"><i class="bi bi-x-circle-fill"></i> Out of stock</p>
-                        @endif
+        // --- HOVER IMAGES (Image 2) ---
+        // If the second image exists, use it. Otherwise, FALL BACK to the first image.
+        $mobileImageHover = (is_array($product->thumbnail_image) && count($product->thumbnail_image) > 1)
+                            ? $front_ins_url . 'public/uploads/' . $product->thumbnail_image[1]
+                            : $mobileImage;
+        $desktopImageHover = (is_array($product->main_image) && count($product->main_image) > 1)
+                             ? $front_ins_url . 'public/uploads/' . $product->main_image[1]
+                             : $desktopImage;
 
-                        <div class="rating-stars mb-2">
-                            <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-half"></i>
-                        </div>
+        // Calculate total stock
+        $totalStock = 0;
+        if ($product->variants->isNotEmpty()) {
+            foreach ($product->variants as $variant) {
+                if (is_array($variant->sizes)) {
+                    foreach ($variant->sizes as $sizeInfo) {
+                        $totalStock += $sizeInfo['quantity'] ?? 0;
+                    }
+                }
+            }
+        }
+    @endphp
 
-                        <p class="price-tag mb-2">
-                            @if($product->discount_price)
-                                <del class="text-muted">৳ {{ $product->base_price }}</del>
-                                <span class="fw-bold">৳ {{ $product->discount_price }}</span>
-                            @else
-                                <span class="fw-bold">৳ {{ $product->base_price }}</span>
-                            @endif
-                        </p>
-                        <a href="#" class="btn btn-primary btn-add-cart" data-product-id="{{ $product->id }}">Add to Cart</a>
-                    </div>
-                </div>
+    {{-- The link is now the main container for the images --}}
+    <a href="{{ route('product.show', $product->slug) }}" class="product-image-container">
+        <picture class="product-image-default">
+            <source media="(min-width: 992px)" srcset="{{ $desktopImage }}">
+            <source media="(max-width: 991px)" srcset="{{ $mobileImage }}">
+            <img src="{{ $mobileImage }}" 
+                 alt="{{ $product->name }}" 
+                 class="card-img-top img-fluid">
+        </picture>
+
+        <picture class="product-image-hover">
+            <source media="(min-width: 992px)" srcset="{{ $desktopImageHover }}">
+            <source media="(max-width: 991px)" srcset="{{ $mobileImageHover }}">
+            <img src="{{ $mobileImageHover }}" 
+                 alt="{{ $product->name }} hover" 
+                 class="card-img-top img-fluid">
+        </picture>
+    </a>
+    
+    <div class="product-details-body">
+        <h5 class="product-title mb-1"><a href="{{ route('product.show', $product->slug) }}">
+                        {{ Str::limit($product->name, 25) }}
+                        </a></h5>
+        <p class="product-meta mb-1">Category: {{ $product->category->name ?? 'N/A' }}</p>
+        <p class="product-meta mb-1">SKU: {{ $product->product_code ?? 'N/A' }}</p>
+
+        @if($totalStock > 0)
+            <p class="product-meta text-success fw-bold mb-1"><i class="bi bi-check-circle-fill"></i> In stock</p>
+        @else
+            <p class="product-meta text-danger fw-bold mb-1"><i class="bi bi-x-circle-fill"></i> Out of stock</p>
+        @endif
+
+        <div class="rating-stars mb-2">
+            <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-half"></i>
+        </div>
+
+        <p class="price-tag mb-2">
+            @if($product->discount_price)
+                <del class="text-muted">৳ {{ $product->base_price }}</del>
+                <span class="fw-bold">৳ {{ $product->discount_price }}</span>
+            @else
+                <span class="fw-bold">৳ {{ $product->base_price }}</span>
+            @endif
+        </p>
+        <a href="#" class="btn btn-primary btn-add-cart" data-product-id="{{ $product->id }}">Add to Cart</a>
+    </div>
+</div>
                 @endforeach
             </div>
         </div>
@@ -428,32 +504,84 @@
                     <div class="product-carousel">
                         @forelse($row1Products as $product)
                             <div class="product-card card">
-                                @php
-                                    $mobileImage = (is_array($product->thumbnail_image) && count($product->thumbnail_image) > 0) ? $front_ins_url . 'public/uploads/' . $product->thumbnail_image[0] : 'https://placehold.co/800x400';
-                                    $desktopImage = (is_array($product->main_image) && count($product->main_image) > 0) ? $front_ins_url . 'public/uploads/' . $product->main_image[0] : 'https://placehold.co/800x400';
-                                @endphp
-                                <a href="{{ route('product.show', $product->slug) }}">
-                                    <picture>
-                                        <source media="(min-width: 992px)" srcset="{{ $desktopImage }}">
-                                        <source media="(max-width: 991px)" srcset="{{ $mobileImage }}">
-                                        <img src="{{ $mobileImage }}" alt="{{ $product->name }}" class="card-img-top img-fluid">
-                                    </picture>
-                                </a>
-                                <div class="product-details-body">
-                                    <h5 class="product-title mb-1"><a href="{{ route('product.show', $product->slug) }}">
-                                        {{ Str::limit($product->name, 25) }}
-                                        </a></h5>
-                                    <p class="price-tag mb-2">
-                                        @if($product->discount_price)
-                                            <del class="text-muted">৳ {{ $product->base_price }}</del>
-                                            <span class="fw-bold">৳ {{ $product->discount_price }}</span>
-                                        @else
-                                            <span class="fw-bold">৳ {{ $product->base_price }}</span>
-                                        @endif
-                                    </p>
-                                    <a href="#" class="btn btn-primary btn-add-cart" data-product-id="{{ $product->id }}">Add to Cart</a>
-                                </div>
-                            </div>
+    @php
+        // --- DEFAULT IMAGES (Image 1) ---
+        $mobileImage = (is_array($product->thumbnail_image) && count($product->thumbnail_image) > 0)
+                        ? $front_ins_url . 'public/uploads/' . $product->thumbnail_image[0]
+                        : 'https://placehold.co/400x400';
+        $desktopImage = (is_array($product->main_image) && count($product->main_image) > 0)
+                        ? $front_ins_url . 'public/uploads/' . $product->main_image[0]
+                        : 'https://placehold.co/400x400';
+
+        // --- HOVER IMAGES (Image 2) ---
+        // If the second image exists, use it. Otherwise, FALL BACK to the first image.
+        $mobileImageHover = (is_array($product->thumbnail_image) && count($product->thumbnail_image) > 1)
+                            ? $front_ins_url . 'public/uploads/' . $product->thumbnail_image[1]
+                            : $mobileImage;
+        $desktopImageHover = (is_array($product->main_image) && count($product->main_image) > 1)
+                             ? $front_ins_url . 'public/uploads/' . $product->main_image[1]
+                             : $desktopImage;
+
+        // Calculate total stock
+        $totalStock = 0;
+        if ($product->variants->isNotEmpty()) {
+            foreach ($product->variants as $variant) {
+                if (is_array($variant->sizes)) {
+                    foreach ($variant->sizes as $sizeInfo) {
+                        $totalStock += $sizeInfo['quantity'] ?? 0;
+                    }
+                }
+            }
+        }
+    @endphp
+
+    {{-- The link is now the main container for the images --}}
+    <a href="{{ route('product.show', $product->slug) }}" class="product-image-container">
+        <picture class="product-image-default">
+            <source media="(min-width: 992px)" srcset="{{ $desktopImage }}">
+            <source media="(max-width: 991px)" srcset="{{ $mobileImage }}">
+            <img src="{{ $mobileImage }}" 
+                 alt="{{ $product->name }}" 
+                 class="card-img-top img-fluid">
+        </picture>
+
+        <picture class="product-image-hover">
+            <source media="(min-width: 992px)" srcset="{{ $desktopImageHover }}">
+            <source media="(max-width: 991px)" srcset="{{ $mobileImageHover }}">
+            <img src="{{ $mobileImageHover }}" 
+                 alt="{{ $product->name }} hover" 
+                 class="card-img-top img-fluid">
+        </picture>
+    </a>
+    
+    <div class="product-details-body">
+        <h5 class="product-title mb-1"><a href="{{ route('product.show', $product->slug) }}">
+                        {{ Str::limit($product->name, 25) }}
+                        </a></h5>
+        <p class="product-meta mb-1">Category: {{ $product->category->name ?? 'N/A' }}</p>
+        <p class="product-meta mb-1">SKU: {{ $product->product_code ?? 'N/A' }}</p>
+
+        @if($totalStock > 0)
+            <p class="product-meta text-success fw-bold mb-1"><i class="bi bi-check-circle-fill"></i> In stock</p>
+        @else
+            <p class="product-meta text-danger fw-bold mb-1"><i class="bi bi-x-circle-fill"></i> Out of stock</p>
+        @endif
+
+        <div class="rating-stars mb-2">
+            <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-half"></i>
+        </div>
+
+        <p class="price-tag mb-2">
+            @if($product->discount_price)
+                <del class="text-muted">৳ {{ $product->base_price }}</del>
+                <span class="fw-bold">৳ {{ $product->discount_price }}</span>
+            @else
+                <span class="fw-bold">৳ {{ $product->base_price }}</span>
+            @endif
+        </p>
+        <a href="#" class="btn btn-primary btn-add-cart" data-product-id="{{ $product->id }}">Add to Cart</a>
+    </div>
+</div>
                         @empty
                             <p class="text-center w-100">No products found for this category.</p>
                         @endforelse
@@ -601,34 +729,84 @@
                     <div class="product-carousel">
                         @forelse($row2Products as $product)
                             <div class="product-card card">
-                                @php
-                                    $mobileImage = (is_array($product->thumbnail_image) && count($product->thumbnail_image) > 0) ? $front_ins_url . 'public/uploads/' . $product->thumbnail_image[0] : 'https://placehold.co/800x400';
-                                    $desktopImage = (is_array($product->main_image) && count($product->main_image) > 0) ? $front_ins_url . 'public/uploads/' . $product->main_image[0] : 'https://placehold.co/800x400';
-                                @endphp
-                                <a href="{{ route('product.show', $product->slug) }}">
-                                    <picture>
-                                        <source media="(min-width: 992px)" srcset="{{ $desktopImage }}">
-                                        <source media="(max-width: 991px)" srcset="{{ $mobileImage }}">
-                                        <img src="{{ $mobileImage }}" alt="{{ $product->name }}" class="card-img-top img-fluid">
-                                    </picture>
-                                </a>
-                                <div class="product-details-body">
-                                    <h5 class="product-title mb-1">
-                                        <a href="{{ route('product.show', $product->slug) }}">
-                                        {{ Str::limit($product->name, 25) }}
-                                        </a>
-                                    </h5>
-                                    <p class="price-tag mb-2">
-                                        @if($product->discount_price)
-                                            <del class="text-muted">৳ {{ $product->base_price }}</del>
-                                            <span class="fw-bold">৳ {{ $product->discount_price }}</span>
-                                        @else
-                                            <span class="fw-bold">৳ {{ $product->base_price }}</span>
-                                        @endif
-                                    </p>
-                                    <a href="#" class="btn btn-primary btn-add-cart" data-product-id="{{ $product->id }}">Add to Cart</a>
-                                </div>
-                            </div>
+    @php
+        // --- DEFAULT IMAGES (Image 1) ---
+        $mobileImage = (is_array($product->thumbnail_image) && count($product->thumbnail_image) > 0)
+                        ? $front_ins_url . 'public/uploads/' . $product->thumbnail_image[0]
+                        : 'https://placehold.co/400x400';
+        $desktopImage = (is_array($product->main_image) && count($product->main_image) > 0)
+                        ? $front_ins_url . 'public/uploads/' . $product->main_image[0]
+                        : 'https://placehold.co/400x400';
+
+        // --- HOVER IMAGES (Image 2) ---
+        // If the second image exists, use it. Otherwise, FALL BACK to the first image.
+        $mobileImageHover = (is_array($product->thumbnail_image) && count($product->thumbnail_image) > 1)
+                            ? $front_ins_url . 'public/uploads/' . $product->thumbnail_image[1]
+                            : $mobileImage;
+        $desktopImageHover = (is_array($product->main_image) && count($product->main_image) > 1)
+                             ? $front_ins_url . 'public/uploads/' . $product->main_image[1]
+                             : $desktopImage;
+
+        // Calculate total stock
+        $totalStock = 0;
+        if ($product->variants->isNotEmpty()) {
+            foreach ($product->variants as $variant) {
+                if (is_array($variant->sizes)) {
+                    foreach ($variant->sizes as $sizeInfo) {
+                        $totalStock += $sizeInfo['quantity'] ?? 0;
+                    }
+                }
+            }
+        }
+    @endphp
+
+    {{-- The link is now the main container for the images --}}
+    <a href="{{ route('product.show', $product->slug) }}" class="product-image-container">
+        <picture class="product-image-default">
+            <source media="(min-width: 992px)" srcset="{{ $desktopImage }}">
+            <source media="(max-width: 991px)" srcset="{{ $mobileImage }}">
+            <img src="{{ $mobileImage }}" 
+                 alt="{{ $product->name }}" 
+                 class="card-img-top img-fluid">
+        </picture>
+
+        <picture class="product-image-hover">
+            <source media="(min-width: 992px)" srcset="{{ $desktopImageHover }}">
+            <source media="(max-width: 991px)" srcset="{{ $mobileImageHover }}">
+            <img src="{{ $mobileImageHover }}" 
+                 alt="{{ $product->name }} hover" 
+                 class="card-img-top img-fluid">
+        </picture>
+    </a>
+    
+    <div class="product-details-body">
+        <h5 class="product-title mb-1"><a href="{{ route('product.show', $product->slug) }}">
+                        {{ Str::limit($product->name, 25) }}
+                        </a></h5>
+        <p class="product-meta mb-1">Category: {{ $product->category->name ?? 'N/A' }}</p>
+        <p class="product-meta mb-1">SKU: {{ $product->product_code ?? 'N/A' }}</p>
+
+        @if($totalStock > 0)
+            <p class="product-meta text-success fw-bold mb-1"><i class="bi bi-check-circle-fill"></i> In stock</p>
+        @else
+            <p class="product-meta text-danger fw-bold mb-1"><i class="bi bi-x-circle-fill"></i> Out of stock</p>
+        @endif
+
+        <div class="rating-stars mb-2">
+            <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-half"></i>
+        </div>
+
+        <p class="price-tag mb-2">
+            @if($product->discount_price)
+                <del class="text-muted">৳ {{ $product->base_price }}</del>
+                <span class="fw-bold">৳ {{ $product->discount_price }}</span>
+            @else
+                <span class="fw-bold">৳ {{ $product->base_price }}</span>
+            @endif
+        </p>
+        <a href="#" class="btn btn-primary btn-add-cart" data-product-id="{{ $product->id }}">Add to Cart</a>
+    </div>
+</div>
                         @empty
                             <p class="text-center w-100">No products found for this category.</p>
                         @endforelse

@@ -239,10 +239,20 @@
                                             <span class="fw-semibold text-dark ms-3">Inside Dhaka BDT 70</span>
                                         </div>
                                     </div>
+                                     <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <div class="d-flex align-items-center">
+                                            <i class="bi bi-truck me-2"></i>
+                                            <span class="small">Regular Product Delivery</span>
+                                        </div>
+                                        <div class="d-flex align-items-center small text-muted">
+                                            <span>2-3 Days</span>
+                                            <span class="fw-semibold text-dark ms-3">Inside Dhaka(Subzone) BDT 120</span>
+                                        </div>
+                                    </div>
                                     <div class="d-flex justify-content-between align-items-center">
                                         <div class="d-flex align-items-center">
                                             <i class="bi bi-truck me-2"></i>
-                                            <span class="small">Customized Product Delivery</span>
+                                            <span class="small">Regular Product Delivery</span>
                                         </div>
                                         <div class="d-flex align-items-center small text-muted">
                                             <span>4-6 Days</span>

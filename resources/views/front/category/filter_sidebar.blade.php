@@ -1,31 +1,36 @@
 {{-- This partial contains the filter options for both desktop and mobile --}}
 <div class="filter-section">
     <h5 class="fw-bold mb-3 filter_title">Product Categories</h5>
-    <ul class="list-unstyled mb-4 filter_listing">
+<ul class="list-unstyled mb-4 filter_listing">
     @foreach($categoryList as $cat)
         <li class="mb-2">
             <div class="d-flex justify-content-between align-items-center"
-                 @if($cat->subcategories->isNotEmpty())
+                 {{-- Check for children to make the row expandable --}}
+                 @if($cat->children->isNotEmpty())
                      data-bs-toggle="collapse"
                      data-bs-target="#collapse-{{ $cat->slug }}"
-                     aria-expanded="{{ $cat->id === $category->id ? 'true' : 'false' }}"
+                     {{-- Expand the parent category if it matches the current page's category --}}
+                     aria-expanded="{{ isset($category) && $category->id === $cat->id ? 'true' : 'false' }}"
                      role="button"
                  @endif
             >
-                {{-- MODIFIED: Added class and data-id to make the main category clickable as a filter --}}
-                <a href="#" class="text-dark text-decoration-none main-category-filter" data-id="{{ $cat->id }}">{{ $cat->name }}</a>
-                
-                @if($cat->subcategories->isNotEmpty())
+                {{-- Add 'active' class to the parent category link if it's the one being viewed --}}
+                <a href="#" class="text-dark text-decoration-none main-category-filter {{ (isset($category) && $category->id === $cat->id && !isset($subcategory)) ? 'active' : '' }}" data-id="{{ $cat->id }}">{{ $cat->name }}</a>
+
+                @if($cat->children->isNotEmpty())
                     <i class="bi bi-chevron-down"></i>
                 @endif
             </div>
-            
-            @if($cat->subcategories->isNotEmpty())
-                <div class="collapse {{ $cat->id === $category->id ? 'show' : '' }}" id="collapse-{{ $cat->slug }}">
+
+            {{-- Loop through child categories if they exist --}}
+            @if($cat->children->isNotEmpty())
+                {{-- Add 'show' class to display the child list if the parent is active --}}
+                <div class="collapse {{ isset($category) && $category->id === $cat->id ? 'show' : '' }}" id="collapse-{{ $cat->slug }}">
                     <ul class="list-unstyled ms-3 mt-2">
-                        @foreach($cat->subcategories as $subcat)
+                        @foreach($cat->children as $child)
                             <li>
-                                <a class="d-block py-1 text-dark text-decoration-none subcategory-filter" href="#" data-id="{{ $subcat->id }}">{{ $subcat->name }}</a>
+                                {{-- Add 'active' class to the subcategory link if it's the one being viewed --}}
+                                <a class="d-block py-1 text-dark text-decoration-none subcategory-filter {{ (isset($subcategory) && $subcategory->id === $child->id) ? 'active' : '' }}" href="#" data-id="{{ $child->id }}">{{ $child->name }}</a>
                             </li>
                         @endforeach
                     </ul>

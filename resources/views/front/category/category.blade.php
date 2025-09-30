@@ -24,6 +24,36 @@
         overflow-y: auto; /* Adds a scrollbar if the filters are too long */
     }
     /* --- END OF NEW CSS --- */
+     /* Container for the product images */
+    .product-image-container {
+        position: relative; /* Needed to position the hover image correctly */
+        display: block;
+        overflow: hidden; /* Ensures images stay within the card boundaries */
+    }
+
+    /* Styling for both default and hover images */
+    .product-image-container picture img {
+        transition: transform 0.3s ease-in-out; /* Optional: adds a slight zoom effect on hover */
+    }
+
+    /* The hover image is positioned directly on top of the default one */
+    .product-image-hover {
+        position: absolute;
+        top: 0;
+        left: 0;
+        opacity: 0; /* It's completely invisible by default */
+        transition: opacity 0.3s ease-in-out; /* This creates the smooth fade effect */
+    }
+
+    /* When you hover over the container... */
+    .product-image-container:hover .product-image-hover {
+        opacity: 1; /* ...the hover image fades in and becomes visible */
+    }
+    
+    /* Optional: Slight zoom effect on the image when hovering */
+    .product-image-container:hover picture img {
+        transform: scale(1.05);
+    }
 </style>
 @endsection
 
@@ -111,6 +141,7 @@
 @endsection
 
 @section('script')
+
 <script>
     $(document).ready(function() {
         // Use event delegation for buttons in sliders

@@ -1,18 +1,22 @@
 <div class="filter-section">
-    <h5 class="fw-bold mb-3 filter_title">Product Categories</h5>
+      <h5 class="fw-bold mb-3 filter_title">Product Categories</h5>
     <ul class="list-unstyled mb-4 filter_listing">
         @foreach($categoryList as $cat)
             <li class="mb-2">
+                {{-- Use the 'children' relationship to check for subcategories --}}
                 <div class="d-flex justify-content-between align-items-center"
-                     @if($cat->subcategories->isNotEmpty()) data-bs-toggle="collapse" data-bs-target="#collapse-{{ $cat->slug }}" role="button" @endif>
+                     @if($cat->children->isNotEmpty()) data-bs-toggle="collapse" data-bs-target="#collapse-{{ $cat->slug }}" role="button" @endif>
                     <a href="#" class="text-dark text-decoration-none main-category-filter" data-id="{{ $cat->id }}">{{ $cat->name }}</a>
-                    @if($cat->subcategories->isNotEmpty()) <i class="bi bi-chevron-down"></i> @endif
+                    @if($cat->children->isNotEmpty()) <i class="bi bi-chevron-down"></i> @endif
                 </div>
-                @if($cat->subcategories->isNotEmpty())
+
+                {{-- If children exist, create the collapsible list --}}
+                @if($cat->children->isNotEmpty())
                     <div class="collapse" id="collapse-{{ $cat->slug }}">
                         <ul class="list-unstyled ms-3 mt-2">
-                            @foreach($cat->subcategories as $subcat)
-                                <li><a class="d-block py-1 text-dark text-decoration-none subcategory-filter" href="#" data-id="{{ $subcat->id }}">{{ $subcat->name }}</a></li>
+                            {{-- Loop through the 'children' relationship --}}
+                            @foreach($cat->children as $child)
+                                <li><a class="d-block py-1 text-dark text-decoration-none subcategory-filter" href="#" data-id="{{ $child->id }}">{{ $child->name }}</a></li>
                             @endforeach
                         </ul>
                     </div>
@@ -20,6 +24,8 @@
             </li>
         @endforeach
     </ul>
+
+    <hr>
     <hr>
     <h5 class="fw-bold my-3 filter_title">Animation Categories</h5>
     <ul class="list-unstyled mb-4 filter_listing">

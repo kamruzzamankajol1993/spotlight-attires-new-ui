@@ -361,7 +361,7 @@ $homepageRow2 = HomepageSection::with('category')->where('row_identifier', 'row_
 $row1Products = collect();
 if ($homepageRow1 && $homepageRow1->category) {
     // Get product IDs from the assignment table for the first row's category
-    $productIds = AssignCategory::where('category_id', $homepageRow1->category_id)->pluck('product_id');
+    $productIds = AssignCategory::where('category_id', $homepageRow1->category_id)->where('type','product_category')->pluck('product_id');
     $row1Products = Product::whereIn('id', $productIds)
         ->where('status', 1)
         ->with('variants')
@@ -373,7 +373,7 @@ if ($homepageRow1 && $homepageRow1->category) {
 $row2Products = collect();
 if ($homepageRow2 && $homepageRow2->category) {
     // Get product IDs from the assignment table for the second row's category
-    $productIds = AssignCategory::where('category_id', $homepageRow2->category_id)->pluck('product_id');
+    $productIds = AssignCategory::where('category_id', $homepageRow2->category_id)->where('type','product_category')->pluck('product_id');
     $row2Products = Product::whereIn('id', $productIds)
         ->where('status', 1)
         ->with('variants')
@@ -431,7 +431,7 @@ $footerBanner = FooterBanner::latest()->first();
         $category = Category::where('slug', $slug)->firstOrFail();
 
         // 1. Get all product IDs assigned to this category from the pivot table.
-        $productIds = AssignCategory::where('category_id', $category->id)->pluck('product_id');
+        $productIds = AssignCategory::where('category_id', $category->id)->where('type','product_category')->pluck('product_id');
 
         // 2. Fetch and paginate the products using the retrieved IDs.
         $products = Product::whereIn('id', $productIds)
@@ -536,14 +536,19 @@ $footerBanner = FooterBanner::latest()->first();
 
         // If either exists, use it to filter products via the AssignCategory table.
         if ($categoryId) {
-            $productIds = AssignCategory::where('category_id', $categoryId)->pluck('product_id');
+            $productIds = AssignCategory::where('category_id', $categoryId)
+            ->where('type','product_category')
+            ->pluck('product_id');
+
             $query->whereIn('id', $productIds);
         }
         // --- END: UNIFIED FILTER ---
         
         // Filter by Animation Category
         if ($request->filled('animation_category_id')) {
-            $productIds = AssignCategory::where('category_id', $request->animation_category_id)->pluck('product_id');
+            $productIds = AssignCategory::where('category_id', $request->animation_category_id)
+            ->where('type','animation')
+            ->pluck('product_id');
             $query->whereIn('id', $productIds);
         }
 
@@ -629,7 +634,7 @@ $footerBanner = FooterBanner::latest()->first();
         $category = $subcategory->parent;
 
         // 3. Get all product IDs assigned to THIS subcategory from the pivot table.
-        $productIds = AssignCategory::where('category_id', $subcategory->id)->pluck('product_id');
+        $productIds = AssignCategory::where('category_id', $subcategory->id)->where('type','product_category')->pluck('product_id');
 
         // 4. Fetch and paginate the products using the retrieved IDs.
         $products = Product::whereIn('id', $productIds)
@@ -712,8 +717,12 @@ $footerBanner = FooterBanner::latest()->first();
         // Filter by Main Category if selected
          // --- START: UNIFIED CATEGORY/SUBCATEGORY FILTER ---
         $categoryId = $request->input('category_id') ?: $request->input('subcategory_id');
+
+
+       // dd($categoryId);
         if ($categoryId) {
-            $productIds = AssignCategory::where('category_id', $categoryId)->pluck('product_id');
+            $productIds = AssignCategory::where('category_id', $categoryId)
+            ->where('type','product_category')->pluck('product_id');
             $query->whereIn('id', $productIds);
         }
         // --- END: UNIFIED FILTER ---
@@ -799,7 +808,7 @@ $footerBanner = FooterBanner::latest()->first();
 
         // 1. Get all product IDs assigned to this animation category
         $productIds = AssignCategory::where('category_id', $animationCategory->id)
-            // You might add ->where('type', 'animation') if you have other types
+            ->where('type', 'animation') 
             ->pluck('product_id');
 
         // 2. Fetch and paginate the initial products
@@ -821,7 +830,7 @@ $footerBanner = FooterBanner::latest()->first();
     $request->validate(['animation_category_id' => 'required|integer|exists:animation_categories,id']);
 
     // 1. Get product IDs for the requested animation category
-    $productIds = AssignCategory::where('category_id', $request->animation_category_id)->pluck('product_id');
+    $productIds = AssignCategory::where('category_id', $request->animation_category_id)->where('type','aimation')->pluck('product_id');
 
     // 2. Start the query for products
     $productsQuery = Product::whereIn('id', $productIds)->where('status', 1);
