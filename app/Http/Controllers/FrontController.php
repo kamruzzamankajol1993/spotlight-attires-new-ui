@@ -484,8 +484,96 @@ $footerBanner = FooterBanner::latest()->first();
     // Fetch filter data for the sidebar
     $categoryList = Category::where('status', 1)->whereNull('parent_id')->with('children')->get();
     $animationCategoryList = AnimationCategory::where('status', 1)->get();
+$sizes = Size::where('status', 1)->get();
+    return view('front.main.search_results', compact('sizes','products', 'categoryList', 'animationCategoryList', 'searchQuery'));
+}
 
-    return view('front.main.search_results', compact('products', 'categoryList', 'animationCategoryList', 'searchQuery'));
+public function ajaxSearchFilter(Request $request)
+{
+    // Start with the base query for active products.
+    $query = Product::where('status', 1);
+
+    // CRITICAL: Apply the original search query if it exists.
+    if ($request->filled('query')) {
+        $searchQuery = $request->input('query');
+        $query->where('name', 'LIKE', "%{$searchQuery}%");
+    }
+
+    // --- The rest of this logic is the same as ajaxShopFilter ---
+
+    // Filter by Category or Subcategory
+    $categoryId = $request->input('category_id') ?: $request->input('subcategory_id');
+    if ($categoryId) {
+        $productIds = AssignCategory::where('category_id', $categoryId)
+                                    ->where('type', 'product_category')
+                                    ->pluck('product_id');
+        $query->whereIn('id', $productIds);
+    }
+
+    // Filter by Animation Category
+    if ($request->filled('animation_category_id')) {
+        $productIds = AssignCategory::where('category_id', $request->animation_category_id)
+                                    ->where('type', 'animation')
+                                    ->pluck('product_id');
+        $query->whereIn('id', $productIds);
+    }
+
+    // Filter by Price Range
+    if ($request->filled('min_price') && $request->filled('max_price')) {
+        $query->whereBetween('base_price', [(float)$request->min_price, (float)$request->max_price]);
+    }
+
+    // Filter by Stock Status
+    if ($request->filled('stock_status')) {
+        if ($request->stock_status === 'on_sale') {
+            $query->whereNotNull('discount_price')->where('discount_price', '>', 0);
+        } elseif ($request->stock_status === 'in_stock') {
+            $query->whereHas('variants', fn($q) => $q->whereJsonLength('sizes', '>', 0));
+        }
+    }
+
+    // Filter by Size
+    if ($request->filled('sizes') && is_array($request->sizes)) {
+        $selectedSizeNames = $request->sizes;
+        $sizeIds = Size::whereIn('name', $selectedSizeNames)->pluck('id')->toArray();
+        if (!empty($sizeIds)) {
+            $query->whereHas('variants', function ($variantQuery) use ($sizeIds) {
+                $variantQuery->where(function ($q) use ($sizeIds) {
+                    foreach ($sizeIds as $sizeId) {
+                        $q->orWhereJsonContains('sizes', ['size_id' => (string)$sizeId]);
+                    }
+                });
+            });
+        }
+    }
+
+    // Sorting Logic
+    $sortBy = $request->input('sort_by', 'newest');
+    switch ($sortBy) {
+        case 'price_asc':
+            $query->orderByRaw('ISNULL(discount_price), discount_price ASC, base_price ASC');
+            break;
+        case 'price_desc':
+            $query->orderByRaw('ISNULL(discount_price), discount_price DESC, base_price DESC');
+            break;
+        case 'name_asc':
+            $query->orderBy('name', 'asc');
+            break;
+        case 'popularity':
+        case 'newest':
+        default:
+            $query->latest();
+            break;
+    }
+
+    // Fetch and render results
+    $products = $query->with(['variants'])->paginate(12);
+    $html = view('front.category.product_card_partial', compact('products'))->render();
+
+    return response()->json([
+        'html' => $html,
+        'hasMorePages' => $products->hasMorePages(),
+    ]);
 }
 
     public function shop()

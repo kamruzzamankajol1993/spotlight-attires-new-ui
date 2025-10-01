@@ -52,6 +52,39 @@
     .product-image-container:hover picture img {
         transform: scale(1.05);
     }
+    /* --- START: NEW CSS FOR FILTER TAGS --- */
+    #active-filters-container {
+        display: none; /* Hidden by default */
+        padding-bottom: 1rem;
+        margin-bottom: 1rem;
+        border-bottom: 1px solid #eee;
+    }
+    .filter-tag {
+        display: inline-flex;
+        align-items: center;
+        background-color: #e9ecef;
+        border: 1px solid #dee2e6;
+        border-radius: 1rem;
+        padding: 0.25rem 0.75rem;
+        margin-right: 0.5rem;
+        margin-bottom: 0.5rem;
+        font-size: 0.875rem;
+    }
+    .remove-filter {
+        margin-left: 0.5rem;
+        cursor: pointer;
+        font-weight: bold;
+    }
+    #clear-all-filters {
+        font-size: 0.875rem;
+        font-weight: bold;
+        color: #dc3545;
+        text-decoration: none;
+    }
+    #clear-all-filters:hover {
+        text-decoration: underline;
+    }
+    /* --- END: NEW CSS FOR FILTER TAGS --- */
 </style>
 
 @endsection
@@ -97,6 +130,11 @@
                         </div>
                     </div>
                     <!--- end new filter section ---->
+                    <div id="active-filters-container">
+                        <div id="active-filters-list" class="d-inline">
+                            </div>
+                        <a href="#" id="clear-all-filters" class="ms-2">Clear All</a>
+                    </div>
                     <div class="product-grid">
                         <div id="product-list" class="row row-cols-2 row-cols-sm-2 row-cols-lg-3 row-cols-xl-4 g-3">
                             @include('front.category.product_card_partial', ['products' => $products])
@@ -182,18 +220,57 @@ $(document).ready(function() {
     let hasMorePages = {{ $products->hasMorePages() ? 'true' : 'false' }};
     let isLoading = false;
     let currentRequest = null;
-
-    // --- START: MODIFIED PART ---
-    // Capture the current category slug from the controller
     const EXTRA_CATEGORY_SLUG = '{{ $extraCategory->slug ?? '' }}';
 
-    function getFilters() {
-        const selectedSizes = $('.size-filter:checked').map(function() {
-            return $(this).val();
-        }).get();
+    // NEW: Function to build and display active filter tags
+    function updateActiveFiltersDisplay() {
+        const filtersList = $('#active-filters-list');
+        const filtersContainer = $('#active-filters-container');
+        filtersList.html('');
+        let hasActiveFilters = false;
 
+        const minPrice = $('#min-price-slider').val();
+        const maxPrice = $('#max-price-slider').val();
+        if (minPrice > 0 || maxPrice < 10000) {
+            filtersList.append(`<span class="filter-tag" data-filter-type="price">Price: ৳${minPrice} - ৳${maxPrice} <span class="remove-filter" title="Remove filter">&times;</span></span>`);
+            hasActiveFilters = true;
+        }
+
+        const stockStatus = $('input[name="stock-status"]:checked');
+        if (stockStatus.val() !== "") {
+            const text = stockStatus.next('label').text();
+            filtersList.append(`<span class="filter-tag" data-filter-type="stock">${text} <span class="remove-filter" title="Remove filter">&times;</span></span>`);
+            hasActiveFilters = true;
+        }
+
+        $('.size-filter:checked').each(function() {
+            const size = $(this).val();
+            filtersList.append(`<span class="filter-tag" data-filter-type="size" data-filter-value="${size}">${size} <span class="remove-filter" title="Remove filter">&times;</span></span>`);
+            hasActiveFilters = true;
+        });
+
+        // --- START: NEW CODE FOR SORTING TAG ---
+        const sortSelect = $('#sort-select-new');
+        const sortValue = sortSelect.val();
+        if (sortValue && sortValue !== 'default') {
+            const sortText = sortSelect.find('option:selected').text();
+            filtersList.append(
+                `<span class="filter-tag" data-filter-type="sort">Sort by: ${sortText} <span class="remove-filter" title="Remove filter">&times;</span></span>`
+            );
+            hasActiveFilters = true;
+        }
+        // --- END: NEW CODE FOR SORTING TAG ---
+
+        if (hasActiveFilters) {
+            filtersContainer.slideDown(200);
+        } else {
+            filtersContainer.slideUp(200);
+        }
+    }
+
+    function getFilters() {
+        const selectedSizes = $('.size-filter:checked').map(function() { return $(this).val(); }).get();
         return {
-            // Add the slug to the data sent in the AJAX request
             extra_category_slug: EXTRA_CATEGORY_SLUG, 
             min_price: $('#min-price-slider').val(),
             max_price: $('#max-price-slider').val(),
@@ -202,85 +279,74 @@ $(document).ready(function() {
             sizes: selectedSizes 
         };
     }
-    // --- END: MODIFIED PART ---
 
     function loadProducts(reset = false) {
-    if (isLoading) return;
-    if (reset) {
-        page = 1;
-        $('#product-list').html('');
-    }
-
-    isLoading = true;
-    $('#loading-spinner').show();
-    if (currentRequest) currentRequest.abort();
-
-    currentRequest = $.ajax({
-        // --- START: MODIFIED LINE ---
-        // Use the new, dedicated route for discount filtering
-        url: `{{ route('discount.ajax_filter') }}?page=${page}`,
-        // --- END: MODIFIED LINE ---
-        type: 'GET',
-        data: getFilters(),
-        success: function(response) {
-            if (reset) $('#product-list').html(response.html);
-            else $('#product-list').append(response.html);
-            hasMorePages = response.hasMorePages;
-            page++;
-            if (!hasMorePages) $('#loading-spinner').hide();
-        },
-        error: function(xhr, status, error) {
-            if (status !== 'abort') console.error("Error:", error);
-        },
-        complete: function() {
-            isLoading = false;
-            if (hasMorePages) $('#loading-spinner').hide();
+        if (isLoading) return;
+        if (reset) {
+            page = 1;
+            $('#product-list').html('');
         }
-    });
-}
 
-    // On-scroll loader
-    $(window).scroll(function() {
-        if ($('#product-list').length > 0 && ($(window).scrollTop() + $(window).height() >= $('#product-list').offset().top + $('#product-list').height() - 500)) {
-            if (hasMorePages && !isLoading) loadProducts();
-        }
-    });
+        updateActiveFiltersDisplay(); // NEW: Update tags on every load
 
-    // --- Event Listeners ---
-    function handleCategoryClick(selector, otherSelectors) {
-        $(document).on('click', selector, function(e) {
-            e.preventDefault();
-            otherSelectors.forEach(sel => $(sel).removeClass('active'));
-            const $el = $(this);
-            if ($el.hasClass('active')) $el.removeClass('active');
-            else {
-                $(selector).removeClass('active');
-                $el.addClass('active');
-            }
-            loadProducts(true);
+        isLoading = true;
+        $('#loading-spinner').show();
+        if (currentRequest) currentRequest.abort();
+
+        currentRequest = $.ajax({
+            url: `{{ route('discount.ajax_filter') }}?page=${page}`,
+            type: 'GET',
+            data: getFilters(),
+            success: function(response) {
+                if (reset) $('#product-list').html(response.html);
+                else $('#product-list').append(response.html);
+                hasMorePages = response.hasMorePages;
+                page++;
+                if (!hasMorePages) $('#loading-spinner').hide();
+            },
+            error: function(xhr, status, error) { if (status !== 'abort') console.error("Error:", error); },
+            complete: function() { isLoading = false; if (hasMorePages) $('#loading-spinner').hide(); }
         });
     }
 
-    handleCategoryClick('.main-category-filter', ['.subcategory-filter', '.animation-category-filter']);
-    handleCategoryClick('.subcategory-filter', ['.main-category-filter', '.animation-category-filter']);
-    handleCategoryClick('.animation-category-filter', ['.main-category-filter', '.subcategory-filter']);
+    // Initial call for tags on page load
+    updateActiveFiltersDisplay();
 
-    $('#sort-select-new').on('change', function() {
-        loadProducts(true); // Reset and load products with the new sorting
-    });
-    // Listeners for Price and Stock
+    // On-scroll loader
+    $(window).scroll(function() { if ($('#product-list').length > 0 && ($(window).scrollTop() + $(window).height() >= $('#product-list').offset().top + $('#product-list').height() - 500)) { if (hasMorePages && !isLoading) loadProducts(); } });
+
+    // Sidebar filter listeners
+    $('#sort-select-new, .stock-status-filter, .size-filter').on('change', () => loadProducts(true));
     $('#price-filter-btn').on('click', () => loadProducts(true));
-    $('.stock-status-filter').on('change', () => loadProducts(true));
-    $('#min-price-slider, #max-price-slider').on('input', function() {
-        let min = parseInt($('#min-price-slider').val()), max = parseInt($('#max-price-slider').val());
-        if (min > max) [min, max] = [max, min];
-        $('#price-range-display').text(`Price: ৳${min} - ৳${max}`);
+    $('#min-price-slider, #max-price-slider').on('input', function() { let min = parseInt($('#min-price-slider').val()), max = parseInt($('#max-price-slider').val()); if (min > max) [min, max] = [max, min]; $('#price-range-display').text(`Price: ৳${min} - ৳${max}`); });
+
+    // NEW: Listeners for removing/clearing tags
+    $(document).on('click', '.remove-filter', function() {
+        const tag = $(this).closest('.filter-tag');
+        const type = tag.data('filter-type');
+        const value = tag.data('filter-value');
+
+        if (type === 'price') {
+            $('#min-price-slider').val(0); $('#max-price-slider').val(10000); $('#price-range-display').text(`Price: ৳0 - ৳10000`);
+        } else if (type === 'stock') {
+            $('#all-stock').prop('checked', true);
+        } else if (type === 'size') {
+            $(`.size-filter[value="${value}"]`).prop('checked', false);
+        } else if (type === 'sort') {
+            $('#sort-select-new').val('default');
+        }
+        loadProducts(true);
     });
 
-    // --- NEW: Listener for size checkboxes ---
-    $(document).on('change', '.size-filter', function() {
+    $('#clear-all-filters').on('click', function(e) {
+        e.preventDefault();
+        $('#min-price-slider').val(0); $('#max-price-slider').val(10000); $('#price-range-display').text(`Price: ৳0 - ৳10000`);
+        $('#all-stock').prop('checked', true);
+        $('.size-filter').prop('checked', false);
+        $('#sort-select-new').val('default');
         loadProducts(true);
     });
 });
 </script>
+{{-- END: UPDATED FILTERING SCRIPT --}}
 @endsection

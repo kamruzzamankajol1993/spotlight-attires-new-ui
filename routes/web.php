@@ -115,6 +115,8 @@ Route::get('/locations-districts', [LocationController::class, 'getDistricts'])-
 Route::get('/locations-upazilas', [LocationController::class, 'getUpazilas'])->name('locations.upazilas');
 Route::controller(FrontController::class)->group(function () {
 
+     Route::get('/products/ajax-search-filter', 'ajaxSearchFilter')->name('products.ajax_search_filter');
+
     Route::get('/products/ajax-search', 'ajaxSearch')->name('products.ajax_search');
     Route::get('/product-search', 'productSearch')->name('products.search');
 
