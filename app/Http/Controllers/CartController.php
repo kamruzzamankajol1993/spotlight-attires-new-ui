@@ -254,7 +254,7 @@ class CartController extends Controller
         
         if ($coupon->type === 'fixed') {
             $discount = $coupon->value;
-        } elseif ($coupon->type === 'percentage') {
+        } elseif ($coupon->type === 'percent') {
             $discount = ($eligibleSubtotal * $coupon->value) / 100;
         }
         
@@ -287,7 +287,7 @@ public function getMainCartContent()
         if ($coupon) {
             if ($coupon->type === 'fixed') {
                 $discount = $coupon->value;
-            } elseif ($coupon->type === 'percentage') {
+            } elseif ($coupon->type === 'percent') {
                 $discount = ($subtotal * $coupon->value) / 100;
             }
         }
@@ -310,9 +310,16 @@ public function getMainCartContent()
     {
         $request->validate(['coupon_code' => 'required|string']);
         
-        $coupon = Coupon::where('code', $request->coupon_code)
+          $coupon = Coupon::where('code', $request->coupon_code)
                         ->where('status', true)
-                        ->where('expires_at', '>', now())
+                        ->where(function ($query) {
+                            $query->where('start_date', '<=', now())
+                                  ->orWhereNull('start_date');
+                        })
+                        ->where(function ($query) {
+                            $query->where('expires_at', '>=', now())
+                                  ->orWhereNull('expires_at');
+                        })
                         ->first();
 
         if (!$coupon) {

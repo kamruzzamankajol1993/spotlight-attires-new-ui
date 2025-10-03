@@ -944,7 +944,6 @@
             <div class="mega-offer-section">
                 <div class="container">
                     <div class="row">
-                        <!-- Main banner with two columns -->
                         <div class="col-12">
                             <div class="row g-0 ">
                                 <div class="col-lg-6">
@@ -978,32 +977,37 @@
                             </div>
                         </div>
                        
-                        <!-- Product Slider Section -->
                         <div class="col-12 product-offer-slider-wrapper">
                             <div class="product-offer-slider">
 
                                   @forelse ($newGlobalCat as $deal)
             
             @php
-
-            //dd($deal->product_id);
                 // Get the first product in the deal to use its image
                 $firstProductId = $deal->product_id[0] ?? null;
-                //dd($firstProductId);
                 $firstProduct = \App\Models\Product::find($firstProductId) ?? null;
-//dd($firstProduct);
-                // Calculate the original total price by summing up the base prices of all products in the deal
+
+                // --- START: UPDATED PRICE CALCULATION LOGIC ---
                 $originalTotalPrice = 0;
-                foreach ($deal->product_id as $productId) {
+                
+                // Determine how many products to count based on 'buy_quantity'.
+                // Default to all products in the array if 'buy_quantity' is not set or invalid.
+                $quantityToConsider = (isset($deal->buy_quantity) && $deal->buy_quantity > 0) 
+                                      ? (int)$deal->buy_quantity 
+                                      : count($deal->product_id);
+                
+                // Get the specific number of product IDs from the start of the array.
+                $productIdsToSum = array_slice($deal->product_id, 0, $quantityToConsider);
+                
+                // Calculate the total base price for only those products.
+                foreach ($productIdsToSum as $productId) {
                     if ($product = \App\Models\Product::find($productId)) {
                         $originalTotalPrice += $product->base_price;
                     }
                 }
-
-               // dd($originalTotalPrice);
+                // --- END: UPDATED PRICE CALCULATION LOGIC ---
             @endphp
 @if(isset($firstProduct))
-            <!-- Product Card -->
             <div class="product-card-offer card">
                 <img src="{{ $front_ins_url . 'public/uploads/' .$firstProduct->main_image[0] }}" class="card-img-left" alt="{{ $deal->title }}">
                 <div class="product-details-offer">
@@ -1026,7 +1030,6 @@
                 <p class="text-center">No special offers available at the moment.</p>
             </div>
         @endforelse
-                                <!-- Product Card 1 -->
                                 {{-- <div class="product-card-offer card">
                                     <img src="{{asset('/')}}public/front/assets/img/product/product.webp" class="card-img-left" alt="Product 1">
                                     <div class="product-details-offer">

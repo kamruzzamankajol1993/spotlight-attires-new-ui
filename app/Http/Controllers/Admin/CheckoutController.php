@@ -149,7 +149,7 @@ $BKASH_CHECKOUT_URL_APP_SECRET ='2is7hdktrekvrbljjh44ll3d9l1dtjo4pasmjvs5vl5qr3f
         
         if ($coupon->type === 'fixed') {
             $discount = $coupon->value;
-        } elseif ($coupon->type === 'percentage') {
+        } elseif ($coupon->type === 'percent') {
             $discount = ($eligibleSubtotal * $coupon->value) / 100;
         }
         

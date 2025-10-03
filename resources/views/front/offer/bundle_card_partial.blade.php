@@ -22,18 +22,26 @@
 
                 // --- 2. Calculate Total Base Price ---
                 $totalBasePrice = 0;
-                if(is_array($deal->product_id)) {
+                if (is_array($deal->product_id)) {
+                    // Determine how many products to count based on 'buy_quantity'.
+                    // Default to all products in the array if 'buy_quantity' is not set or invalid.
+                    $quantityToConsider = (isset($deal->buy_quantity) && $deal->buy_quantity > 0)
+                                          ? (int)$deal->buy_quantity
+                                          : count($deal->product_id);
 
-                   // dd($deal->product_id);
-                    foreach($deal->product_id as $pid) {
-                        if(isset($productsCollection[$pid])) {
+                    // Get the specific number of product IDs from the start of the array.
+                    $productIdsToSum = array_slice($deal->product_id, 0, $quantityToConsider);
+
+                    // Calculate the total base price for only those products.
+                    foreach ($productIdsToSum as $pid) {
+                        if (isset($productsCollection[$pid])) {
                             $totalBasePrice += $productsCollection[$pid]->base_price;
                         }
                     }
                 }
             @endphp
             
-            <a href="#">
+            <a href="{{route('offerProduct.show',$deal->id )}}">
                 <img src="{{ $image }}" alt="{{ $deal->title }}" class="card-img-top img-fluid">
             </a>
 
@@ -66,8 +74,7 @@
 @endforelse
 
 @else
-<!-- Example product card -->
-                                <div class="col">
+<div class="col">
                                     <div class="product-card card">
                                         <img src="https://placehold.co/300x300" class="card-img-top" alt="Product 6">
                                         <div class="product-details-body">
