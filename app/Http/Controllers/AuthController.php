@@ -18,6 +18,7 @@ use Mpdf\Mpdf;
 use Exception;
 use GuzzleHttp\Client; 
 use Illuminate\Support\Facades\Cookie;
+use Illuminate\Support\Facades\Session;
 class AuthController extends Controller
 {
 
@@ -603,7 +604,7 @@ $cleanPhoneNumber = trim($phone);
             'district' => 'required|string',
             'upazila' => 'required|string',
             'address' => 'required|string|max:255',
-            'address_type' => 'required|string|in:Home,Office,Hometown',
+            'address_type' => 'required|string|in:Home,Office,Others',
             'is_default' => 'nullable|boolean',
         ]);
 
@@ -644,7 +645,7 @@ $cleanPhoneNumber = trim($phone);
             'district' => 'required|string',
             'upazila' => 'required|string',
             'address' => 'required|string|max:255',
-            'address_type' => 'required|string|in:Home,Office,Hometown',
+            'address_type' => 'required|string|in:Home,Office,Others',
             'is_default' => 'nullable|boolean',
         ]);
 

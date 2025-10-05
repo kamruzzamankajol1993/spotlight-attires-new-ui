@@ -27,7 +27,7 @@
     <link rel="stylesheet" href="{{asset('/')}}public/front/assets/vendor/slickslider/slick.css">
 
     <!-- Main CSS File -->
-    <link href="{{asset('/')}}public/front/assets/css/main.css" rel="stylesheet">
+    <link href="{{asset('/')}}public/front/assets/css/main.css?v={{ filemtime(public_path('front/assets/css/main.css')) }}" rel="stylesheet">
     @yield('css')
     <script src="{{asset('/')}}public/front/assets/js/jquery.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -336,7 +336,7 @@ $(document).ready(function() {
                         resultsContainer.html('');
                         if (products && products.length > 0) {
                             products.forEach(function(product) {
-                                let priceHtml = product.discount_price > 0 ? `<span class="fw-bold text-dark">৳${product.discount_price}</span> <del class="text-muted small ms-2">৳${product.base_price}</del>` : `<span class="fw-bold text-dark">৳${product.base_price}</span>`;
+                                let priceHtml = product.discount_price > 0 ? `<span class="fw-bold text-dark">৳ ${product.discount_price}</span> <del class="text-muted small ms-2">৳ ${product.base_price}</del>` : `<span class="fw-bold text-dark">৳ ${product.base_price}</span>`;
                                 const productHtml = `<a href="${product.url}" class="search-result-item"><img src="${product.image_url}" alt="${product.name}"><div class="search-result-info"><div class="fw-bold">${product.name}</div><div class="price">${priceHtml}</div></div></a>`;
                                 resultsContainer.append(productHtml);
                             });

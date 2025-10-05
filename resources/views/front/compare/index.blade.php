@@ -8,7 +8,7 @@
             <div class="d-flex justify-content-between align-items-center mb-4">
                 <h2 class="h3">Compare Products</h2>
                 @if($products->isNotEmpty())
-                <a href="{{ route('compare.clear') }}" class="btn btn-sm btn-outline-danger">
+                <a href="{{ route('compare.clear') }}" id="clear-compare-btn" class="btn btn-sm btn-outline-danger">
                     <i class="bi bi-x-lg"></i> Clear All
                 </a>
                 @endif
@@ -45,10 +45,10 @@
                                 @foreach($products as $product)
                                     <td>
                                         @if($product->discount_price)
-                                            <span class="fw-bold fs-5">৳{{ number_format($product->discount_price) }}</span>
-                                            <del class="text-muted ms-2">৳{{ number_format($product->base_price) }}</del>
+                                            <span class="fw-bold fs-5">৳ {{ number_format($product->discount_price) }}</span>
+                                            <del class="text-muted ms-2">৳ {{ number_format($product->base_price) }}</del>
                                         @else
-                                            <span class="fw-bold fs-5">৳{{ number_format($product->base_price) }}</span>
+                                            <span class="fw-bold fs-5">৳ {{ number_format($product->base_price) }}</span>
                                         @endif
                                     </td>
                                 @endforeach
@@ -104,31 +104,67 @@
 <script>
 $(document).ready(function() {
     $('.remove-compare-btn').on('click', function() {
-        const productId = $(this).data('id');
-        
-        $.ajax({
-            url: '{{ route("compare.remove") }}',
-            method: 'POST',
-            data: {
-                _token: '{{ csrf_token() }}',
-                product_id: productId
-            },
-            success: function(response) {
-                if(response.success){
-                    Swal.fire({
-                        toast: true,
-                        position: 'top-end',
-                        icon: 'success',
-                        title: response.message,
-                        showConfirmButton: false,
-                        timer: 1500
-                    });
-                    // Reload the page to show updated compare list
-                    setTimeout(() => location.reload(), 1500);
+    const productId = $(this).data('id');
+
+    // Show confirmation dialog first
+    Swal.fire({
+        title: 'Are you sure?',
+        text: "Do you want to remove this product?",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'Yes, remove it!'
+    }).then((result) => {
+        // If the user confirms, then proceed with the AJAX call
+        if (result.isConfirmed) {
+            $.ajax({
+                url: '{{ route("compare.remove") }}',
+                method: 'POST',
+                data: {
+                    _token: '{{ csrf_token() }}',
+                    product_id: productId
+                },
+                success: function(response) {
+                    if (response.success) {
+                        Swal.fire({
+                            // toast: true,
+                            // position: 'top-end',
+                            icon: 'success',
+                            title: response.message,
+                            showConfirmButton: false,
+                            timer: 1000
+                        });
+                        // Reload the page to show updated compare list
+                        setTimeout(() => location.reload(), 1000);
+                    }
                 }
+            });
+        }
+    });
+});
+
+       // --- ADD THIS NEW CODE BLOCK FOR THE CLEAR ALL CONFIRMATION ---
+    $('#clear-compare-btn').on('click', function(e) {
+        e.preventDefault(); // Prevent the link from navigating immediately
+        const url = $(this).attr('href'); // Get the URL from the link
+
+        Swal.fire({
+            title: 'Are you sure?',
+            text: "This will remove all products from your compare list.",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'Yes, clear it!'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                // If the user confirms, navigate to the clear URL
+                window.location.href = url;
             }
         });
     });
+    // --- END OF NEW CODE BLOCK ---
 });
 </script>
 @endsection

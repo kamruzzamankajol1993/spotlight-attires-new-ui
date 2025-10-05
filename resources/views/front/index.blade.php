@@ -960,15 +960,15 @@
                                             </div>
                                             <div class="timer-box">
                                                 <div class="value" id="hours-3">{{ $remaining['hours'] }}</div>
-                                                <div class="label">Hr</div>
+                                                <div class="label">Hours</div>
                                             </div>
                                             <div class="timer-box">
                                                 <div class="value" id="minutes-3">{{ $remaining['minutes'] }}</div>
-                                                <div class="label">Min</div>
+                                                <div class="label">Minutes</div>
                                             </div>
                                             <div class="timer-box">
                                                 <div class="value" id="seconds-3">{{ $remaining['seconds'] }}</div>
-                                                <div class="label">Sec</div>
+                                                <div class="label">Seconds</div>
                                             </div>
                                         </div>
                                         <a href="{{ url($offerSectionSetting->route ?? '#') }}" class="btn btn-go-shopping">Go Shopping</a>
@@ -1011,11 +1011,11 @@
             <div class="product-card-offer card">
                 <img src="{{ $front_ins_url . 'public/uploads/' .$firstProduct->main_image[0] }}" class="card-img-left" alt="{{ $deal->title }}">
                 <div class="product-details-offer">
-                    <h5 class="product-title-offer">{{ $deal->title }}</h5>
+                    <h5 class="product-title-offer">{{ Str::limit($deal->title, 10) }}</h5>
                     <p class="item-price-offer mb-0">
                         {{-- If there's a valid discount price, show both original and discounted price --}}
                         @if ($deal->discount_price > 0 && $deal->discount_price < $originalTotalPrice)
-                            <span class="original-price">৳ {{ number_format($originalTotalPrice, 2) }}</span>
+                            <span class="original-price">৳ {{ number_format($originalTotalPrice, 2) }}</span><br>
                             ৳ {{ number_format($deal->discount_price, 2) }}
                         @else
                             {{-- Otherwise, just show the calculated original price --}}

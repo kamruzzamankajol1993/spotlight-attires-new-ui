@@ -66,7 +66,13 @@ class WishlistController extends Controller
             'size'               => $request->size,
         ]);
 
-        return response()->json(['success' => true, 'message' => 'Product added to your wishlist!']);
+        $count = Auth::user()->wishlist()->count();
+
+return response()->json([
+    'success' => true, 
+    'message' => 'Product added to your wishlist!',
+    'count' => $count
+]);
     }
 
     public function addBundle(Request $request)
@@ -106,14 +112,21 @@ class WishlistController extends Controller
         }
         
         $message = '';
-        if ($itemsAdded > 0) {
-            $message .= "$itemsAdded item(s) added to your wishlist. ";
-        }
-        if ($itemsAlreadyExist > 0) {
-            $message .= "$itemsAlreadyExist item(s) were already in your wishlist.";
-        }
+if ($itemsAdded > 0) {
+    $message .= "$itemsAdded item(s) added to your wishlist. ";
+}
+if ($itemsAlreadyExist > 0) {
+    $message .= "$itemsAlreadyExist item(s) were already in your wishlist.";
+}
 
-        return response()->json(['success' => true, 'message' => trim($message)]);
+// Get the new total count of items in the wishlist
+$count = Auth::user()->wishlist()->count();
+
+return response()->json([
+    'success' => true, 
+    'message' => trim($message),
+    'count' => $count // Return the new count
+]);
     }
 
     public function remove(Request $request)
@@ -130,9 +143,15 @@ class WishlistController extends Controller
                                 ->first();
 
         if ($wishlistItem) {
-            $wishlistItem->delete();
-            return response()->json(['success' => true, 'message' => 'Item removed from wishlist.']);
-        }
+    $wishlistItem->delete();
+    $count = Auth::user()->wishlist()->count();
+
+    return response()->json([
+        'success' => true, 
+        'message' => 'Item removed from wishlist.',
+        'count' => $count
+    ]);
+}
 
         return response()->json(['success' => false, 'message' => 'Item not found in your wishlist.'], 404);
     }
@@ -186,8 +205,13 @@ class WishlistController extends Controller
 
         Session::put('cart', $cart);
         $wishlistItem->delete(); // Remove from wishlist after adding to cart
+$count = Auth::user()->wishlist()->count();
 
-        return response()->json(['success' => true, 'message' => 'Item moved to cart!']);
+return response()->json([
+    'success' => true, 
+    'message' => 'Item moved to cart!',
+    'count' => $count
+]);
     }
 
 }

@@ -3,6 +3,29 @@
 @section('title', 'My Dashboard')
 
 @section('css')
+<style>
+    .spotlight_user_profile_profile-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem; /* Adds some space below the header */
+}
+/* Target the h4 title within the header */
+.spotlight_user_profile_profile-header h4 {
+    margin: 0; /* Removes default heading margin for better alignment */
+    flex-shrink: 0; /* Prevents the title from shrinking */
+}
+
+/* Target the update button specifically within the header */
+.spotlight_user_profile_profile-header .spotlight_user_profile_update-btn {
+    width: auto;      /* Let the button's width be determined by its content */
+    flex-grow: 0;     /* IMPORTANT: Stops the button from stretching to fill empty space */
+    padding: 8px 25px;/* Adjust padding to make the button smaller. (Top/Bottom Left/Right) */
+}
+.spotlight_user_profile_form-group {
+    margin-bottom: 1.5rem; /* Adjust this value for more or less space */
+}
+</style>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
 @endsection
 
@@ -25,11 +48,12 @@
                             <div class="col-lg-9 col-md-8">
                                 <div class="spotlight_user_profile_main-content">
                                     <div class="spotlight_user_profile_profile-header">
-                                        <h4>View Profile</h4>
-                                    </div>
+    <h4>View Profile</h4>
+    <button class="btn spotlight_user_profile_update-btn" id="update-profile-info-btn">Update Profile</button>
+</div>
 
                                     <div class="spotlight_user_profile_profile-picture-section">
-                                         <div class="spotlight_user_profile_profile-picture" id="main-profile-picture">
+                                      <div class="spotlight_user_profile_profile-picture" id="main-profile-picture" @if(Auth::user()->image) style="background: transparent;" @endif>
                                     @if(Auth::user()->image)
                                         <img src="{{ asset('public/' . Auth::user()->image) }}" style="height: 70px;" alt="Profile Picture">
                                     @else
@@ -103,11 +127,11 @@
 
                             </div>
 
-                            <div class="row mt-4">
+                            {{-- <div class="row mt-4">
                                 <div class="col-12">
                                     <button class="btn spotlight_user_profile_update-btn" id="update-profile-info-btn">Update Profile</button>
                                 </div>
-                            </div>
+                            </div> --}}
                         </div>
                     </div>
                 </div>
@@ -175,26 +199,36 @@ $(document).ready(function() {
                 data: formData,
                 processData: false, // Important for file uploads
                 contentType: false, // Important for file uploads
-                success: function(response) {
-                    if (response.success) {
-                        // Create the new image HTML
-                        const newImageHtml = `<img src="${response.image_url}" alt="User Avatar">`;
-                        
-                        // Update both profile picture displays
-                        $('#sidebar-avatar-container').html(newImageHtml.replace('User Avatar', 'Sidebar Avatar'));
-                        $('#main-profile-picture').find('img, i').first().remove(); // Remove old img or icon
-                        $('#main-profile-picture').prepend(newImageHtml.replace('User Avatar', 'Profile Picture'));
+               success: function(response) {
+    if (response.success) {
+        // Create the new image HTML
+        const newImageHtml = `<img src="${response.image_url}" style="height: 70px;" alt="User Avatar">`;
+        
+        // Update the main profile picture
+        const mainProfileContainer = $('#main-profile-picture');
+        mainProfileContainer.find('img, i').first().remove(); 
+        mainProfileContainer.prepend(newImageHtml.replace('User Avatar', 'Profile Picture'));
+        
+        // **Remove the gray background**
+        mainProfileContainer.css('background', 'transparent');
 
-                        Swal.fire({
-                            toast: true,
-                            position: 'top-end',
-                            icon: 'success',
-                            title: response.message,
-                            showConfirmButton: false,
-                            timer: 3000
-                        });
-                    }
-                },
+        // Update the sidebar profile picture
+        const sidebarProfileContainer = $('#sidebar-avatar-container'); // Assuming this is the correct ID
+        sidebarProfileContainer.html(newImageHtml.replace('User Avatar', 'Sidebar Avatar'));
+
+        // **Also remove the gray background from the sidebar version**
+        sidebarProfileContainer.css('background', 'transparent');
+
+        Swal.fire({
+            // toast: true,
+            // position: 'top-end',
+            icon: 'success',
+            title: response.message,
+            showConfirmButton: false,
+            timer: 3000
+        });
+    }
+},
                 error: function(xhr) {
                     const errorMessage = xhr.responseJSON ? xhr.responseJSON.message : 'An unknown error occurred.';
                     Swal.fire({
@@ -254,7 +288,7 @@ $(document).ready(function() {
             success: function(response) {
                 if(response.success){
                     $('.spotlight_user_profile_user-name').text(response.newName);
-                    Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: response.message, showConfirmButton: false, timer: 3000 });
+                    Swal.fire({  icon: 'success', title: response.message, showConfirmButton: false, timer: 3000 });
                 }
             },
             error: function(xhr) {

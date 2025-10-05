@@ -99,11 +99,17 @@ $(document).ready(function() {
                     method: 'POST',
                     data: { _token: '{{ csrf_token() }}', wishlist_id: wishlistItemId },
                     success: function(response) {
-                        if(response.success) {
-                            card.fadeOut(300, function() { $(this).remove(); });
-                            Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: response.message, showConfirmButton: false, timer: 2000 });
-                        }
-                    },
+    if(response.success) {
+        card.fadeOut(300, function() { $(this).remove(); });
+        Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: response.message, showConfirmButton: false, timer: 2000 });
+
+        // Update the header counters
+        if (response.count !== undefined) {
+            $('#wishlist-count').text(response.count);
+            $('#mobile-wishlist-count').text(response.count);
+        }
+    }
+},
                     error: function(xhr) {
                         Swal.fire({ icon: 'error', title: 'Oops...', text: xhr.responseJSON.message || 'Could not remove item.' });
                     }
@@ -124,19 +130,25 @@ $(document).ready(function() {
             method: 'POST',
             data: { _token: '{{ csrf_token() }}', wishlist_id: wishlistItemId },
             success: function(response) {
-                if(response.success) {
-                    card.fadeOut(300, function() { $(this).remove(); });
-                    updateCartOffcanvas(); // Update the sidebar cart
-                    Swal.fire({
-                        toast: true,
-                        position: 'top-end',
-                        icon: 'success',
-                        title: response.message,
-                        showConfirmButton: false,
-                        timer: 2000
-                    });
-                }
-            },
+             if(response.success) {
+        card.fadeOut(300, function() { $(this).remove(); });
+        updateCartOffcanvas(); // Update the sidebar cart
+        Swal.fire({
+            toast: true,
+            position: 'top-end',
+            icon: 'success',
+            title: response.message,
+            showConfirmButton: false,
+            timer: 2000
+        });
+
+        // Update the header counters
+        if (response.count !== undefined) {
+            $('#wishlist-count').text(response.count);
+            $('#mobile-wishlist-count').text(response.count);
+        }
+    }
+},
             error: function(xhr) {
                 Swal.fire({ icon: 'error', title: 'Oops...', text: xhr.responseJSON.message || 'Could not move item to cart.' });
                 button.prop('disabled', false).html('<i class="bi bi-cart-fill"></i> Add to cart');

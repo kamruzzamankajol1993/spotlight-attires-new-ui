@@ -25,10 +25,25 @@
 <body>
     <div class="container">
         <div class="header">
-            {{-- You can add your logo here --}}
-            <img src="{{$front_ins_url}}public/black.png" alt="Logo" width="150"/>
-            <h1>INVOICE</h1>
-        </div>
+    <table style="width: 100%;">
+        <tr>
+            <td style="width: 50%;">
+                <img src="{{$front_ins_url}}public/black.png" alt="Logo" style="width: 150px;">
+            </td>
+            <td style="width: 50%; text-align: right;">
+                <h2 style="margin: 0;">INVOICE</h2>
+                <p style="margin: 0; line-height: 1.5;">
+                    <strong>Spotlight Attires</strong><br>
+                    {{$front_ins_add}}<br>
+                    {{$front_ins_phone}}<br>
+                    {{$front_ins_email}}<br>
+                    www.spotlightattires.com
+                </p>
+            </td>
+        </tr>
+    </table>
+    <hr>
+</div>
 
         <div class="invoice-details">
             <table>
@@ -101,7 +116,7 @@
         <div style="clear: both;"></div>
 
         <div class="footer" style="margin-top: 50px;">
-            <p>Thank you for your business!</p>
+            <p>Thank you for shopping with Spotlight Attires!</p>
         </div>
     </div>
 </body>

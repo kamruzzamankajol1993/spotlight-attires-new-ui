@@ -243,7 +243,7 @@ $(document).ready(function() {
         const minPrice = $('#min-price-slider').val();
         const maxPrice = $('#max-price-slider').val();
         if (minPrice > 0 || maxPrice < 10000) {
-            filtersList.append(`<span class="filter-tag" data-filter-type="price">Price: ৳${minPrice} - ৳${maxPrice} <span class="remove-filter" title="Remove filter">&times;</span></span>`);
+            filtersList.append(`<span class="filter-tag" data-filter-type="price">Price: ৳ ${minPrice} - ৳ ${maxPrice} <span class="remove-filter" title="Remove filter">&times;</span></span>`);
             hasActiveFilters = true;
         }
 
@@ -337,7 +337,7 @@ $(document).ready(function() {
     $('#sort-select-new, .stock-status-filter, .size-filter').on('change', () => loadProducts(true));
     $('#price-filter-btn').on('click', () => loadProducts(true));
     $(document).on('click', '.animation-category-filter', function(e) { e.preventDefault(); if ($(this).hasClass('active')) { $(this).removeClass('active'); } else { $('.animation-category-filter').removeClass('active'); $(this).addClass('active'); } loadProducts(true); });
-    $('#min-price-slider, #max-price-slider').on('input', function() { let minPrice = parseInt($('#min-price-slider').val()); let maxPrice = parseInt($('#max-price-slider').val()); if (minPrice > maxPrice) { [minPrice, maxPrice] = [maxPrice, minPrice]; } $('#price-range-display').text(`Price: ৳${minPrice} - ৳${maxPrice}`); });
+    $('#min-price-slider, #max-price-slider').on('input', function() { let minPrice = parseInt($('#min-price-slider').val()); let maxPrice = parseInt($('#max-price-slider').val()); if (minPrice > maxPrice) { [minPrice, maxPrice] = [maxPrice, minPrice]; } $('#price-range-display').text(`Price: ৳ ${minPrice} - ৳ ${maxPrice}`); });
 
     // NEW: Listeners for removing/clearing tags
     $(document).on('click', '.remove-filter', function() {
@@ -348,7 +348,7 @@ $(document).ready(function() {
         if (type === 'animation') {
             $(`a.animation-category-filter[data-id="${value}"]`).removeClass('active');
         } else if (type === 'price') {
-            $('#min-price-slider').val(0); $('#max-price-slider').val(10000); $('#price-range-display').text(`Price: ৳0 - ৳10000`);
+            $('#min-price-slider').val(0); $('#max-price-slider').val(10000); $('#price-range-display').text(`Price: ৳ 0 - ৳ 10000`);
         } else if (type === 'stock') {
             $('#all-stock').prop('checked', true);
         } else if (type === 'size') {
@@ -363,7 +363,7 @@ $(document).ready(function() {
     $('#clear-all-filters').on('click', function(e) {
         e.preventDefault();
         $('.animation-category-filter').removeClass('active');
-        $('#min-price-slider').val(0); $('#max-price-slider').val(10000); $('#price-range-display').text(`Price: ৳0 - ৳10000`);
+        $('#min-price-slider').val(0); $('#max-price-slider').val(10000); $('#price-range-display').text(`Price: ৳ 0 - ৳ 10000`);
         $('#all-stock').prop('checked', true);
         $('.size-filter').prop('checked', false);
         $('#sort-select-new').val('default');

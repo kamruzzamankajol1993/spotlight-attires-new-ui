@@ -4,14 +4,14 @@
             const offcanvasElement = document.getElementById('categoriesOffcanvas');
             const offcanvas = new bootstrap.Offcanvas(offcanvasElement);
 
-            if (categoriesButton) {
-                categoriesButton.addEventListener('mouseenter', () => {
-                    // Only show on desktop/tablet views (when the button is visible)
-                    if (window.innerWidth >= 992) {
-                        offcanvas.show();
-                    }
-                });
-            }
+            // if (categoriesButton) {
+            //     categoriesButton.addEventListener('mouseenter', () => {
+            //         // Only show on desktop/tablet views (when the button is visible)
+            //         if (window.innerWidth >= 992) {
+            //             offcanvas.show();
+            //         }
+            //     });
+            // }
         });
 
         // JavaScript to toggle password visibility

@@ -75,10 +75,10 @@
                     <p class="h6 text-muted mb-4">SKU: BDL-{{ $bundleDeal->id }}</p>
                     <div class="d-flex align-items-baseline mb-4">
                          @if($bundleDeal->discount_price > 0 && $bundleDeal->discount_price < $totalBasePrice)
-                            <del class="text-muted h4 me-2">৳{{ number_format($totalBasePrice) }}</del>
-                            <span class="h3 fw-bold text-dark">৳{{ number_format($bundleDeal->discount_price) }}</span>
+                            <del class="text-muted h4 me-2">৳ {{ number_format($totalBasePrice) }}</del>
+                            <span class="h3 fw-bold text-dark">৳ {{ number_format($bundleDeal->discount_price) }}</span>
                         @else
-                            <span class="h3 fw-bold text-dark">৳{{ number_format($totalBasePrice) }}</span>
+                            <span class="h3 fw-bold text-dark">৳ {{ number_format($totalBasePrice) }}</span>
                         @endif
                     </div>
                             <!-- Product Selection Boxes -->
@@ -147,17 +147,16 @@
 
                             <!-- Actions and Share with Bootstrap Icons -->
                             <div class="d-flex flex-column flex-sm-row align-items-center justify-content-between mt-4">
-                                <div class="d-flex align-items-center space-x-4 mb-4 mb-sm-0">
-                                    <a href="#"  id="add-bundle-to-compare" class="d-flex align-items-center text-secondary text-decoration-none">
-                                        <i class="bi bi-plus-circle me-1"></i>
-                                        <span>Add to compare</span>
-                                    </a>
-                                    <a href="#"  id="add-bundle-to-wishlist"
-                                        class="d-flex align-items-center text-secondary text-decoration-none ms-3">
-                                        <i class="bi bi-heart me-1"></i>
-                                        <span>Add to wishlist</span>
-                                    </a>
-                                </div>
+                                <div class="d-flex align-items-center gap-2 mb-4 mb-sm-0">
+    <a href="#" id="add-bundle-to-compare" class="btn btn-sm btn-outline-secondary d-flex align-items-center">
+        <i class="bi bi-plus-circle me-2"></i>
+        <span>Add to compare</span>
+    </a>
+    <a href="#" id="add-bundle-to-wishlist" class="btn btn-sm btn-outline-secondary d-flex align-items-center">
+        <i class="bi bi-heart me-2"></i>
+        <span>Add to wishlist</span>
+    </a>
+</div>
                                   @php
                                     $shareUrl = urlencode(url()->current());
                                     $shareTitle = urlencode($bundleDeal->title);
@@ -344,8 +343,8 @@
                         $discountedPricePerItem = $bundleDeal->discount_price / $bundleDeal->buy_quantity;
                     @endphp
                     <p class="card-text small">
-                        <del class="text-muted me-1">৳{{ number_format($product->base_price, 1) }}</del>
-                        <span class="fw-bold">৳{{ number_format($discountedPricePerItem, 1) }}</span>
+                        <del class="text-muted me-1">৳ {{ number_format($product->base_price, 1) }}</del>
+                        <span class="fw-bold">৳ {{ number_format($discountedPricePerItem, 1) }}</span>
                     </p>
                     {{-- END: ADDED PRICE DISPLAY --}}
                                 </div>
@@ -455,8 +454,8 @@
                                     <h6 class="card-title small mb-1">${product.name}</h6>
                                     <p class="card-text small mb-1">Size: ${sizeInfo.name}</p>
                                     <p class="card-text small">
-                                        <del class="text-muted me-1">৳${basePrice.toFixed(1)}</del>
-                                        <span class="fw-bold">৳${discountedPrice.toFixed(1)}</span>
+                                        <del class="text-muted me-1">৳ ${basePrice.toFixed(1)}</del>
+                                        <span class="fw-bold">৳ ${discountedPrice.toFixed(1)}</span>
                                     </p>
                                 </div>
                             </div>
@@ -534,8 +533,8 @@
                     <i class="bi bi-pencil-square"></i>
                 </a>
                 <div class="text-end">
-                    <del class="text-muted me-2">৳${product.basePrice.toFixed(1)}</del>
-                    <span class="fw-bold">৳${product.finalPrice.toFixed(1)}</span>
+                    <del class="text-muted me-2">৳ ${product.basePrice.toFixed(1)}</del>
+                    <span class="fw-bold">৳ ${product.finalPrice.toFixed(1)}</span>
                 </div>
             `;
             const parentDiv = slotElement.empty().addClass('d-flex justify-content-between align-items-center py-2 border-bottom');
@@ -749,17 +748,24 @@
                     $button.prop('disabled', true).find('span').text('Adding...');
                 },
                 success: function(response) {
-                    if (response.success) {
-                        Swal.fire({
-                            toast: true,
-                            position: 'top-end',
-                            icon: 'success',
-                            title: response.message,
-                            showConfirmButton: false,
-                            timer: 3000
-                        });
-                    }
-                },
+                if (response.success) {
+        Swal.fire({
+            toast: true,
+            position: 'top-end',
+            icon: 'success',
+            title: response.message,
+            showConfirmButton: false,
+            timer: 3000
+        });
+
+        // --- ADD THESE LINES TO UPDATE THE COUNTERS ---
+        if (response.count !== undefined) {
+            $('#wishlist-count').text(response.count);
+            $('#mobile-wishlist-count').text(response.count);
+        }
+        // --- END OF NEW LINES ---
+    }
+},
                 error: function(xhr) {
                     Swal.fire({ icon: 'error', title: 'Oops...', text: xhr.responseJSON.message || 'Something went wrong.' });
                 },

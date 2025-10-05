@@ -49,7 +49,7 @@
 
             <div class="product-details-body">
                 <h5 class="product-title mb-1"><a href="{{ route('product.show', $product->slug) }}">{{ Str::limit($product->name, 25) }}</a></h5>
-                <p class="product-meta mb-1">SKU: {{ $product->product_code ?? 'N/A' }}</p>
+                <p class="product-meta mb-1">Category: {{ $product->category->name ?? 'N/A' }}</p>
 
                 @if($totalStock > 0)
                     <p class="product-meta text-success fw-bold mb-1"><i class="bi bi-check-circle-fill"></i> In stock</p>
@@ -63,10 +63,10 @@
 
                 <p class="price-tag mb-2">
                     @if($product->discount_price)
-                        <del class="text-muted">৳{{ number_format($product->base_price) }}</del>
-                        <span class="fw-bold">৳{{ number_format($product->discount_price) }}</span>
+                        <del class="text-muted" style="font-weight: 100 !important;">৳ {{ number_format($product->base_price) }}</del>
+                        <span class="fw-bold">৳ {{ number_format($product->discount_price) }}</span>
                     @else
-                        <span class="fw-bold">৳{{ number_format($product->base_price) }}</span>
+                        <span class="fw-bold">৳ {{ number_format($product->base_price) }}</span>
                     @endif
                 </p>
                 <a href="#" class="btn btn-primary btn-add-cart" data-product-id="{{ $product->id }}">Add to Cart</a>

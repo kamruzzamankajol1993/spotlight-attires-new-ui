@@ -243,7 +243,7 @@ $(document).ready(function() {
         const maxPrice = $('#max-price-slider').val();
         if (minPrice > 0 || maxPrice < 10000) {
             filtersList.append(
-                `<span class="filter-tag" data-filter-type="price">Price: ৳${minPrice} - ৳${maxPrice} <span class="remove-filter" title="Remove filter">&times;</span></span>`
+                `<span class="filter-tag" data-filter-type="price">Price: ৳ ${minPrice} - ৳ ${maxPrice} <span class="remove-filter" title="Remove filter">&times;</span></span>`
             );
             hasActiveFilters = true;
         }
@@ -360,7 +360,7 @@ $(document).ready(function() {
 
     $('#sort-select-new, .stock-status-filter, .size-filter').on('change', () => loadProducts(true));
     $('#price-filter-btn').on('click', () => loadProducts(true));
-    $('#min-price-slider, #max-price-slider').on('input', function() { let min = parseInt($('#min-price-slider').val()), max = parseInt($('#max-price-slider').val()); if (min > max) [min, max] = [max, min]; $('#price-range-display').text(`Price: ৳${min} - ৳${max}`); });
+    $('#min-price-slider, #max-price-slider').on('input', function() { let min = parseInt($('#min-price-slider').val()), max = parseInt($('#max-price-slider').val()); if (min > max) [min, max] = [max, min]; $('#price-range-display').text(`Price: ৳ ${min} - ৳ ${max}`); });
 
     // Event listener for removing a single filter tag
     $(document).on('click', '.remove-filter', function() {
@@ -377,7 +377,7 @@ $(document).ready(function() {
             case 'price':
                 $('#min-price-slider').val(0);
                 $('#max-price-slider').val(10000);
-                $('#price-range-display').text(`Price: ৳0 - ৳10000`);
+                $('#price-range-display').text(`Price: ৳ 0 - ৳ 10000`);
                 break;
             case 'stock':
                 $('#all-stock').prop('checked', true);
@@ -400,7 +400,7 @@ $(document).ready(function() {
         $('.main-category-filter, .subcategory-filter, .animation-category-filter').removeClass('active');
         $('#min-price-slider').val(0);
         $('#max-price-slider').val(10000);
-        $('#price-range-display').text(`Price: ৳0 - ৳10000`);
+        $('#price-range-display').text(`Price: ৳ 0 - ৳ 10000`);
         $('#all-stock').prop('checked', true);
         $('.size-filter').prop('checked', false);
         $('#sort-select-new').val('default');

@@ -42,13 +42,13 @@ Your Cart
                                 <div class="table-responsive">
                                     <table class="spotlight_cart_table">
                                         <thead>
-                                            <tr>
-                                                <th class="text-start">PRODUCT</th>
-                                                <th>PRICE</th>
-                                                <th>QUANTITY</th>
-                                                <th>SUBTOTAL</th>
-                                            </tr>
-                                        </thead>
+    <tr>
+        <th class="text-start">PRODUCT</th>
+        <th>PRICE</th>
+        <th>QUANTITY</th>
+        <th>SUBTOTAL</th>
+        <th></th> </tr>
+</thead>
                                         <tbody id="main-cart-body">
                                             {{-- Cart items will be loaded here by JavaScript --}}
                                             <tr>
@@ -62,14 +62,7 @@ Your Cart
                                     </table>
                                 </div>
 
-                                 {{-- DYNAMIC COUPON SECTION --}}
-                        <div id="coupon-section" class="mt-4">
-                            <form id="coupon-form" class="d-flex">
-                                <input type="text" id="coupon-code" class="form-control me-2" placeholder="Coupon code">
-                                <button type="submit" class="btn btn-outline-secondary">Apply Coupon</button>
-                            </form>
-                            <div id="coupon-message" class="mt-2 small"></div>
-                        </div>
+                          
                             </div>
 
                             <div class="spotlight_cart_interest_card">
@@ -91,10 +84,10 @@ Your Cart
                                                     <h5 class="product-title mb-1">{{ Str::limit($product->name, 20) }}</h5>
                                                     <p class="price-tag mb-2">
                                                         @if($product->discount_price)
-                                                            <del class="text-muted">৳{{ number_format($product->base_price) }}</del>
-                                                            <span class="fw-bold">৳{{ number_format($product->discount_price) }}</span>
+                                                            <del class="text-muted">৳ {{ number_format($product->base_price) }}</del>
+                                                            <span class="fw-bold">৳ {{ number_format($product->discount_price) }}</span>
                                                         @else
-                                                            <span class="fw-bold">৳{{ number_format($product->base_price) }}</span>
+                                                            <span class="fw-bold">৳ {{ number_format($product->base_price) }}</span>
                                                         @endif
                                                     </p>
                                                     <a href="#" class="btn btn-primary btn-add-cart w-100" data-product-id="{{ $product->id }}">Add to Cart</a>
@@ -129,7 +122,19 @@ Your Cart
                             <h6 class="fw-bold mb-0">Total</h6>
                             <h6 class="fw-bold mb-0" id="cart-page-total">৳ 0.00</h6>
                         </div>
-                        
+
+                               {{-- DYNAMIC COUPON SECTION --}}
+                        <div id="coupon-section" class="mt-4">
+                            <form id="coupon-form" class="d-flex">
+                                <input type="text" id="coupon-code" class="form-control me-2" placeholder="Coupon code">
+                                <button type="submit" class="btn btn-outline-secondary">Apply Coupon</button>
+                            </form>
+                            <div id="coupon-message" class="mt-2 small"></div>
+                        </div>
+                        <div class="text-center text-muted small bg-light p-2 rounded mt-3">
+    <i class="bi bi-info-circle me-1"></i>
+    Shipping charges calculated at checkout
+</div>
                         {{-- DYNAMIC CHECKOUT BUTTON --}}
                         <button id="proceed-to-checkout-btn" class="btn btn-dark spotlight_cart_action_button mt-3">Proceed To Checkout</button>
                     </div>

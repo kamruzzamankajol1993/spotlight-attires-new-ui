@@ -135,7 +135,7 @@ $(document).ready(function() {
         const maxPrice = $('#max-price-slider').val();
         // Assuming your default max price on the slider is 20000
         if (minPrice > 0 || maxPrice < 20000) { 
-            filtersList.append(`<span class="filter-tag" data-filter-type="price">Price: ৳${minPrice} - ৳${maxPrice} <span class="remove-filter" title="Remove filter">&times;</span></span>`);
+            filtersList.append(`<span class="filter-tag" data-filter-type="price">Price: ৳ ${minPrice} - ৳ ${maxPrice} <span class="remove-filter" title="Remove filter">&times;</span></span>`);
             hasActiveFilters = true;
         }
 
@@ -208,7 +208,7 @@ $(document).ready(function() {
     // Sidebar filter listeners
     $(document).on('click', '.offer-filter', function(e) { e.preventDefault(); if ($(this).hasClass('active')) { $(this).removeClass('active'); } else { $('.offer-filter').removeClass('active'); $(this).addClass('active'); } loadProducts(true); });
     $('#price-filter-btn').on('click', () => loadProducts(true));
-    $('#min-price-slider, #max-price-slider').on('input', function() { let minPrice = parseInt($('#min-price-slider').val()); let maxPrice = parseInt($('#max-price-slider').val()); if (minPrice > maxPrice) { [minPrice, maxPrice] = [maxPrice, minPrice]; } $('#price-range-display').text(`Price: ৳${minPrice} - ৳${maxPrice}`); });
+    $('#min-price-slider, #max-price-slider').on('input', function() { let minPrice = parseInt($('#min-price-slider').val()); let maxPrice = parseInt($('#max-price-slider').val()); if (minPrice > maxPrice) { [minPrice, maxPrice] = [maxPrice, minPrice]; } $('#price-range-display').text(`Price: ৳ ${minPrice} - ৳ ${maxPrice}`); });
 
     // NEW: Listeners for removing/clearing tags
     $(document).on('click', '.remove-filter', function() {
@@ -221,7 +221,7 @@ $(document).ready(function() {
         } else if (type === 'price') {
             $('#min-price-slider').val(0);
             $('#max-price-slider').val(20000);
-            $('#price-range-display').text(`Price: ৳0 - ৳20000`);
+            $('#price-range-display').text(`Price: ৳ 0 - ৳ 20000`);
         }
         loadProducts(true);
     });
@@ -231,7 +231,7 @@ $(document).ready(function() {
         $('.offer-filter').removeClass('active');
         $('#min-price-slider').val(0);
         $('#max-price-slider').val(20000);
-        $('#price-range-display').text(`Price: ৳0 - ৳20000`);
+        $('#price-range-display').text(`Price: ৳ 0 - ৳ 20000`);
         loadProducts(true);
     });
 });

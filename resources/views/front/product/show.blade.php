@@ -140,7 +140,16 @@
 
                             <!--end color--->
 
-                            <!-- size Chart-->
+                           
+
+                            <!-- Size Selection -->
+                             <div class="mb-4">
+                            <p class="mb-2">Size: <span id="selected-size-name" class="fw-semibold text-dark">Select a size</span></p>
+                            <div id="size-options-container" class="d-flex gap-2">
+                                {{-- Size buttons will be dynamically inserted here by JavaScript --}}
+                            </div>
+                        </div>
+                         <!-- size Chart-->
 
                              @if($product->assignChart && $product->assignChart->entries->isNotEmpty())
                         <div class="mb-4">
@@ -170,14 +179,6 @@
                         </div>
                         @endif
 
-                            <!-- Size Selection -->
-                             <div class="mb-4">
-                            <p class="mb-2">Size: <span id="selected-size-name" class="fw-semibold text-dark">Select a size</span></p>
-                            <div id="size-options-container" class="d-flex gap-2">
-                                {{-- Size buttons will be dynamically inserted here by JavaScript --}}
-                            </div>
-                        </div>
-
                             <!-- Quantity and Buttons -->
                            <div class="d-flex flex-column flex-sm-row align-items-center gap-4 mb-4">
                             <div class="d-flex align-items-center border rounded-3 overflow-hidden">
@@ -191,17 +192,16 @@
 
                             <!-- Actions and Share with Bootstrap Icons -->
                             <div class="d-flex flex-column flex-sm-row align-items-center justify-content-between mt-4">
-                                <div class="d-flex align-items-center space-x-4 mb-4 mb-sm-0">
-                                    <a href="#" id="add-to-compare" class="d-flex align-items-center text-secondary text-decoration-none">
-                                        <i class="bi bi-plus-circle me-1"></i>
-                                        <span>Add to compare</span>
-                                    </a>
-                                    <a href="#"  id="add-to-wishlist"
-                                        class="d-flex align-items-center text-secondary text-decoration-none ms-3">
-                                        <i class="bi bi-heart me-1"></i>
-                                        <span>Add to wishlist</span>
-                                    </a>
-                                </div>
+                                <div class="d-flex align-items-center gap-2 mb-4 mb-sm-0">
+    <a href="#" id="add-to-compare" class="btn btn-sm btn-outline-secondary d-flex align-items-center">
+        <i class="bi bi-plus-circle me-2"></i>
+        <span>Add to compare</span>
+    </a>
+    <a href="#" id="add-to-wishlist" class="btn btn-sm btn-outline-secondary d-flex align-items-center">
+        <i class="bi bi-heart me-2"></i>
+        <span>Add to wishlist</span>
+    </a>
+</div>
                                  @php
                                     $shareUrl = urlencode(url()->current());
                                     $shareTitle = urlencode($product->name);
@@ -656,19 +656,24 @@ $(document).ready(function() {
                     $button.prop('disabled', true).find('span').text('Adding...');
                 },
                 success: function(response) {
-                    if (response.success) {
-                        Swal.fire({
-                            toast: true,
-                            position: 'top-end',
-                            icon: 'success',
-                            title: response.message,
-                            showConfirmButton: false,
-                            timer: 2000
-                        });
-                    } else {
-                         Swal.fire({ icon: 'info', title: 'Already Added', text: response.message });
-                    }
-                },
+    if (response.success) {
+        Swal.fire({
+            toast: true,
+            position: 'top-end',
+            icon: 'success',
+            title: response.message,
+            showConfirmButton: false,
+            timer: 2000
+        });
+        // UPDATE THE COUNT
+        if(response.count !== undefined) {
+            $('#wishlist-count').text(response.count);
+            $('#mobile-wishlist-count').text(response.count);
+        }
+    } else {
+         Swal.fire({ icon: 'info', title: 'Already Added', text: response.message });
+    }
+},
                 error: function(xhr) {
                      Swal.fire({ icon: 'error', title: 'Oops...', text: 'Something went wrong. Please try again.' });
                 },

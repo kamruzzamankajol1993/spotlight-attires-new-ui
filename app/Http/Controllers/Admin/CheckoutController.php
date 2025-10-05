@@ -247,9 +247,15 @@ $BKASH_CHECKOUT_URL_APP_SECRET ='2is7hdktrekvrbljjh44ll3d9l1dtjo4pasmjvs5vl5qr3f
 
         DB::beginTransaction();
         try {
+
+             do {
+                $invoiceNumber = rand(1000, 9999);
+            } while (Order::where('invoice_no', $invoiceNumber)->exists());
+
+
             $order = Order::create([
                 'customer_id'      => $customer->id,
-                'invoice_no'       => 'INV-' . time() . $customer->id,
+                'invoice_no'       => $invoiceNumber,
                 'subtotal'         => $cartData['subtotal'],
                 'shipping_cost'    => $request->shipping_cost,
                 'discount'         => $cartData['discount'],
@@ -396,7 +402,7 @@ $BKASH_CHECKOUT_URL_APP_SECRET ='2is7hdktrekvrbljjh44ll3d9l1dtjo4pasmjvs5vl5qr3f
 
             // Update order status
             $order->update([
-                'status' => 'processing',
+                'status' => 'pending',
                 'payment_status' => 'paid',
                 'trxID' => $response['trxID'], // Store the final transaction ID
                 'total_pay' => $response['amount'],
@@ -465,7 +471,7 @@ $BKASH_CHECKOUT_URL_APP_SECRET ='2is7hdktrekvrbljjh44ll3d9l1dtjo4pasmjvs5vl5qr3f
 
             if ($validation) {
                 $order->update([
-                    'status' => 'processing',
+                    'status' => 'pending',
                     'payment_status' => 'paid',
                     'total_pay' => $order->total_amount,
                     'due' => 0,
@@ -524,7 +530,7 @@ $BKASH_CHECKOUT_URL_APP_SECRET ='2is7hdktrekvrbljjh44ll3d9l1dtjo4pasmjvs5vl5qr3f
             $validation = $sslc->orderValidate($request->all(), $tran_id, $order->total_amount, $order->currency);
             if ($validation) {
                 $order->update([
-                    'status' => 'processing',
+                    'status' => 'pending',
                     'payment_status' => 'paid',
                     'total_pay' => $order->total_amount,
                     'due' => 0,

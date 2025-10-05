@@ -43,6 +43,17 @@
     .mobile-search-bar .search-container {
         width: 100%;
     }
+    /* This adds a smooth transition to the icons */
+/* This adds a smooth transition ONLY to the icons on the right */
+.header-bottom .righti .nav-link {
+    transition: transform 0.2s ease-in-out, color 0.2s ease-in-out;
+}
+
+/* This applies the zoom and color change ONLY when you hover on the right-side icons */
+.header-bottom .righti .nav-link:hover {
+    color: black !important; 
+    transform: scale(1.2); 
+}
 </style>
     <header class="d-none d-lg-block sticky-header">
         <!-- Top Section -->
@@ -97,7 +108,7 @@
                 </div>
 
                 <!-- Right Side: Icons -->
-                <div class="d-flex align-items-center">
+                <div class="d-flex align-items-center righti">
                     <!-- Updated User icon to trigger the new offcanvas -->
 
                     @if (Auth::check())
@@ -111,18 +122,21 @@
                     </a>
                     @endif
                     @if (Auth::check())
-                    <a class="nav-link text-dark me-3" href="{{route('wishlist.index')}}">
-                        <i class="bi bi-heart fs-4"></i>
-                    </a>
-                    @else
- <a class="nav-link text-dark me-3" href="#" data-bs-toggle="offcanvas"
-                        data-bs-target="#signInOffcanvas" aria-controls="signInOffcanvas">
-                        <i class="bi bi-heart fs-4"></i>
-                    </a>
-                    @endif
+<a class="nav-link text-dark me-3" href="{{route('wishlist.index')}}">
+    <i class="bi bi-heart fs-4"></i>
+    <span id="wishlist-count" class="badge rounded-pill bg-dark" style="position: relative;top: -13px;left: -8px;font-size: 0.6em; padding: .35em .5em;">{{ Auth::user()->wishlist->count() }}</span>
+</a>
+@else
+<a class="nav-link text-dark me-3" href="#" data-bs-toggle="offcanvas"
+    data-bs-target="#signInOffcanvas" aria-controls="signInOffcanvas">
+    <i class="bi bi-heart fs-4"></i>
+    <span id="wishlist-count" class="badge rounded-pill bg-dark" style="position: relative;top: -13px;left: -8px;font-size: 0.6em; padding: .35em .5em;">0</span>
+</a>
+@endif
                     <a class="nav-link text-dark me-3" href="{{route('compare.index')}}">
-                        <i class="bi bi-arrow-left-right fs-4"></i>
-                    </a>
+    <i class="bi bi-arrow-left-right fs-4"></i>
+    <span id="compare-count" class="badge rounded-pill bg-dark" style="position: relative;top: -13px;left: -8px;font-size: 0.6em; padding: .35em .5em;">{{ count(Session::get('compare', [])) }}</span>
+</a>
                     <!-- Updated Cart icon to trigger the new offcanvas -->
                     <a class="nav-link text-dark" href="#" data-bs-toggle="offcanvas" data-bs-target="#cartOffcanvas"
                         aria-controls="cartOffcanvas">
@@ -330,24 +344,24 @@
             <span>Shop</span>
         </a>
 
-        @if(Auth::check())
-        <a href="{{route('wishlist.index')}}" class="nav-link text-dark">
-            <div class="position-relative">
-                <i class="bi bi-heart"></i>
-                <span class="badge rounded-pill bg-danger">0</span>
-            </div>
-            <span>Wishlist</span>
-        </a>
-        @else
-         <a href="#" class="nav-link text-dark" data-bs-toggle="offcanvas"
-                        data-bs-target="#signInOffcanvas" aria-controls="signInOffcanvas">
-            <div class="position-relative">
-                <i class="bi bi-heart"></i>
-                <span class="badge rounded-pill bg-danger">0</span>
-            </div>
-            <span>Wishlist</span>
-        </a>
-        @endif
+       @if(Auth::check())
+<a href="{{route('wishlist.index')}}" class="nav-link text-dark">
+    <div class="position-relative">
+        <i class="bi bi-heart"></i>
+        <span id="mobile-wishlist-count" class="badge rounded-pill bg-danger">{{ Auth::user()->wishlist->count() }}</span>
+    </div>
+    <span>Wishlist</span>
+</a>
+@else
+ <a href="#" class="nav-link text-dark" data-bs-toggle="offcanvas"
+                data-bs-target="#signInOffcanvas" aria-controls="signInOffcanvas">
+    <div class="position-relative">
+        <i class="bi bi-heart"></i>
+        <span id="mobile-wishlist-count" class="badge rounded-pill bg-danger">0</span>
+    </div>
+    <span>Wishlist</span>
+</a>
+@endif
         <a href="{{route('cart.show')}}" class="nav-link text-dark" data-bs-toggle="offcanvas" data-bs-target="#cartOffcanvas"
             aria-controls="cartOffcanvas">
             <div class="position-relative">

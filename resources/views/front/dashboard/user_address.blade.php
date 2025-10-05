@@ -103,7 +103,7 @@
                         <div>
                             <input type="radio" class="btn-check" name="address_type" id="add-Home" value="Home" autocomplete="off" checked><label class="btn btn-outline-secondary me-2" for="add-Home"><i class="bi bi-house-door-fill me-1"></i> Home</label>
                             <input type="radio" class="btn-check" name="address_type" id="add-Office" value="Office" autocomplete="off"><label class="btn btn-outline-secondary me-2" for="add-Office"><i class="bi bi-building-fill me-1"></i> Office</label>
-                            <input type="radio" class="btn-check" name="address_type" id="add-Hometown" value="Hometown" autocomplete="off"><label class="btn btn-outline-secondary" for="add-Hometown"><i class="bi bi-geo-alt-fill me-1"></i> Hometown</label>
+                            <input type="radio" class="btn-check" name="address_type" id="add-Others" value="Others" autocomplete="off"><label class="btn btn-outline-secondary" for="add-Others"><i class="bi bi-geo-alt-fill me-1"></i> Others</label>
                         </div>
                     </div>
                     <div class="form-check form-switch mb-3"><input class="form-check-input" type="checkbox" id="add-is_default" name="is_default" value="1"><label class="form-check-label" for="add-is_default">Make this my default address</label></div>
@@ -145,7 +145,7 @@
                         <div>
                             <input type="radio" class="btn-check" name="address_type" id="edit-Home" value="Home" autocomplete="off"><label class="btn btn-outline-secondary me-2" for="edit-Home"><i class="bi bi-house-door-fill me-1"></i> Home</label>
                             <input type="radio" class="btn-check" name="address_type" id="edit-Office" value="Office" autocomplete="off"><label class="btn btn-outline-secondary me-2" for="edit-Office"><i class="bi bi-building-fill me-1"></i> Office</label>
-                            <input type="radio" class="btn-check" name="address_type" id="edit-Hometown" value="Hometown" autocomplete="off"><label class="btn btn-outline-secondary" for="edit-Hometown"><i class="bi bi-geo-alt-fill me-1"></i> Hometown</label>
+                          <input type="radio" class="btn-check" name="address_type" id="edit-Others" value="Others" autocomplete="off"><label class="btn btn-outline-secondary" for="edit-Others"><i class="bi bi-geo-alt-fill me-1"></i> Others</label>
                         </div>
                     </div>
                     <div class="form-check form-switch mb-3"><input class="form-check-input" type="checkbox" id="edit-is_default" name="is_default" value="1"><label class="form-check-label" for="edit-is_default">Make this my default address</label></div>

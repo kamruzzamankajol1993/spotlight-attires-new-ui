@@ -42,7 +42,7 @@
         <input type="range" class="form-range" id="max-price-slider" min="0" max="10000" value="10000">
     </div>
     <div class="d-flex justify-content-between align-items-center mb-3">
-        <span class="text-muted" id="price-range-display">Price: ৳0 - ৳10000</span>
+        <span class="text-muted" id="price-range-display">Price: ৳ 0 - ৳ 10000</span>
         <button class="btn btn-sm btn-primary" id="price-filter-btn">Filter</button>
     </div>
     <hr>

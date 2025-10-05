@@ -56,10 +56,10 @@
                 <p class="price-tag mb-2">
                     {{-- Show discount price from bundle_offer_product and calculated total --}}
                     @if($deal->discount_price > 0 && $deal->discount_price < $totalBasePrice)
-                        <del class="text-muted">৳{{ number_format($totalBasePrice) }}</del>
-                        <span class="fw-bold">৳{{ number_format($deal->discount_price) }}</span>
+                        <del class="text-muted">৳ {{ number_format($totalBasePrice) }}</del>
+                        <span class="fw-bold">৳ {{ number_format($deal->discount_price) }}</span>
                     @else
-                        <span class="fw-bold">৳{{ number_format($totalBasePrice) }}</span>
+                        <span class="fw-bold">৳ {{ number_format($totalBasePrice) }}</span>
                     @endif
                 </p>
                 <a href="{{route('offerProduct.show',$deal->id )}}" class="btn btn-primary btn-add-cart w-100">View Deal</a>

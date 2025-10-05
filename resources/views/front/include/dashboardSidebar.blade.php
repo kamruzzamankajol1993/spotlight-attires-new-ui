@@ -1,6 +1,6 @@
 <div class="spotlight_user_profile_sidebar">
                                     <div class="spotlight_user_profile_sidebar-header">
-                                         <div class="spotlight_user_profile_user-avatar-container" id="sidebar-avatar-container">
+                                         <div class="spotlight_user_profile_user-avatar-container" id="sidebar-avatar-container" @if(Auth::user()->image) style="background: transparent;" @endif>
                                     @if(Auth::user()->image)
                                         <img src="{{ asset('public/'.Auth::user()->image) }}" alt="User Avatar" style="height: 40px !important;" class="spotlight_user_profile_user-avatar">
                                     @else
