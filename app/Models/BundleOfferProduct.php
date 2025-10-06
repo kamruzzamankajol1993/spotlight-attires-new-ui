@@ -28,6 +28,7 @@ class BundleOfferProduct extends Model
         'discount_price',
         'buy_quantity',
         'get_quantity',
+         'view_count',
     ];
 
     /**

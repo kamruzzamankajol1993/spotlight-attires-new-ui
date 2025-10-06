@@ -114,7 +114,8 @@ Route::post('/reset-password', [AuthController::class, 'resetPassword'])->name('
 Route::get('/locations-districts', [LocationController::class, 'getDistricts'])->name('locations.districts');
 Route::get('/locations-upazilas', [LocationController::class, 'getUpazilas'])->name('locations.upazilas');
 Route::controller(FrontController::class)->group(function () {
-
+    Route::get('/bundle-view-count/{id}', [FrontController::class, 'getBundleViewCount'])->name('bundle.view_count');
+Route::get('/product-view-count/{id}', 'getProductViewCount')->name('product.view_count');
      Route::get('/products/ajax-search-filter', 'ajaxSearchFilter')->name('products.ajax_search_filter');
 
     Route::get('/products/ajax-search', 'ajaxSearch')->name('products.ajax_search');

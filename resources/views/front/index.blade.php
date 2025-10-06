@@ -3,6 +3,159 @@
 @section('title', 'Home')
 @section('css')
 <style>
+   /* --- START: FINAL PRODUCT CARD STYLES --- */
+
+/* Make the entire product card interactive */
+.product-card {
+    transition: box-shadow 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+/* Add a shadow when the card is hovered on desktop */
+.product-card:hover {
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+    z-index: 15;
+}
+
+.product-image-container {
+    position: relative;
+    display: block;
+}
+
+.product-image-container picture img {
+    transition: transform 0.3s ease-in-out;
+}
+
+.product-image-hover {
+    position: absolute;
+    top: 0;
+    left: 0;
+    opacity: 0;
+    transition: opacity 0.3s ease-in-out;
+    z-index: 5;
+}
+
+/* --- DESKTOP STYLES FOR ACTION BUTTONS --- */
+/* The buttons are now positioned relative to the whole card */
+.product-actions {
+    position: absolute;
+    top: 35%; /* Adjust this % to perfectly center on your images */
+    left: 50%;
+    z-index: 10;
+    display: flex;
+    gap: 10px;
+    
+    /* Start centered, smaller, and invisible */
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.9);
+    transition: opacity 0.3s ease, transform 0.3s ease, visibility 0.3s;
+    visibility: hidden; /* Hide completely */
+}
+
+/* Styling for the individual circle buttons */
+.product-action-btn {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 40px;
+    height: 40px;
+    background-color: #ffffff;
+    color: #333;
+    border-radius: 50%;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    transition: background-color 0.2s, color 0.2s, transform 0.2s ease;
+    text-decoration: none;
+}
+
+.product-action-btn:hover {
+    background-color: #0d6efd;
+    color: #ffffff;
+    transform: translateY(-2px);
+}
+
+/* Animate buttons to appear on card hover */
+.product-card:hover .product-actions {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+    visibility: visible; /* Make them visible */
+}
+
+/* Other hover effects */
+.product-card:hover .product-image-hover {
+    opacity: 1;
+}
+.product-card:hover .product-image-container picture img {
+    transform: scale(1.05);
+}
+
+/* --- START: FINAL MOBILE RESPONSIVE STYLES --- */
+@media (max-width: 767.98px) {
+
+    /* The container for the buttons on mobile */
+    .product-actions {
+        position: static;
+        visibility: visible;
+        opacity: 1;
+        transform: none;
+        display: flex;
+        justify-content: center;
+        gap: 2px; /* Increased gap for better touch separation */
+        margin-top: 10px;
+        margin-bottom: 16px;
+    }
+
+    /* The "Perfect Circle" buttons */
+    .product-action-btn {
+        /* 1. Precise Shape & Sizing */
+        width: 35px;
+        height: 35px;
+        min-width: 35px; /* Prevents squashing */
+        border-radius: 50%; /* Guarantees a circle */
+        border: none; /* No border */
+        
+        /* 2. Premium Aesthetics */
+        background-color: #ffffff;
+        /* A softer, more realistic shadow */
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.06);
+        
+        /* 3. Perfect Icon Centering */
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        
+        /* 4. Smooth Interaction */
+        transition: all 0.2s ease-out;
+    }
+    
+    /* Provides visual feedback when a button is tapped */
+    .product-action-btn:active {
+        transform: scale(0.94);
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+    
+    /* Icon Styling */
+    .product-action-btn i {
+        font-size: 1.1rem; /* Slightly larger, more prominent icon */
+        color: #343a40;
+        line-height: 1; /* Critical for preventing alignment shifts */
+    }
+
+    /* Disable desktop-only hover effects on mobile */
+    .product-card:hover {
+        box-shadow: none;
+    }
+    .product-card:hover .product-image-container picture img {
+        transform: none;
+    }
+    .product-card:hover .product-image-hover {
+        opacity: 0;
+    }
+}
+/* --- END: FINAL MOBILE RESPONSIVE STYLES --- */
+/* --- END: REFINED MOBILE RESPONSIVE STYLES --- */
+</style>
+<style>
     /* Container for the product images */
     .product-image-container {
         position: relative; /* Needed to position the hover image correctly */
@@ -16,13 +169,16 @@
     }
 
     /* The hover image is positioned directly on top of the default one */
-    .product-image-hover {
-        position: absolute;
-        top: 0;
-        left: 0;
-        opacity: 0; /* It's completely invisible by default */
-        transition: opacity 0.3s ease-in-out; /* This creates the smooth fade effect */
-    }
+  .product-image-hover {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%; /* Ensure it covers the full area */
+    height: 100%; /* Ensure it covers the full area */
+    opacity: 0; /* It's completely invisible by default */
+    transition: opacity 0.3s ease-in-out; /* This creates the smooth fade effect */
+    z-index: 5; /* This places the hover image ABOVE the default image but BELOW the action buttons */
+}
 
     /* When you hover over the container... */
     .product-image-container:hover .product-image-hover {
@@ -217,10 +373,24 @@
                 }
             }
         }
+          $extraCategoryName = null;
+        if ($product->assigns) { // Check if assigns relationship is loaded
+            $extraCategoryAssignment = $product->assigns->where('type', 'other')->first();
+            if ($extraCategoryAssignment) {
+                $extraCategory = \App\Models\ExtraCategory::find($extraCategoryAssignment->category_id);
+                if ($extraCategory) {
+                    $extraCategoryName = $extraCategory->name;
+                }
+            }
+        }
     @endphp
 
     {{-- The link is now the main container for the images --}}
     <a href="{{ route('product.show', $product->slug) }}" class="product-image-container">
+
+         @if ($extraCategoryName)
+            <span class="product-badge">{{ $extraCategoryName }}</span>
+        @endif
         <picture class="product-image-default">
             <source media="(min-width: 992px)" srcset="{{ $desktopImage }}">
             <source media="(max-width: 991px)" srcset="{{ $mobileImage }}">
@@ -237,10 +407,10 @@
                  class="card-img-top img-fluid">
         </picture>
     </a>
-    
+   
     <div class="product-details-body">
         <h5 class="product-title mb-1"><a href="{{ route('product.show', $product->slug) }}">
-                        {{ Str::limit($product->name, 25) }}
+                        {{ $product->name }}
                         </a></h5>
         <p class="product-meta mb-1">Category: {{ $product->category->name ?? 'N/A' }}</p>
         <p class="product-meta mb-1">SKU: {{ $product->product_code ?? 'N/A' }}</p>
@@ -252,18 +422,43 @@
         @endif
 
         <div class="rating-stars mb-2">
-            <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-half"></i>
-        </div>
+    @php
+        // Round the average rating to the nearest whole number
+        $rating = round($product->reviews_avg_rating ?? 0);
+    @endphp
+    @for ($i = 1; $i <= 5; $i++)
+        @if ($i <= $rating)
+            {{-- Show a filled star if the loop index is less than or equal to the rating --}}
+            <i class="bi bi-star-fill"></i>
+        @else
+            {{-- Otherwise, show an empty star --}}
+            <i class="bi bi-star"></i>
+        @endif
+    @endfor
+</div>
 
         <p class="price-tag mb-2">
             @if($product->discount_price)
-                <del class="text-muted">৳ {{ $product->base_price }}</del>
+                <del class="text-muted" style="font-weight: 100 !important;">৳ {{ $product->base_price }}</del>
                 <span class="fw-bold">৳ {{ $product->discount_price }}</span>
             @else
                 <span class="fw-bold">৳ {{ $product->base_price }}</span>
             @endif
         </p>
-        <a href="#" class="btn btn-primary btn-add-cart" data-product-id="{{ $product->id }}">Add to Cart</a>
+ <div class="product-actions">
+        <a href="#" class="product-action-btn btn-add-cart" data-product-id="{{ $product->id }}" data-bs-toggle="tooltip" title="Quick View">
+            <i class="bi bi-eye"></i>
+        </a>
+        <a href="#" class="product-action-btn btn-add-cart" data-product-id="{{ $product->id }}" data-bs-toggle="tooltip" title="Add to Cart">
+            <i class="bi bi-cart-plus"></i>
+        </a>
+        <a href="#" class="product-action-btn btn-add-cart" data-product-id="{{ $product->id }}" data-bs-toggle="tooltip" title="Add to Wishlist">
+            <i class="bi bi-heart"></i>
+        </a>
+        <a href="#" class="product-action-btn btn-add-cart" data-product-id="{{ $product->id }}" data-bs-toggle="tooltip" title="Add to Compare">
+            <i class="bi bi-arrow-left-right"></i>
+        </a>
+    </div>
     </div>
 </div>
                 @endforeach
@@ -427,10 +622,23 @@
                 }
             }
         }
+          $extraCategoryName = null;
+        if ($product->assigns) { // Check if assigns relationship is loaded
+            $extraCategoryAssignment = $product->assigns->where('type', 'other')->first();
+            if ($extraCategoryAssignment) {
+                $extraCategory = \App\Models\ExtraCategory::find($extraCategoryAssignment->category_id);
+                if ($extraCategory) {
+                    $extraCategoryName = $extraCategory->name;
+                }
+            }
+        }
     @endphp
 
     {{-- The link is now the main container for the images --}}
     <a href="{{ route('product.show', $product->slug) }}" class="product-image-container">
+         @if ($extraCategoryName)
+            <span class="product-badge">{{ $extraCategoryName }}</span>
+        @endif
         <picture class="product-image-default">
             <source media="(min-width: 992px)" srcset="{{ $desktopImage }}">
             <source media="(max-width: 991px)" srcset="{{ $mobileImage }}">
@@ -447,10 +655,10 @@
                  class="card-img-top img-fluid">
         </picture>
     </a>
-    
+
     <div class="product-details-body">
         <h5 class="product-title mb-1"><a href="{{ route('product.show', $product->slug) }}">
-                        {{ Str::limit($product->name, 25) }}
+                        {{ $product->name }}
                         </a></h5>
         <p class="product-meta mb-1">Category: {{ $product->category->name ?? 'N/A' }}</p>
         <p class="product-meta mb-1">SKU: {{ $product->product_code ?? 'N/A' }}</p>
@@ -462,18 +670,43 @@
         @endif
 
         <div class="rating-stars mb-2">
-            <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-half"></i>
-        </div>
+    @php
+        // Round the average rating to the nearest whole number
+        $rating = round($product->reviews_avg_rating ?? 0);
+    @endphp
+    @for ($i = 1; $i <= 5; $i++)
+        @if ($i <= $rating)
+            {{-- Show a filled star if the loop index is less than or equal to the rating --}}
+            <i class="bi bi-star-fill"></i>
+        @else
+            {{-- Otherwise, show an empty star --}}
+            <i class="bi bi-star"></i>
+        @endif
+    @endfor
+</div>
 
         <p class="price-tag mb-2">
             @if($product->discount_price)
-                <del class="text-muted">৳ {{ $product->base_price }}</del>
+                <del class="text-muted" style="font-weight: 100 !important;">৳ {{ $product->base_price }}</del>
                 <span class="fw-bold">৳ {{ $product->discount_price }}</span>
             @else
                 <span class="fw-bold">৳ {{ $product->base_price }}</span>
             @endif
         </p>
-        <a href="#" class="btn btn-primary btn-add-cart" data-product-id="{{ $product->id }}">Add to Cart</a>
+<div class="product-actions">
+        <a href="#" class="product-action-btn btn-add-cart" data-product-id="{{ $product->id }}" data-bs-toggle="tooltip" title="Quick View">
+            <i class="bi bi-eye"></i>
+        </a>
+        <a href="#" class="product-action-btn btn-add-cart" data-product-id="{{ $product->id }}" data-bs-toggle="tooltip" title="Add to Cart">
+            <i class="bi bi-cart-plus"></i>
+        </a>
+        <a href="#" class="product-action-btn btn-add-cart" data-product-id="{{ $product->id }}" data-bs-toggle="tooltip" title="Add to Wishlist">
+            <i class="bi bi-heart"></i>
+        </a>
+        <a href="#" class="product-action-btn btn-add-cart" data-product-id="{{ $product->id }}" data-bs-toggle="tooltip" title="Add to Compare">
+            <i class="bi bi-arrow-left-right"></i>
+        </a>
+    </div>
     </div>
 </div>
                 @endforeach
@@ -533,10 +766,23 @@
                 }
             }
         }
+          $extraCategoryName = null;
+        if ($product->assigns) { // Check if assigns relationship is loaded
+            $extraCategoryAssignment = $product->assigns->where('type', 'other')->first();
+            if ($extraCategoryAssignment) {
+                $extraCategory = \App\Models\ExtraCategory::find($extraCategoryAssignment->category_id);
+                if ($extraCategory) {
+                    $extraCategoryName = $extraCategory->name;
+                }
+            }
+        }
     @endphp
 
     {{-- The link is now the main container for the images --}}
     <a href="{{ route('product.show', $product->slug) }}" class="product-image-container">
+         @if ($extraCategoryName)
+            <span class="product-badge">{{ $extraCategoryName }}</span>
+        @endif
         <picture class="product-image-default">
             <source media="(min-width: 992px)" srcset="{{ $desktopImage }}">
             <source media="(max-width: 991px)" srcset="{{ $mobileImage }}">
@@ -553,10 +799,10 @@
                  class="card-img-top img-fluid">
         </picture>
     </a>
-    
+   
     <div class="product-details-body">
         <h5 class="product-title mb-1"><a href="{{ route('product.show', $product->slug) }}">
-                        {{ Str::limit($product->name, 25) }}
+                        {{ $product->name }}
                         </a></h5>
         <p class="product-meta mb-1">Category: {{ $product->category->name ?? 'N/A' }}</p>
         <p class="product-meta mb-1">SKU: {{ $product->product_code ?? 'N/A' }}</p>
@@ -568,18 +814,43 @@
         @endif
 
         <div class="rating-stars mb-2">
-            <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-half"></i>
-        </div>
+    @php
+        // Round the average rating to the nearest whole number
+        $rating = round($product->reviews_avg_rating ?? 0);
+    @endphp
+    @for ($i = 1; $i <= 5; $i++)
+        @if ($i <= $rating)
+            {{-- Show a filled star if the loop index is less than or equal to the rating --}}
+            <i class="bi bi-star-fill"></i>
+        @else
+            {{-- Otherwise, show an empty star --}}
+            <i class="bi bi-star"></i>
+        @endif
+    @endfor
+</div>
 
         <p class="price-tag mb-2">
             @if($product->discount_price)
-                <del class="text-muted">৳ {{ $product->base_price }}</del>
+                <del class="text-muted" style="font-weight: 100 !important;">৳ {{ $product->base_price }}</del>
                 <span class="fw-bold">৳ {{ $product->discount_price }}</span>
             @else
                 <span class="fw-bold">৳ {{ $product->base_price }}</span>
             @endif
         </p>
-        <a href="#" class="btn btn-primary btn-add-cart" data-product-id="{{ $product->id }}">Add to Cart</a>
+ <div class="product-actions">
+        <a href="#" class="product-action-btn btn-add-cart" data-product-id="{{ $product->id }}" data-bs-toggle="tooltip" title="Quick View">
+            <i class="bi bi-eye"></i>
+        </a>
+        <a href="#" class="product-action-btn btn-add-cart" data-product-id="{{ $product->id }}" data-bs-toggle="tooltip" title="Add to Cart">
+            <i class="bi bi-cart-plus"></i>
+        </a>
+        <a href="#" class="product-action-btn btn-add-cart" data-product-id="{{ $product->id }}" data-bs-toggle="tooltip" title="Add to Wishlist">
+            <i class="bi bi-heart"></i>
+        </a>
+        <a href="#" class="product-action-btn btn-add-cart" data-product-id="{{ $product->id }}" data-bs-toggle="tooltip" title="Add to Compare">
+            <i class="bi bi-arrow-left-right"></i>
+        </a>
+    </div>
     </div>
 </div>
                         @empty
@@ -762,6 +1033,9 @@
 
     {{-- The link is now the main container for the images --}}
     <a href="{{ route('product.show', $product->slug) }}" class="product-image-container">
+         @if ($extraCategoryName)
+            <span class="product-badge">{{ $extraCategoryName }}</span>
+        @endif
         <picture class="product-image-default">
             <source media="(min-width: 992px)" srcset="{{ $desktopImage }}">
             <source media="(max-width: 991px)" srcset="{{ $mobileImage }}">
@@ -781,7 +1055,7 @@
     
     <div class="product-details-body">
         <h5 class="product-title mb-1"><a href="{{ route('product.show', $product->slug) }}">
-                        {{ Str::limit($product->name, 25) }}
+                        {{ $product->name }}
                         </a></h5>
         <p class="product-meta mb-1">Category: {{ $product->category->name ?? 'N/A' }}</p>
         <p class="product-meta mb-1">SKU: {{ $product->product_code ?? 'N/A' }}</p>
@@ -793,18 +1067,43 @@
         @endif
 
         <div class="rating-stars mb-2">
-            <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-half"></i>
-        </div>
+    @php
+        // Round the average rating to the nearest whole number
+        $rating = round($product->reviews_avg_rating ?? 0);
+    @endphp
+    @for ($i = 1; $i <= 5; $i++)
+        @if ($i <= $rating)
+            {{-- Show a filled star if the loop index is less than or equal to the rating --}}
+            <i class="bi bi-star-fill"></i>
+        @else
+            {{-- Otherwise, show an empty star --}}
+            <i class="bi bi-star"></i>
+        @endif
+    @endfor
+</div>
 
         <p class="price-tag mb-2">
             @if($product->discount_price)
-                <del class="text-muted">৳ {{ $product->base_price }}</del>
+                <del class="text-muted" style="font-weight: 100 !important;">৳ {{ $product->base_price }}</del>
                 <span class="fw-bold">৳ {{ $product->discount_price }}</span>
             @else
                 <span class="fw-bold">৳ {{ $product->base_price }}</span>
             @endif
         </p>
-        <a href="#" class="btn btn-primary btn-add-cart" data-product-id="{{ $product->id }}">Add to Cart</a>
+<div class="product-actions">
+        <a href="#" class="product-action-btn btn-add-cart" data-product-id="{{ $product->id }}" data-bs-toggle="tooltip" title="Quick View">
+            <i class="bi bi-eye"></i>
+        </a>
+        <a href="#" class="product-action-btn btn-add-cart" data-product-id="{{ $product->id }}" data-bs-toggle="tooltip" title="Add to Cart">
+            <i class="bi bi-cart-plus"></i>
+        </a>
+        <a href="#" class="product-action-btn btn-add-cart" data-product-id="{{ $product->id }}" data-bs-toggle="tooltip" title="Add to Wishlist">
+            <i class="bi bi-heart"></i>
+        </a>
+        <a href="#" class="product-action-btn btn-add-cart" data-product-id="{{ $product->id }}" data-bs-toggle="tooltip" title="Add to Compare">
+            <i class="bi bi-arrow-left-right"></i>
+        </a>
+    </div>
     </div>
 </div>
                         @empty

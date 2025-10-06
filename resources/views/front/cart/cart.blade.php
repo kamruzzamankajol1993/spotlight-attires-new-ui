@@ -69,7 +69,7 @@ Your Cart
                                 <h5 class="fw-semibold">You May Be Interested In...</h5>
                                 <div class="row row-cols-2 row-cols-md-4 g-3 mt-3">
                                    {{-- This section is now dynamic --}}
-                                   @forelse($randomProducts as $product)
+                                   @forelse($suggestedProducts as $product)
                                         <div class="col">
                                             <div class="product-card card h-100">
                                                 @php

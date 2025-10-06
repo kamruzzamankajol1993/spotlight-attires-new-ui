@@ -729,13 +729,29 @@ section,
 .product-details-body {
     padding: 1rem;
 }
-
+/* Badge for Extra Category on Product Card */
+.product-badge {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    background-color: var(--primary-color); 
+    color: white;
+    padding: 4px 10px;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    z-index: 10;
+    text-transform: uppercase;
+    line-height: 1;
+}
 .product-title {
-    font-size: 1.2rem;
-    font-weight: bold;
-    line-height: 1.2;
+    font-size: 0.9rem; 
+    font-weight: 600; 
+    line-height: 1.3;
     margin-bottom: 0.25rem;
     color: black;
+   
+    min-height: 2.4rem; 
 }
 
 .product-meta {
@@ -906,7 +922,7 @@ section,
 
 .mega-offer-content {
     color: #2e433f;
-    text-align: right;
+    text-align: left;
 }
 
 .mega-offer-content h2 {

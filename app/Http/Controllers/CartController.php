@@ -81,17 +81,37 @@ class CartController extends Controller
     }
 
 
-     public function showCartData()
-    {
-        // 2. FETCH 4 RANDOM, ACTIVE PRODUCTS
-        $randomProducts = Product::where('status', 1) // Optional: only show active products
-                                 ->inRandomOrder()
-                                 ->limit(4)
-                                 ->get();
+    public function showCartData(Request $request)
+{
+    // Get product IDs already in the cart to exclude them from suggestions
+    $cartProductIds = collect(Session::get('cart', []))->pluck('product_id')->unique()->toArray();
 
-        // 3. PASS THE PRODUCTS TO THE VIEW
-        return view('front.cart.cart', compact('randomProducts'));
+    // Read the recently viewed product IDs from the cookie
+    $viewedProductIds = json_decode($request->cookie('recently_viewed', '[]'), true);
+
+    if (!empty($viewedProductIds)) {
+        // If there's a viewing history, fetch those products
+        $idsToFetch = array_diff($viewedProductIds, $cartProductIds);
+        
+        $suggestedProducts = Product::whereIn('id', $idsToFetch)
+            ->where('status', 1)
+            ->get()
+            ->sortBy(function($product) use ($idsToFetch) {
+                // Keep the "recently viewed" order
+                return array_search($product->id, $idsToFetch);
+            });
+
+    } else {
+        // Fallback: If no history, fetch the 10 newest products
+        $suggestedProducts = Product::where('status', 1)
+            ->whereNotIn('id', $cartProductIds)
+            ->latest()
+            ->take(10)
+            ->get();
     }
+
+    return view('front.cart.cart', compact('suggestedProducts'));
+}
     /**
      * Add a product to the cart.
      */

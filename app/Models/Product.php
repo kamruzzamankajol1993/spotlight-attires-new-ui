@@ -25,6 +25,7 @@ class Product extends Model
         'subcategory_id',
         'sub_subcategory_id',
         'fabric_id',
+         'view_count',
         'unit_id',
         'description',
         'base_price',

@@ -11,6 +11,16 @@
     .custom-checkbox-card .icon { font-size: 1.5rem; }
     .custom-checkbox-card .title { font-weight: 600; }
     .custom-checkbox-card .description { font-size: 0.85rem; color: #6c757d; }
+    /* Add this to your existing <style> block */
+.custom-checkbox-card.disabled-option {
+    opacity: 0.6;
+    cursor: not-allowed;
+    background-color: #f8f9fa !important;
+}
+.custom-checkbox-card.disabled-option:hover {
+    border-color: #dee2e6; /* Prevents hover effect */
+    box-shadow: none;
+}
 </style>
 @endsection
 
@@ -115,16 +125,23 @@
                                 <div class="spotlight_checkout_total"><span>Total</span><span id="grand-total-text">৳ {{ number_format($subtotal - $discount, 2) }}</span></div>
                                 
                                 <div class="my-4">
-                                    <h5 class="mb-3">Delivery Type</h5>
-                                    <div class="row g-2">
-                                        <div class="col-6">
-                                            <label class="custom-checkbox-card" data-name="delivery_type"><input type="radio" name="delivery_type" value="regular" checked><div class="d-flex align-items-center"><i class="bi bi-truck icon me-3"></i><div><div class="title">Regular</div><div class="description">3-5 days</div></div></div></label>
-                                        </div>
-                                        <div class="col-6">
-                                            <label class="custom-checkbox-card" data-name="delivery_type"><input type="radio" name="delivery_type" value="express"><div class="d-flex align-items-center"><i class="bi bi-lightning-charge-fill icon me-3"></i><div><div class="title">Express</div><div class="description">1-2 days</div></div></div></label>
-                                        </div>
-                                    </div>
-                                </div>
+    <h5 class="mb-3">Delivery Type</h5>
+    <p class="text-muted small mb-2">Express delivery available only inside Dhaka .</p>
+    <div class="row g-2">
+        <div class="col-6">
+            <label class="custom-checkbox-card" data-name="delivery_type">
+                <input type="radio" name="delivery_type" value="regular" checked>
+                <div class="d-flex align-items-center"><i class="bi bi-truck icon me-3"></i><div><div class="title">Regular</div><div class="description">3-5 days</div></div></div>
+            </label>
+        </div>
+        <div class="col-6">
+            <label id="express-delivery-option" class="custom-checkbox-card" data-name="delivery_type">
+                <input id="express-delivery-input" type="radio" name="delivery_type" value="express">
+                <div class="d-flex align-items-center"><i class="bi bi-lightning-charge-fill icon me-3"></i><div><div class="title">Express</div><div class="description">1-2 days</div></div></div>
+            </label>
+        </div>
+    </div>
+</div>
 
                                 <div class="my-4">
                                     <h5 class="mb-3">Payment Method</h5>
@@ -170,32 +187,59 @@ $(document).ready(function() {
     }
 
     function getShippingCharge(addressId) {
-        if (!addressId) {
-            $('#shipping-charge-text').text('Select an address');
-            $('#place-order-btn').prop('disabled', true);
-            return;
-        }
-        $('#shipping-charge-text').html('<span class="spinner-border spinner-border-sm"></span>');
+    if (!addressId) {
+        $('#shipping-charge-text').text('Select an address');
         $('#place-order-btn').prop('disabled', true);
-
-        // This AJAX call is still needed to fetch the shipping charge dynamically
-        $.ajax({
-            url: '{{ route("get.shipping.charge") }}',
-            method: 'POST',
-            data: { _token: '{{ csrf_token() }}', address_id: addressId },
-            success: function(response) {
-                if(response.success) {
-                    shippingCharge = parseFloat(response.shipping_charge);
-                    updateTotals();
-                }
-            },
-            error: function(xhr) {
-                shippingCharge = 130; // Default fallback
-                updateTotals();
-                // You can optionally show a non-blocking notification here
-            }
-        });
+        return;
     }
+
+    // --- START: NEW LOGIC FOR EXPRESS DELIVERY ---
+    const expressOption = $('#express-delivery-option');
+    const expressInput = $('#express-delivery-input');
+    const regularInput = $('input[name="delivery_type"][value="regular"]');
+    
+    // Get the full address text from the selected radio button's label
+    const selectedRadio = $(`.shipping-address-radio[value="${addressId}"]`);
+    const addressText = selectedRadio.closest('.form-check').find('small').first().text();
+    
+    // Check if the address is in Dhaka
+    const isDhaka = addressText.toLowerCase().includes('dhaka');
+
+    if (isDhaka) {
+        // Enable Express Delivery
+        expressOption.removeClass('disabled-option');
+        expressInput.prop('disabled', false);
+    } else {
+        // Disable Express Delivery
+        expressOption.addClass('disabled-option');
+        expressInput.prop('disabled', true);
+        
+        // If Express was selected, switch back to Regular
+        if (expressInput.is(':checked')) {
+            regularInput.prop('checked', true).trigger('change');
+        }
+    }
+    // --- END: NEW LOGIC FOR EXPRESS DELIVERY ---
+
+    $('#shipping-charge-text').html('<span class="spinner-border spinner-border-sm"></span>');
+    $('#place-order-btn').prop('disabled', true);
+
+    $.ajax({
+        url: '{{ route("get.shipping.charge") }}',
+        method: 'POST',
+        data: { _token: '{{ csrf_token() }}', address_id: addressId },
+        success: function(response) {
+            if(response.success) {
+                shippingCharge = parseFloat(response.shipping_charge);
+                updateTotals();
+            }
+        },
+        error: function(xhr) {
+            shippingCharge = 130; // Default fallback
+            updateTotals();
+        }
+    });
+}
 
     $('.custom-checkbox-card').on('click', function() {
         const radioName = $(this).find('input[type="radio"]').attr('name');

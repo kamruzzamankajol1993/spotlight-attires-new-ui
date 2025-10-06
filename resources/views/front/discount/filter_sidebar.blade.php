@@ -1,6 +1,19 @@
 <div class="filter-section">
     {{-- Product and Animation Categories have been removed as requested --}}
-    
+     <h5 class="fw-bold my-3 filter_title">Status</h5>
+    <div class="form-check mb-2">
+        <input class="form-check-input stock-status-filter" type="radio" name="stock-status" id="all-stock" value="" checked>
+        <label class="form-check-label" for="all-stock">All</label>
+    </div>
+    <div class="form-check mb-2">
+        <input class="form-check-input stock-status-filter" type="radio" name="stock-status" id="on-sale" value="offer">
+        <label class="form-check-label" for="on-sale">Offer</label>
+    </div>
+    <div class="form-check">
+        <input class="form-check-input stock-status-filter" type="radio" name="stock-status" id="in-stock" value="in_stock">
+        <label class="form-check-label" for="in-stock">In Stock</label>
+    </div>
+    {{-- END OF NEW BLOCK --}}
     <h5 class="fw-bold my-3 filter_title">Filter by Price</h5>
     <div class="range-slider-container mb-3">
         <input type="range" class="form-range" id="min-price-slider" min="0" max="10000" value="0">
@@ -27,17 +40,5 @@
     <hr>
     @endif
     
-    <h5 class="fw-bold my-3 filter_title">Stock Status</h5>
-    <div class="form-check mb-2">
-        <input class="form-check-input stock-status-filter" type="radio" name="stock-status" id="all-stock" value="" checked>
-        <label class="form-check-label" for="all-stock">All</label>
-    </div>
-    <div class="form-check mb-2">
-        <input class="form-check-input stock-status-filter" type="radio" name="stock-status" id="on-sale" value="on_sale">
-        <label class="form-check-label" for="on-sale">On Sale</label>
-    </div>
-    <div class="form-check">
-        <input class="form-check-input stock-status-filter" type="radio" name="stock-status" id="in-stock" value="in_stock">
-        <label class="form-check-label" for="in-stock">In Stock</label>
-    </div>
+    
 </div>

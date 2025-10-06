@@ -14,7 +14,7 @@
         font-weight: bold;
         color: #0d6efd !important;
     }
-      /* --- NEW CSS FOR STICKY SIDEBAR --- */
+    /* --- CSS FOR STICKY SIDEBAR --- */
     .sticky-filter {
         position: -webkit-sticky; /* For Safari */
         position: sticky;
@@ -23,70 +23,164 @@
         height: calc(100vh - 100px); /* Sets a max-height for the sidebar */
         overflow-y: auto; /* Adds a scrollbar if the filters are too long */
     }
-    /* --- END OF NEW CSS --- */
-     /* Container for the product images */
+
+    /* --- FINAL PRODUCT CARD STYLES --- */
+    .product-card {
+        transition: box-shadow 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+    .product-card:hover {
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+        z-index: 15;
+    }
     .product-image-container {
-        position: relative; /* Needed to position the hover image correctly */
+        position: relative;
         display: block;
-        overflow: hidden; /* Ensures images stay within the card boundaries */
     }
-
-    /* Styling for both default and hover images */
     .product-image-container picture img {
-        transition: transform 0.3s ease-in-out; /* Optional: adds a slight zoom effect on hover */
+        transition: transform 0.3s ease-in-out;
     }
-
-    /* The hover image is positioned directly on top of the default one */
     .product-image-hover {
         position: absolute;
         top: 0;
         left: 0;
-        opacity: 0; /* It's completely invisible by default */
-        transition: opacity 0.3s ease-in-out; /* This creates the smooth fade effect */
+        opacity: 0;
+        transition: opacity 0.3s ease-in-out;
+        z-index: 5;
     }
 
-    /* When you hover over the container... */
-    .product-image-container:hover .product-image-hover {
-        opacity: 1; /* ...the hover image fades in and becomes visible */
+    /* DESKTOP: Position buttons over the image on hover */
+    .product-actions {
+        position: absolute;
+        top: 35%; /* Adjusted for better vertical centering on the image */
+        left: 50%;
+        z-index: 10;
+        display: flex;
+        gap: 10px;
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(0.9);
+        transition: opacity 0.3s ease, transform 0.3s ease, visibility 0.3s;
+        visibility: hidden; /* Prevent interaction when hidden */
+    }
+
+    /* Styling for the individual circle buttons */
+    .product-action-btn {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        width: 40px;
+        height: 40px;
+        background-color: #ffffff;
+        color: #333;
+        border-radius: 50%;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.15);
+        transition: background-color 0.2s, color 0.2s, transform 0.2s ease;
+        text-decoration: none;
+    }
+    .product-action-btn:hover {
+        background-color: #0d6efd;
+        color: #ffffff;
+        transform: translateY(-2px);
     }
     
-    /* Optional: Slight zoom effect on the image when hovering */
-    .product-image-container:hover picture img {
+    /* Trigger hover effects */
+    .product-card:hover .product-actions {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1);
+        visibility: visible;
+    }
+    .product-card:hover .product-image-hover {
+        opacity: 1;
+    }
+    .product-card:hover .product-image-container picture img {
         transform: scale(1.05);
     }
+    
+    /* --- FILTER TAGS --- */
     #active-filters-container {
-    display: none; /* Hidden by default */
-    padding-bottom: 1rem;
-    margin-bottom: 1rem;
-    border-bottom: 1px solid #eee;
-}
-.filter-tag {
-    display: inline-flex;
-    align-items: center;
-    background-color: #e9ecef;
-    border: 1px solid #dee2e6;
-    border-radius: 1rem;
-    padding: 0.25rem 0.75rem;
-    margin-right: 0.5rem;
-    margin-bottom: 0.5rem;
-    font-size: 0.875rem;
-}
-.remove-filter {
-    margin-left: 0.5rem;
-    cursor: pointer;
-    font-weight: bold;
-}
-#clear-all-filters {
-    font-size: 0.875rem;
-    font-weight: bold;
-    color: #dc3545;
-    text-decoration: none;
-}
-#clear-all-filters:hover {
-    text-decoration: underline;
-}
+        display: none;
+        padding-bottom: 1rem;
+        margin-bottom: 1rem;
+        border-bottom: 1px solid #eee;
+    }
+    .filter-tag {
+        display: inline-flex;
+        align-items: center;
+        background-color: #e9ecef;
+        border: 1px solid #dee2e6;
+        border-radius: 1rem;
+        padding: 0.25rem 0.75rem;
+        margin-right: 0.5rem;
+        margin-bottom: 0.5rem;
+        font-size: 0.875rem;
+    }
+    .remove-filter {
+        margin-left: 0.5rem;
+        cursor: pointer;
+        font-weight: bold;
+    }
+    #clear-all-filters {
+        font-size: 0.875rem;
+        font-weight: bold;
+        color: #dc3545;
+        text-decoration: none;
+    }
+    #clear-all-filters:hover {
+        text-decoration: underline;
+    }
+
+    /* --- MOBILE RESPONSIVE STYLES --- */
+    @media (max-width: 767.98px) {
+        /* This overrides absolute positioning and places buttons in the normal content flow */
+        .product-actions {
+            position: static;
+            visibility: visible;
+            opacity: 1;
+            transform: none;
+            justify-content: center;
+            margin-top: 8px;
+            gap: 2px;
+            margin-bottom: 12px;
+            background-color: transparent;
+            padding: 0;
+            backdrop-filter: none;
+        }
+
+        /* "Perfect Circle" styles for mobile buttons */
+        .product-action-btn {
+            width: 35px;
+            height: 35px;
+            min-width: 35px;
+            border-radius: 50%;
+            border: none;
+            background-color: #ffffff;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.06);
+            transition: all 0.2s ease-out;
+        }
+        .product-action-btn i {
+            font-size: 1.1rem;
+            line-height: 1;
+        }
+        .product-action-btn:active {
+            transform: scale(0.94);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Disable desktop-only hover effects on mobile */
+        .product-card:hover {
+            box-shadow: none;
+        }
+        .product-card:hover .product-image-container picture img {
+            transform: none;
+        }
+        .product-card:hover .product-image-hover {
+            opacity: 0;
+        }
+    }
 </style>
 @endsection
+
 
 @section('body')
 <main>

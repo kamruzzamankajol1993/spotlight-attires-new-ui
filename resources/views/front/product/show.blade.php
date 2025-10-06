@@ -5,6 +5,52 @@
 @endsection
 @section('css')
 <style>
+   
+#realImageModal .modal-body {
+    padding: 0.5rem; /* Add some padding around the slider */
+}
+
+.real-image-slider .slick-slide img {
+    width: 100%;
+    max-height: 75vh; /* Ensure image is not taller than the screen */
+    object-fit: contain; /* Show the full image without cropping */
+    margin: auto;
+}
+
+/* Slick slider arrow customization for the modal */
+.real-image-slider .slick-prev,
+.real-image-slider .slick-next {
+    z-index: 10;
+    width: 40px;
+    height: 40px;
+}
+.real-image-slider .slick-prev { left: 25px; }
+.real-image-slider .slick-next { right: 25px; }
+
+.real-image-slider .slick-prev:before,
+.real-image-slider .slick-next:before {
+    font-size: 30px;
+    opacity: .75;
+    color: #333;
+}
+    #customer-reviews-section {
+    position: relative;
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed; /* Optional: Creates a cool parallax scrolling effect */
+    z-index: 1;
+}
+
+#customer-reviews-section::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(255, 255, 255, 0.92); /* White overlay with 92% opacity */
+    z-index: -1; /* Places the overlay behind the content */
+}
     /* Style for color swatches */
     .color-option {
         width: 35px;
@@ -58,50 +104,75 @@
 
                     <div class="row g-4">
                         <!-- Left Side: Image Gallery -->
-                        <div class="col-12 col-lg-6 d-flex">
-                            <div class="d-flex flex-column align-items-center">
-                                <!-- Thumbnail slider for navigation -->
-                                <div id="thumbnail-nav-slider" class="w-100" style="max-width: 100px;">
-                                    @php
-                                    // Combine product and first variant images for initial display
-                                    $initialThumbnails = $product->thumbnail_image ?? [];
-                                    $firstVariant = $product->variants->first();
-                                    if ($firstVariant && is_array($firstVariant->variant_image)) {
-                                        $initialThumbnails = array_merge($initialThumbnails, $firstVariant->variant_image);
-                                    }
-                                @endphp
-                                @forelse ($initialThumbnails as $thumb)
-                                    <div><img src="{{ $front_ins_url . 'public/uploads/' . $thumb }}" alt="Thumbnail Image" class="img-fluid rounded-3 thumbnail-image"></div>
-                                @empty
-                                    <div><img src="https://placehold.co/100x100/F5F5F5/4B5563?text=No+Image" alt="No Thumbnail" class="img-fluid rounded-3"></div>
-                                @endforelse
-                                </div>
-                                <!-- Custom arrow controls placed below the thumbnail column -->
-                                <div class="custom-arrows d-flex justify-content-start align-items-center w-100 mt-2">
-                                    <button class="prev-arrow"><i class="bi bi-chevron-up"></i></button>
-                                    <button class="next-arrow"><i class="bi bi-chevron-down"></i></button>
-                                </div>
-                            </div>
+                       <div class="col-12 col-lg-6"> <div class="d-flex">
+        <div class="d-flex flex-column align-items-center">
+            <div id="thumbnail-nav-slider" class="w-100" style="max-width: 100px;">
+                @php
+                    $initialThumbnails = $product->thumbnail_image ?? [];
+                    $firstVariant = $product->variants->first();
+                    if ($firstVariant && is_array($firstVariant->variant_image)) {
+                        $initialThumbnails = array_merge($initialThumbnails, $firstVariant->variant_image);
+                    }
+                    $imageCount = count($initialThumbnails);
+                    if ($imageCount > 0 && $imageCount < 4) {
+                        $needed = 4 - $imageCount;
+                        for ($i = 0; $i < $needed; $i++) {
+                            $initialThumbnails[] = $initialThumbnails[$i % $imageCount];
+                        }
+                    }
+                @endphp
+                @forelse ($initialThumbnails as $thumb)
+                    <div><img src="{{ $front_ins_url . 'public/uploads/' . $thumb }}" alt="Thumbnail Image" class="img-fluid rounded-3 thumbnail-image"></div>
+                @empty
+                    <div><img src="https://placehold.co/100x100/F5F5F5/4B5563?text=No+Image" alt="No Thumbnail" class="img-fluid rounded-3"></div>
+                @endforelse
+            </div>
+            <div class="custom-arrows d-flex justify-content-start align-items-center w-100 mt-2">
+                <button class="prev-arrow"><i class="bi bi-chevron-up"></i></button>
+                <button class="next-arrow"><i class="bi bi-chevron-down"></i></button>
+            </div>
+        </div>
 
-                            <!-- Main image slider -->
-                            <div id="main-product-slider" class="flex-grow-1 rounded-3 overflow-hidden ms-4">
-                                 @php
-                                $initialMainImages = $product->main_image ?? [];
-                                if ($firstVariant && is_array($firstVariant->main_image)) {
-                                    $initialMainImages = array_merge($initialMainImages, $firstVariant->main_image);
-                                }
-                            @endphp
-                            @forelse ($initialMainImages as $image)
-                                <div><img src="{{ $front_ins_url . 'public/uploads/' . $image }}" alt="{{ $product->name }}" class="img-fluid rounded-3"></div>
-                            @empty
-                                <div><img src="https://placehold.co/1000x1000/F5F5F5/4B5563?text=No+Image" alt="No Product Image" class="img-fluid rounded-3"></div>
-                            @endforelse
-                            </div>
-                        </div>
+        <div id="main-product-slider" class="flex-grow-1 rounded-3 overflow-hidden ms-4">
+            @php
+                $initialMainImages = $product->main_image ?? [];
+                if ($firstVariant && is_array($firstVariant->main_image)) {
+                    $initialMainImages = array_merge($initialMainImages, $firstVariant->main_image);
+                }
+                $imageCount = count($initialMainImages);
+                if ($imageCount > 0 && $imageCount < 4) {
+                    $needed = 4 - $imageCount;
+                    for ($i = 0; $i < $needed; $i++) {
+                        $initialMainImages[] = $initialMainImages[$i % $imageCount];
+                    }
+                }
+            @endphp
+            @forelse ($initialMainImages as $image)
+                <div><img src="{{ $front_ins_url . 'public/uploads/' . $image }}" alt="{{ $product->name }}" class="img-fluid rounded-3"></div>
+            @empty
+                <div><img src="https://placehold.co/1000x1000/F5F5F5/4B5563?text=No+Image" alt="No Product Image" class="img-fluid rounded-3"></div>
+            @endforelse
+        </div>
+    </div>
+    <div class="d-flex align-items-center justify-content-center mt-3  p-3 rounded-3" data-product-id="{{ $product->id }}">
+    <i class="bi bi-eye text-muted me-2"></i>
+         <span id="watching-count">{{ $product->view_count }} </span> <span style="padding-left: 5px;">People watching this product now!</span>
+    </div>
+</div>
 
                         <!-- Right Side: Product Details -->
                         <div class="col-12 col-lg-6 d-flex flex-column p-4 spotlight_product_details">
-                            <h1 class="h3 fw-semibold text-dark mb-2">{{ $product->name }}</h1>
+                            <div class="d-flex flex-wrap align-items-center justify-content-between mb-2">
+    <h1 class="h3 fw-semibold text-dark mb-0">{{ $product->name }}</h1>
+
+    {{-- Show this button ONLY if thumbnail_image exist --}}
+    @if(isset($product->thumbnail_image) && is_array($product->thumbnail_image) && count($product->thumbnail_image) > 0)
+        <button class="btn btn-sm btn-outline-dark fw-semibold" data-bs-toggle="modal" data-bs-target="#realImageModal">
+            <i class="bi bi-camera me-1"></i>
+            Real Image
+        </button>
+    @endif
+</div>
                             <p class="h6 text-muted mb-4">SKU: <span id="product-sku">{{ $product->product_code }}</span></p>
                             <div class="d-flex align-items-baseline mb-4">
                                 @if($product->discount_price)
@@ -222,10 +293,10 @@
                             <!-- Section: People Watching and Delivery/Payment -->
                             <div class="mt-4 pt-4 border-top">
                                 <!-- People Watching -->
-                                <div class="d-flex align-items-center bg-light p-3 rounded-3 mb-3">
+                                {{-- <div class="d-flex align-items-center bg-light p-3 rounded-3 mb-3">
                                     <i class="bi bi-eye text-muted me-2"></i>
                                     <span class="small text-muted">18 People watching this product now!</span>
-                                </div>
+                                </div> --}}
 
                                 <!-- Delivery Information -->
                                 <div class="bg-white border p-3 rounded-3 mb-3">
@@ -279,7 +350,13 @@
                 </div>
             </div>
         </section>
-         <section class="section">
+        @php
+    // Get the first main image for the background, with a fallback.
+    $reviewBgImage = (is_array($product->main_image) && count($product->main_image) > 0)
+                   ? $front_ins_url . 'public/uploads/' . $product->main_image[0]
+                   : ''; 
+@endphp
+        <section class="section" id="customer-reviews-section" style="background-image: url('{{ $reviewBgImage }}');">
         <div class="container">
             <h2 class="h5 fw-semibold mb-3">Description</h2>
             <div class="bg-white p-4 rounded-3 border">
@@ -320,12 +397,18 @@
                         </div>
                         @endforeach
                     </div>
-                    @else
-                    <div class="text-center py-4">
-                        <p class="text-muted">This product has no reviews yet.</p>
-                        <p class="small">Be the first to review!</p>
-                    </div>
-                    @endif
+                   @else
+<div class="text-center py-4">
+    {{-- This section now shows 5 empty stars for products with no reviews --}}
+    <div class="star-rating fs-3 mb-2">
+        @for ($i = 1; $i <= 5; $i++)
+            <i class="bi bi-star text-muted"></i>
+        @endfor
+    </div>
+    <p class="text-muted mb-1">This product has no reviews yet.</p>
+    <p class="small">Be the first to review!</p>
+</div>
+@endif
                 </div>
 
                 <div class="col-12 col-lg-7">
@@ -362,15 +445,88 @@
         </div>
     </section>
     </main>
+    {{-- Real Image Viewer Modal --}}
+@if(isset($product->thumbnail_image) && is_array($product->thumbnail_image) && count($product->thumbnail_image) > 0)
+<div class="modal fade" id="realImageModal" tabindex="-1" aria-labelledby="realImageModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="realImageModalLabel">{{ $product->name }} - Real Images</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div id="real-image-slider" class="real-image-slider">
+                    @foreach($product->thumbnail_image as $image)
+                        <div>
+                            <img src="{{ $front_ins_url . 'public/uploads/' . $image }}" alt="Real product image">
+                        </div>
+                    @endforeach
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+@endif
 @endsection
 @section('script')
 <script>
 $(document).ready(function() {
+
+    // --- Real Image Modal Slider Initialization ---
+const realImageModal = document.getElementById('realImageModal');
+if (realImageModal) {
+    realImageModal.addEventListener('shown.bs.modal', function () {
+        const slider = $('#real-image-slider');
+        
+        // Initialize slider only if it hasn't been initialized before
+        if (!slider.hasClass('slick-initialized')) {
+            slider.slick({
+                dots: true,
+                infinite: true,
+                speed: 300,
+                slidesToShow: 1,
+                adaptiveHeight: true,
+                arrows: true
+            });
+        }
+    });
+}
+
+    // --- Real-Time "People Watching" Counter ---
+    const watchingContainer = $('.d-flex[data-product-id]');
+    const watchingCountElement = $('#watching-count');
+
+    if (watchingContainer.length && watchingCountElement.length) {
+        const productId = watchingContainer.data('product-id');
+        
+        // Create a URL template using the named route and a placeholder
+        const urlTemplate = "{{ route('product.view_count', ['id' => ':id']) }}";
+
+        // Set an interval to check for new counts every 8 seconds
+        setInterval(function() {
+            // Replace the placeholder with the actual product ID for each request
+            const finalUrl = urlTemplate.replace(':id', productId);
+
+            $.ajax({
+                url: finalUrl, // Use the generated URL
+                type: 'GET',
+                success: function(response) {
+                    if (response.success) {
+                        watchingCountElement.text(response.view_count);
+                    }
+                },
+                error: function() {
+                    console.log('Could not fetch new view count.');
+                }
+            });
+        }, 8000); // Check every 8 seconds
+    }
     // --- Configuration ---
     const BASE_PRODUCT_PRICE = {{ $product->discount_price ?? $product->base_price }};
     const IMAGE_BASE_URL = "{{ $front_ins_url . 'public/uploads/' }}";
     let selectedVariantId = null;
     let selectedSize = null;
+    let currentStock = 0;
     
     // --- Slick Slider Initialization ---
     function initializeSlick() {
@@ -418,13 +574,15 @@ $(document).ready(function() {
         container.empty(); // Clear old sizes
         $('#selected-size-name').text('Select a size');
         selectedSize = null;
+        currentStock = 0;
 
         if (sizes && sizes.length > 0) {
             sizes.forEach(size => {
                 const button = $('<button></button>')
                     .addClass('btn btn-outline-secondary rounded-3 size-option')
                     .text(size.name)
-                    .data('size-name', size.name);
+                    .data('size-name', size.name)
+                    .data('stock', size.quantity);
                 
                 if (size.quantity <= 0) {
                     button.prop('disabled', true);
@@ -477,6 +635,7 @@ $(document).ready(function() {
         updateSizes(variantData.sizes);
         updatePrice(variantData.additionalPrice);
         updateImages(variantData.mainImages, variantData.thumbImages);
+        $('#quantity-value').text(1);
     });
 
     $('#size-options-container').on('click', '.size-option:not(:disabled)', function() {
@@ -484,13 +643,36 @@ $(document).ready(function() {
         $('#size-options-container .size-option').removeClass('active');
         $this.addClass('active');
         selectedSize = $this.data('size-name');
+         currentStock = $this.data('stock');
         $('#selected-size-name').text(selectedSize);
+        $('#quantity-value').text(1);
     });
 
     $('#quantity-plus').on('click', () => {
-        let qty = parseInt($('#quantity-value').text());
+    // First, check if a size has been selected at all
+    if (!selectedSize) {
+        Swal.fire({
+            icon: 'warning',
+            title: 'Select a Size',
+            text: 'Please select a size first.'
+        });
+        return;
+    }
+
+    let qty = parseInt($('#quantity-value').text());
+
+    // Now, check if the quantity is already at the stock limit
+    if (qty >= currentStock) {
+        Swal.fire({
+            icon: 'info',
+            title: 'Stock Limit Reached',
+            text: `Only ${currentStock} items are available for this size.`
+        });
+    } else {
+        // Only increase the quantity if it's less than the stock
         $('#quantity-value').text(++qty);
-    });
+    }
+});
 
     $('#quantity-minus').on('click', () => {
         let qty = parseInt($('#quantity-value').text());

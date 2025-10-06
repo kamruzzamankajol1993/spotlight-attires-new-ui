@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cookie;
 use App\Models\Product;
 use App\Models\AnimationCategory;
 use App\Models\BundleOfferProduct;
@@ -41,6 +42,9 @@ class FrontController extends Controller
         
 
         $products = Product::where('status', 1)
+        
+            ->with(['category', 'variants']) ->withCount('reviews')
+    ->withAvg('reviews', 'rating')
                            ->where('name', 'LIKE', "{$query}%")
                            ->select('name', 'slug', 'main_image', 'base_price', 'discount_price')
                            ->take(10) // Limit the number of results
@@ -61,34 +65,52 @@ class FrontController extends Controller
     }
 
 
-     public function offerProduct($id)
+    public function offerProduct($id)
     {
         $bundleDeal = BundleOfferProduct::findOrFail($id);
+         $bundleDeal->increment('view_count');
         $productIds = $bundleDeal->product_id;
         $productsCollection = collect();
         $allImages = [];
         $totalBasePrice = 0;
 
         if (!empty($productIds) && is_array($productIds)) {
-            // --- UPDATED QUERY ---
-            // Eager load all necessary relationships for the products in the bundle
             $productsCollection = Product::whereIn('id', $productIds)
                 ->with([
                     'variants.color', 
-                    'reviews.user', // Eager load approved reviews and the user who wrote them
-                    'reviews.images'  // Eager load images for each review
+                    'reviews.user',
+                    'reviews.images'
                 ])
-                ->withCount('reviews') // Get the total number of reviews for each product
-                ->withAvg('reviews', 'rating') // Calculate the average rating for each product
+                ->withCount('reviews')
+                ->withAvg('reviews', 'rating')
                 ->get();
-            // --- END UPDATED QUERY ---
 
+            // Collect images from all available products for the gallery
             foreach ($productsCollection as $product) {
                 if (is_array($product->main_image) && count($product->main_image) > 0) {
                     $allImages = array_merge($allImages, $product->main_image);
                 }
-                $totalBasePrice += $product->base_price;
             }
+
+            // --- START: CORRECTED PRICE CALCULATION ---
+            // Key products by ID for efficient lookup.
+            $productsKeyedById = $productsCollection->keyBy('id');
+
+            // Determine how many products to sum based on 'buy_quantity'.
+            $quantityToConsider = (isset($bundleDeal->buy_quantity) && $bundleDeal->buy_quantity > 0)
+                                  ? (int)$bundleDeal->buy_quantity
+                                  : count($bundleDeal->product_id);
+            
+            // Get the specific number of product IDs from the start of the array.
+            $productIdsToSum = array_slice($bundleDeal->product_id, 0, $quantityToConsider);
+
+            // Calculate the total base price for only those products.
+            foreach ($productIdsToSum as $pid) {
+                if (isset($productsKeyedById[$pid])) {
+                    $totalBasePrice += $productsKeyedById[$pid]->base_price;
+                }
+            }
+            // --- END: CORRECTED PRICE CALCULATION ---
         }
 
         $allImages = array_unique($allImages);
@@ -100,7 +122,16 @@ class FrontController extends Controller
             'totalBasePrice'
         ));
     }
+public function getBundleViewCount($id)
+{
+    $bundle = BundleOfferProduct::find($id, ['view_count']);
+    
+    if ($bundle) {
+        return response()->json(['success' => true, 'view_count' => $bundle->view_count]);
+    }
 
+    return response()->json(['success' => false, 'message' => 'Bundle not found'], 404);
+}
    public function quickView($id)
 {
     // 1. Fetch the product without the old 'category' relationship
@@ -123,7 +154,7 @@ class FrontController extends Controller
     return view('front.include.quick_view_modal_content', compact('product'));
 }
 
-     public function product($slug)
+     public function product(Request $request,$slug)
 {
     // 1. Fetch the product, removing 'category' and 'subcategory' from the with() array.
     $product = Product::where('slug', $slug)
@@ -136,7 +167,19 @@ class FrontController extends Controller
         ->withCount('reviews')
         ->withAvg('reviews', 'rating')
         ->firstOrFail();
+$product->increment('view_count');
 
+// --- START: VIEW TRACKING LOGIC ---
+    $viewed = json_decode($request->cookie('recently_viewed', '[]'), true);
+    // Remove the current product ID if it already exists to avoid duplicates
+    $viewed = array_diff($viewed, [$product->id]);
+    // Add the current product ID to the beginning of the array
+    array_unshift($viewed, $product->id);
+    // Keep only the last 10 viewed products
+    $viewed = array_slice($viewed, 0, 10);
+    // Create a cookie that lasts for 30 days
+    $cookie = Cookie::make('recently_viewed', json_encode($viewed), 60 * 24 * 30);
+    // --- END: VIEW TRACKING LOGIC ---
     // 2. Get all category IDs assigned to this product from the pivot table.
     $assignedCategoryIds = AssignCategory::where('product_id', $product->id)->pluck('category_id');
 
@@ -164,7 +207,16 @@ class FrontController extends Controller
 
     return view('front.product.show', compact('product'));
 }
+public function getProductViewCount($id)
+{
+    $product = Product::find($id, ['view_count']);
+    
+    if ($product) {
+        return response()->json(['success' => true, 'view_count' => $product->view_count]);
+    }
 
+    return response()->json(['success' => false, 'message' => 'Product not found'], 404);
+}
     public function offers()
 {
     // Find the 'discount' category details to pass to the view for context
@@ -175,7 +227,8 @@ class FrontController extends Controller
 
     $products = Product::where('status', 1)
         ->whereIn('id', $getAllid)
-        ->with(['variants'])
+        ->with(['category', 'variants']) ->withCount('reviews')
+    ->withAvg('reviews', 'rating')
         ->latest()
         ->paginate(12);
 
@@ -212,7 +265,8 @@ public function extra_category_offer($slug)
     // 3. Fetch and paginate all products that match the retrieved IDs.
     $products = Product::whereIn('id', $productIds)
         ->where('status', 1)
-        ->with('variants') // Eager load variants for efficiency
+        ->with(['category', 'variants']) ->withCount('reviews')
+    ->withAvg('reviews', 'rating')
         ->latest()
         ->paginate(12);
         
@@ -243,7 +297,7 @@ public function ajaxDiscountFilter(Request $request)
         $query->whereBetween('base_price', [(float)$request->min_price, (float)$request->max_price]);
     }
     if ($request->filled('stock_status')) {
-        if ($request->stock_status === 'on_sale') {
+        if ($request->stock_status === 'offer') {
             $query->whereNotNull('discount_price')->where('discount_price', '>', 0);
         } elseif ($request->stock_status === 'in_stock') {
             $query->whereHas('variants', fn($q) => $q->whereJsonLength('sizes', '>', 0));
@@ -284,7 +338,8 @@ public function ajaxDiscountFilter(Request $request)
     // --- END: Filter and sort logic ---
 
     // Fetch paginated products, but remove the incorrect 'category' relationship.
-    $products = $query->with(['variants'])->paginate(12);
+    $products = $query->with(['category', 'variants']) ->withCount('reviews')
+    ->withAvg('reviews', 'rating')->paginate(12);
 
     // Manually load the correct category for each product on the current page.
     $productIdsOnPage = $products->pluck('id');
@@ -337,7 +392,10 @@ public function ajaxDiscountFilter(Request $request)
         $topRatedTitle = $titles[$topProductsType] ?? 'Top Rated Products';
         $productIds = AssignCategory::where('category_name', $topProductsType)->pluck('product_id');
         if ($productIds->isNotEmpty()) {
-            $products = Product::whereIn('id', $productIds)->where('status', 1)->with(['category', 'variants'])->latest()->take(8)->get();
+            $products = Product::whereIn('id', $productIds)->where('status', 1)
+            ->with(['category', 'variants','assigns']) 
+            ->withCount('reviews')
+    ->withAvg('reviews', 'rating')->latest()->take(8)->get();
         }
     }
     
@@ -349,7 +407,8 @@ public function ajaxDiscountFilter(Request $request)
         $secondRowTitle = $titles[$secondRowType] ?? 'More For You';
         $productIds = AssignCategory::where('category_name', $secondRowType)->pluck('product_id');
         if ($productIds->isNotEmpty()) {
-            $secondRowProducts = Product::whereIn('id', $productIds)->where('status', 1)->with(['category', 'variants'])->latest()->take(8)->get();
+            $secondRowProducts = Product::whereIn('id', $productIds)->where('status', 1)->with(['category', 'variants','assigns']) ->withCount('reviews')
+    ->withAvg('reviews', 'rating')->latest()->take(8)->get();
         }
     }
 
@@ -364,7 +423,9 @@ if ($homepageRow1 && $homepageRow1->category) {
     $productIds = AssignCategory::where('category_id', $homepageRow1->category_id)->where('type','product_category')->pluck('product_id');
     $row1Products = Product::whereIn('id', $productIds)
         ->where('status', 1)
-        ->with('variants')
+        ->with('variants','assigns')
+         ->withCount('reviews')
+    ->withAvg('reviews', 'rating')
         ->latest()
         ->take(8)
         ->get();
@@ -376,7 +437,9 @@ if ($homepageRow2 && $homepageRow2->category) {
     $productIds = AssignCategory::where('category_id', $homepageRow2->category_id)->where('type','product_category')->pluck('product_id');
     $row2Products = Product::whereIn('id', $productIds)
         ->where('status', 1)
-        ->with('variants')
+        ->with('variants','assigns')
+         ->withCount('reviews')
+    ->withAvg('reviews', 'rating')
         ->latest()
         ->take(8)
         ->get();
@@ -436,7 +499,8 @@ $footerBanner = FooterBanner::latest()->first();
         // 2. Fetch and paginate the products using the retrieved IDs.
         $products = Product::whereIn('id', $productIds)
             ->where('status', 1)
-            ->with(['variants'])
+            ->with(['category', 'variants']) ->withCount('reviews')
+    ->withAvg('reviews', 'rating')
             ->latest()
             ->paginate(12);
 
@@ -458,7 +522,8 @@ $footerBanner = FooterBanner::latest()->first();
     // 1. Fetch products without the incorrect 'category' relationship
     $products = Product::where('status', 1)
                        ->where('name', 'LIKE', "%{$searchQuery}%")
-                       ->with(['variants']) // <-- CORRECTED
+                       ->with(['category', 'variants']) ->withCount('reviews')
+    ->withAvg('reviews', 'rating')
                        ->latest()
                        ->paginate(16);
 
@@ -525,7 +590,7 @@ public function ajaxSearchFilter(Request $request)
 
     // Filter by Stock Status
     if ($request->filled('stock_status')) {
-        if ($request->stock_status === 'on_sale') {
+        if ($request->stock_status === 'offer') {
             $query->whereNotNull('discount_price')->where('discount_price', '>', 0);
         } elseif ($request->stock_status === 'in_stock') {
             $query->whereHas('variants', fn($q) => $q->whereJsonLength('sizes', '>', 0));
@@ -567,7 +632,8 @@ public function ajaxSearchFilter(Request $request)
     }
 
     // Fetch and render results
-    $products = $query->with(['variants'])->paginate(12);
+    $products = $query->with(['category', 'variants']) ->withCount('reviews')
+    ->withAvg('reviews', 'rating')->paginate(12);
     $html = view('front.category.product_card_partial', compact('products'))->render();
 
     return response()->json([
@@ -580,7 +646,7 @@ public function ajaxSearchFilter(Request $request)
 {
     // 1. Fetch products without the incorrect 'category' relationship
     $products = Product::where('status', 1)
-        ->with(['variants']) // <-- CORRECTED
+        ->with(['category', 'variants']) ->withCount('reviews')
         ->latest()
         ->paginate(12);
         
@@ -647,7 +713,7 @@ public function ajaxSearchFilter(Request $request)
 
         // Filter by Stock Status
         if ($request->filled('stock_status')) {
-            if ($request->stock_status === 'on_sale') {
+            if ($request->stock_status === 'offer') {
                 $query->whereNotNull('discount_price')->where('discount_price', '>', 0);
             } elseif ($request->stock_status === 'in_stock') {
                 $query->whereHas('variants', fn($q) => $q->whereJsonLength('sizes', '>', 0));
@@ -702,7 +768,8 @@ public function ajaxSearchFilter(Request $request)
         }
         // --- END: NEW SORTING LOGIC ---
 
-        $products = $query->with(['category', 'variants'])->latest()->paginate(12);
+        $products = $query->with(['category', 'variants']) ->withCount('reviews')
+    ->withAvg('reviews', 'rating')->latest()->paginate(12);
 //dd($products);
         $html = view('front.category.product_card_partial', compact('products'))->render();
 
@@ -727,7 +794,8 @@ public function ajaxSearchFilter(Request $request)
         // 4. Fetch and paginate the products using the retrieved IDs.
         $products = Product::whereIn('id', $productIds)
             ->where('status', 1)
-            ->with(['variants'])
+            ->with(['category', 'variants']) ->withCount('reviews')
+    ->withAvg('reviews', 'rating')
             ->latest()
             ->paginate(12);
 
@@ -754,7 +822,8 @@ public function ajaxSearchFilter(Request $request)
         $allProductIds = $bundleDeals->pluck('product_id')->flatten()->unique()->all();
 
         // 3. Fetch all related products in a single query for efficiency
-        $productsCollection = Product::whereIn('id', $allProductIds)->get()->keyBy('id');
+        $productsCollection = Product::whereIn('id', $allProductIds) ->withCount('reviews')
+        ->withAvg('reviews', 'rating')->get()->keyBy('id');
 
         // Fetch all active offers for the filter sidebar
         $offerList = BundleOffer::where('status', 1)->where('enddate', '>=', now())->get();
@@ -782,7 +851,8 @@ public function ajaxSearchFilter(Request $request)
 
     // The rest of the method remains the same
     $allProductIds = $bundleDeals->pluck('product_id')->flatten()->unique()->all();
-    $productsCollection = Product::whereIn('id', $allProductIds)->get()->keyBy('id');
+    $productsCollection = Product::whereIn('id', $allProductIds) ->withCount('reviews')
+        ->withAvg('reviews', 'rating')->get()->keyBy('id');
     $html = view('front.offer.bundle_card_partial', compact('bundleDeals', 'productsCollection'))->render();
 
     return response()->json([
@@ -822,7 +892,7 @@ public function ajaxSearchFilter(Request $request)
 
         // Filter by Stock Status
         if ($request->filled('stock_status')) {
-            if ($request->stock_status === 'on_sale') {
+            if ($request->stock_status === 'offer') {
                 $query->whereNotNull('discount_price')->where('discount_price', '>', 0);
             } elseif ($request->stock_status === 'in_stock') {
                 $query->whereHas('variants', function ($variantQuery) {
@@ -879,7 +949,8 @@ public function ajaxSearchFilter(Request $request)
         }
         // --- END: NEW SORTING LOGIC ---
 
-        $products = $query->with(['category', 'variants'])->paginate(12);
+        $products = $query->with(['category', 'variants']) ->withCount('reviews')
+    ->withAvg('reviews', 'rating')->paginate(12);
 
         $html = view('front.category.product_card_partial', compact('products'))->render();
 
@@ -902,7 +973,8 @@ public function ajaxSearchFilter(Request $request)
         // 2. Fetch and paginate the initial products
         $products = Product::whereIn('id', $productIds)
             ->where('status', 1)
-            ->with(['variants'])
+            ->with(['category', 'variants']) ->withCount('reviews')
+    ->withAvg('reviews', 'rating')
             ->latest()
             ->paginate(12);
 
@@ -929,7 +1001,7 @@ public function ajaxSearchFilter(Request $request)
     }
 
     if ($request->filled('stock_status')) {
-        if ($request->stock_status === 'on_sale') {
+        if ($request->stock_status === 'offer') {
             $productsQuery->whereNotNull('discount_price')->where('discount_price', '>', 0);
         } elseif ($request->stock_status === 'in_stock') {
             $productsQuery->whereHas('variants', function ($variantQuery) {
@@ -985,7 +1057,8 @@ public function ajaxSearchFilter(Request $request)
         // --- END: NEW SORTING LOGIC ---
 
     // 4. Paginate the final results
-    $products = $productsQuery->with(['variants'])->latest()->paginate(12);
+    $products = $productsQuery->with(['category', 'variants']) ->withCount('reviews')
+    ->withAvg('reviews', 'rating')->latest()->paginate(12);
 
     // The rest of the method is unchanged
     $html = view('front.category.product_card_partial', compact('products'))->render();

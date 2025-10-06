@@ -42,40 +42,105 @@
                 </div>
             </div>
 
-            <div class="d-flex align-items-center gap-3">
-                <div class="d-flex align-items-center border rounded-3 overflow-hidden">
-                    <button class="btn btn-light rounded-0" id="qv-quantity-minus">-</button>
-                    <span class="px-3" id="qv-quantity-value">1</span>
-                    <button class="btn btn-light rounded-0" id="qv-quantity-plus">+</button>
-                </div>
-                <button class="btn btn-dark fw-semibold flex-grow-1" id="qv-add-to-cart">Add To Cart</button>
-                <button class="btn btn-outline-danger" id="qv-add-to-wishlist" title="Add to Wishlist">
-                    <i class="bi bi-heart-fill"></i>
-                </button>
-            </div>
+           <div class="d-flex align-items-center gap-3">
+    <div class="d-flex align-items-center border rounded-3 overflow-hidden">
+        <button class="btn btn-light rounded-0" id="qv-quantity-minus">-</button>
+        <span class="px-3" id="qv-quantity-value">1</span>
+        <button class="btn btn-light rounded-0" id="qv-quantity-plus">+</button>
+    </div>
+    
+    {{-- Add to Cart button now with icon and tooltip --}}
+    <button class="btn btn-outline-dark" id="qv-add-to-cart" data-bs-toggle="tooltip" title="Add to Cart">
+        <i class="bi bi-cart-plus "></i>
+    </button>
+
+    {{-- Wishlist button with tooltip enabled --}}
+    <button class="btn btn-outline-danger" id="qv-add-to-wishlist" data-bs-toggle="tooltip" title="Add to Wishlist">
+        <i class="bi bi-heart"></i>
+    </button>
+
+    {{-- Compare button with tooltip enabled --}}
+    <button class="btn btn-outline-secondary" id="qv-add-to-compare" data-bs-toggle="tooltip" title="Add to Compare">
+        <i class="bi bi-arrow-left-right"></i>
+    </button>
+</div>
+            
         </div>
     </div>
 </div>
 
 <script>
 $(document).ready(function() {
+    
     const container = $('#quick-view-container-{{ $product->id }}');
     const BASE_PRODUCT_PRICE = {{ $product->discount_price ?? $product->base_price }};
     let selectedVariantId = null;
     let selectedSize = null;
+    let currentStock = 0; // --- ADDED: Variable to hold current stock
+ // --- NEW: Initialize Bootstrap Tooltips for the modal ---
+    var tooltipTriggerList = [].slice.call(container.find('[data-bs-toggle="tooltip"]'));
+    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+    // --- END NEW ---
+    // --- NEW: Handle Add to Compare ---
+container.find('#qv-add-to-compare').on('click', function() {
+    const $button = $(this);
+    const productId = {{ $product->id }};
+
+    $.ajax({
+        url: '{{ route("compare.add") }}',
+        method: 'POST',
+        data: {
+            _token: '{{ csrf_token() }}',
+            product_id: productId
+        },
+        beforeSend: function() {
+            $button.prop('disabled', true);
+        },
+        success: function(response) {
+            Swal.fire({
+                toast: true,
+                position: 'top-end',
+                icon: response.success ? 'success' : 'info',
+                title: response.message,
+                showConfirmButton: false,
+                timer: 2500
+            });
+            
+            // Update compare count in the header
+            if(response.count !== undefined) {
+                $('#compare-count').text(response.count);
+            }
+        },
+        error: function(xhr) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: xhr.responseJSON.message || 'Could not add to compare list.'
+            });
+        },
+        complete: function() {
+            $button.prop('disabled', false);
+        }
+    });
+});
 
     function updateSizes(sizes) {
         const sizeContainer = container.find('#quick-view-size-container');
         sizeContainer.empty();
         container.find('#quick-view-size-name').text('Select a size');
         selectedSize = null;
+        currentStock = 0; // --- ADDED: Reset stock when sizes change
+        container.find('#qv-quantity-value').text(1); // --- ADDED: Reset quantity to 1
 
         if (sizes && sizes.length > 0) {
             sizes.forEach(size => {
                 const button = $('<button></button>')
                     .addClass('btn btn-outline-secondary btn-sm size-option')
                     .text(size.name)
-                    .data('size-name', size.name);
+                    .data('size-name', size.name)
+                    .data('stock', size.quantity); // --- ADDED: Store stock quantity in the button
                 
                 if (size.quantity <= 0) {
                     button.prop('disabled', true).css('text-decoration', 'line-through');
@@ -109,15 +174,28 @@ $(document).ready(function() {
         const $this = $(this);
         container.find('#quick-view-size-container .size-option').removeClass('active').css({'background-color': '', 'color': ''});
         $this.addClass('active').css({'background-color': '#212529', 'color': '#fff'});
+        
         selectedSize = $this.data('size-name');
+        currentStock = $this.data('stock'); // --- ADDED: Get stock from the clicked button
+        
         container.find('#quick-view-size-name').text(selectedSize);
+        container.find('#qv-quantity-value').text(1); // --- ADDED: Reset quantity to 1
     });
 
-    // Handle quantity
+    // --- MODIFIED: Handle quantity with stock validation ---
     container.find('#qv-quantity-plus').on('click', () => {
+        if (!selectedSize) {
+            Swal.fire({ icon: 'warning', title: 'Select a Size', text: 'Please select a size first.' });
+            return;
+        }
         let qty = parseInt(container.find('#qv-quantity-value').text());
-        container.find('#qv-quantity-value').text(++qty);
+        if (qty >= currentStock) {
+            Swal.fire({ icon: 'info', title: 'Stock Limit Reached', text: `Only ${currentStock} items are available for this size.` });
+        } else {
+            container.find('#qv-quantity-value').text(++qty);
+        }
     });
+
     container.find('#qv-quantity-minus').on('click', () => {
         let qty = parseInt(container.find('#qv-quantity-value').text());
         if (qty > 1) {
@@ -128,19 +206,16 @@ $(document).ready(function() {
     // Handle Add to Cart
     container.find('#qv-add-to-cart').on('click', function() {
          if (!selectedVariantId) {
-            Swal.fire({
-              icon: 'warning',
-              title: 'Hold on!',
-              text: 'Please select a color first.'
-            });
+            Swal.fire({ icon: 'warning', title: 'Hold on!', text: 'Please select a color first.' });
             return;
         }
         if (!selectedSize) {
-            Swal.fire({
-              icon: 'warning',
-              title: 'Almost there!',
-              text: 'Please select a size.'
-            });
+            Swal.fire({ icon: 'warning', title: 'Almost there!', text: 'Please select a size.' });
+            return;
+        }
+        // --- ADDED: Final stock check before adding to cart ---
+        if (parseInt(container.find('#qv-quantity-value').text()) > currentStock) {
+            Swal.fire({ icon: 'error', title: 'Quantity Exceeds Stock', text: `You can only add up to ${currentStock} items for this size.` });
             return;
         }
 
@@ -162,17 +237,7 @@ $(document).ready(function() {
             },
             success: function(response) {
                 if (response.success) {
-                    // 1. Directly update the sidebar cart with the new HTML
-                    $('#cartOffcanvas .cart-products').html(response.sidebar_html);
-                    $('#cart-subtotal').text('৳ ' + response.subtotal);
-                    $('#desktop-cart-count').text(response.count);
-                    $('#mobile-cart-count').text(response.count);
-
-                    // 2. Trigger the global event and PASS the data to it
-                    // This allows the main cart page to update without another AJAX call
-                    $(document.body).trigger('cart-updated', [response]);
-
-                    // 3. Show success feedback and open the sidebar
+                    updateCartOffcanvas(); // This global function should be in your master layout
                     Swal.fire({
                         toast: true,
                         position: 'top-end',
@@ -198,78 +263,44 @@ $(document).ready(function() {
         });
     });
 
-     // --- NEW: Handle Add to Wishlist ---
+    // --- Handle Add to Wishlist (no changes needed here) ---
     container.find('#qv-add-to-wishlist').on('click', function() {
         @auth
-            // --- USER IS LOGGED IN ---
-            if (!selectedVariantId) {
-                Swal.fire({ icon: 'warning', title: 'Hold on!', text: 'Please select a color first.' });
-                return;
-            }
-            if (!selectedSize) {
-                Swal.fire({ icon: 'warning', title: 'Almost there!', text: 'Please select a size.' });
-                return;
-            }
-
+            if (!selectedVariantId) { Swal.fire({ icon: 'warning', title: 'Hold on!', text: 'Please select a color first.' }); return; }
+            if (!selectedSize) { Swal.fire({ icon: 'warning', title: 'Almost there!', text: 'Please select a size.' }); return; }
             const $button = $(this);
             const wishlistData = {
-                product_id: {{ $product->id }},
-                variant_id: selectedVariantId,
-                size: selectedSize,
-                _token: "{{ csrf_token() }}"
+                product_id: {{ $product->id }}, variant_id: selectedVariantId, size: selectedSize, _token: "{{ csrf_token() }}"
             };
-
             $.ajax({
-                url: '{{ route("wishlist.add") }}',
-                type: 'POST',
-                data: wishlistData,
-                beforeSend: function() {
-                    $button.prop('disabled', true).find('i').toggleClass('bi-heart-fill bi-arrow-clockwise');
-                },
+                url: '{{ route("wishlist.add") }}', type: 'POST', data: wishlistData,
+                beforeSend: function() { $button.prop('disabled', true).find('i').toggleClass('bi-heart-fill bi-arrow-clockwise'); },
                 success: function(response) {
                     if (response.success) {
                         Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: response.message, showConfirmButton: false, timer: 2000 });
+                        if (response.count !== undefined) {
+                            $('#wishlist-count').text(response.count);
+                            $('#mobile-wishlist-count').text(response.count);
+                        }
                     } else {
                          Swal.fire({ icon: 'info', title: 'Already Added', text: response.message });
                     }
                 },
-                error: function(xhr) {
-                     Swal.fire({ icon: 'error', title: 'Oops...', text: 'Something went wrong. Please try again.' });
-                },
-                complete: function() {
-                    $button.prop('disabled', false).find('i').toggleClass('bi-arrow-clockwise bi-heart-fill');
-                }
+                error: function(xhr) { Swal.fire({ icon: 'error', title: 'Oops...', text: 'Something went wrong.' }); },
+                complete: function() { $button.prop('disabled', false).find('i').toggleClass('bi-arrow-clockwise bi-heart-fill'); }
             });
-
         @else
-            // --- USER IS A GUEST ---
             Swal.fire({
-                title: 'Login Required',
-                text: "You need to be logged in to add items to your wishlist.",
-                icon: 'info',
-                showCancelButton: true,
-                confirmButtonText: 'Login or Register',
-                cancelButtonText: 'Not Now'
+                title: 'Login Required', text: "You need to be logged in to add items to your wishlist.", icon: 'info',
+                showCancelButton: true, confirmButtonText: 'Login or Register', cancelButtonText: 'Not Now'
             }).then((result) => {
                 if (result.isConfirmed) {
-                    // --- START OF NEW, MORE ROBUST FIX ---
-                    const quickViewModalEl = document.getElementById('quickViewModal');
-                    const quickViewModalInstance = bootstrap.Modal.getInstance(quickViewModalEl);
+                    const quickViewModalInstance = bootstrap.Modal.getInstance(document.getElementById('quickViewModal'));
+                    if (quickViewModalInstance) { quickViewModalInstance.hide(); }
                     const signInOffcanvas = new bootstrap.Offcanvas(document.getElementById('signInOffcanvas'));
-
-                    // 1. Hide the quick view modal
-                    if (quickViewModalInstance) {
-                        quickViewModalInstance.hide();
-                    }
-
-                    // 2. Manually remove the backdrop and cleanup body styles.
-                    //    This forcefully resets the state and prevents conflicts.
                     $('.modal-backdrop').remove();
                     $('body').removeAttr('style').removeClass('modal-open');
-                    
-                    // 3. Show the sign-in offcanvas.
                     signInOffcanvas.show();
-                    // --- END OF NEW FIX ---
                 }
             });
         @endauth

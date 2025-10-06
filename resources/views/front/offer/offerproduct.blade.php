@@ -5,6 +5,52 @@
 @endsection
 @section('css')
 <style>
+    #customer-reviews-section {
+    position: relative;
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed; /* Optional: Creates a cool parallax scrolling effect */
+    z-index: 1;
+}
+
+#customer-reviews-section::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(255, 255, 255, 0.92); /* White overlay with 92% opacity */
+    z-index: -1; /* Places the overlay behind the content */
+}
+    /* Real Image Modal Slider Style */
+#realImageModal .modal-body {
+    padding: 0.5rem; /* স্লাইডারের চারপাশে প্যাডিং যোগ করে */
+}
+
+.real-image-slider .slick-slide img {
+    width: 100%;
+    max-height: 75vh; /* ছবিটি যেন স্ক্রিনের চেয়ে বড় না হয় */
+    object-fit: contain; /* সম্পূর্ণ ছবিটি দেখানোর জন্য */
+    margin: auto;
+}
+
+/* মোডালের জন্য স্লাইডারের অ্যারো বাটন স্টাইল */
+.real-image-slider .slick-prev,
+.real-image-slider .slick-next {
+    z-index: 10;
+    width: 40px;
+    height: 40px;
+}
+.real-image-slider .slick-prev { left: 25px; }
+.real-image-slider .slick-next { right: 25px; }
+
+.real-image-slider .slick-prev:before,
+.real-image-slider .slick-next:before {
+    font-size: 30px;
+    opacity: .75;
+    color: #333;
+}
     .star-rating .bi-star-fill { color: #ffc107; }
     .review-images-container img { width: 70px; height: 70px; object-fit: cover; border-radius: 5px; cursor: pointer; margin-right: 5px;}
 </style>
@@ -25,57 +71,76 @@
 
                     <div class="row g-4">
                         <!-- Left Side: Image Gallery -->
-                        <div class="col-12 col-lg-6 d-flex">
-                            <div class="d-flex flex-column align-items-center">
-                                <!-- Thumbnail slider for navigation -->
-                                <div id="thumbnail-nav-slider" class="w-100 spotlight_combo_page_thumbnail_nav"
-                                    style="max-width: 100px;">
-                                      @forelse ($allImages as $image)
-                                <div>
-                                    <img src="{{ $front_ins_url .'public/uploads/' . $image }}"
-                                         alt="{{ $bundleDeal->title }} thumbnail"
-                                         class="img-fluid rounded-3 spotlight_combo_page_thumbnail_image">
-                                </div>
-                            @empty
-                                <div>
-                                    <img src="https://placehold.co/100x100/F5F5F5/4B5563?text=No+Image"
-                                         alt="No Image available"
-                                         class="img-fluid rounded-3 spotlight_combo_page_thumbnail_image">
-                                </div>
-                            @endforelse
-                                </div>
-                                <!-- Custom arrow controls placed below the thumbnail column -->
-                                 @if (count($allImages) > 3)
-                        <div class="spotlight_combo_page_custom_arrows d-flex justify-content-start align-items-center w-100 mt-2">
-                            <button class="prev-arrow"><i class="bi bi-chevron-up"></i></button>
-                            <button class="next-arrow"><i class="bi bi-chevron-down"></i></button>
-                        </div>
-                        @endif
-                            </div>
+                       <div class="col-12 col-lg-6">
+    {{-- START: New wrapper for image gallery --}}
+    <div class="d-flex">
+        <div class="d-flex flex-column align-items-center">
+            <div id="thumbnail-nav-slider" class="w-100 spotlight_combo_page_thumbnail_nav" style="max-width: 100px;">
+                @forelse ($allImages as $image)
+                <div>
+                    <img src="{{ $front_ins_url .'public/uploads/' . $image }}"
+                         alt="{{ $bundleDeal->title }} thumbnail"
+                         class="img-fluid rounded-3 spotlight_combo_page_thumbnail_image">
+                </div>
+                @empty
+                <div>
+                    <img src="https://placehold.co/100x100/F5F5F5/4B5563?text=No+Image"
+                         alt="No Image available"
+                         class="img-fluid rounded-3 spotlight_combo_page_thumbnail_image">
+                </div>
+                @endforelse
+            </div>
+            @if (count($allImages) > 3)
+            <div class="spotlight_combo_page_custom_arrows d-flex justify-content-start align-items-center w-100 mt-2">
+                <button class="prev-arrow"><i class="bi bi-chevron-up"></i></button>
+                <button class="next-arrow"><i class="bi bi-chevron-down"></i></button>
+            </div>
+            @endif
+        </div>
 
-                            <!-- Main image slider -->
-                            <div id="main-product-slider" class="flex-grow-1 rounded-3 overflow-hidden ms-4">
-                                 @forelse ($allImages as $image)
-                            <div>
-                                <img src="{{ $front_ins_url .'public/uploads/' . $image }}"
-                                     alt="{{ $bundleDeal->title }} main image" class="img-fluid rounded-3">
-                            </div>
-                        @empty
-                            <div>
-                                <img src="https://placehold.co/1000x1000/F5F5F5/4B5563?text=No+Image+Available"
-                                     alt="No Image available" class="img-fluid rounded-3">
-                            </div>
-                        @endforelse
-                            </div>
-                        </div>
+        <div id="main-product-slider" class="flex-grow-1 rounded-3 overflow-hidden ms-4">
+             @forelse ($allImages as $image)
+            <div>
+                <img src="{{ $front_ins_url .'public/uploads/' . $image }}"
+                     alt="{{ $bundleDeal->title }} main image" class="img-fluid rounded-3">
+            </div>
+            @empty
+            <div>
+                <img src="https://placehold.co/1000x1000/F5F5F5/4B5563?text=No+Image+Available"
+                     alt="No Image available" class="img-fluid rounded-3">
+            </div>
+            @endforelse
+        </div>
+    </div>
+    {{-- END: New wrapper for image gallery --}}
+
+    {{-- START: DYNAMIC "PEOPLE WATCHING" FEATURE --}}
+    <div class="d-flex align-items-center justify-content-center bg-light p-3 rounded-3 mt-3" data-bundle-id="{{ $bundleDeal->id }}">
+        <i class="bi bi-eye text-muted me-2"></i>
+        <span class="small text-muted">
+            <span id="watching-count" class="fw-bold">{{ $bundleDeal->view_count }}</span> People watching this product now!
+        </span>
+    </div>
+    {{-- END: DYNAMIC "PEOPLE WATCHING" FEATURE --}}
+</div>
 
                         <!-- Right Side: Product Details -->
                         <div class="col-12 col-lg-6 d-flex flex-column p-4 spotlight_combo_page_product_details">
-                             <h1 class="h3 fw-semibold text-dark mb-2">{{ $bundleDeal->title }}</h1>
+                            <div class="d-flex flex-wrap align-items-center justify-content-between mb-2">
+    <h1 class="h3 fw-semibold text-dark mb-0">{{ $bundleDeal->title }}</h1>
+
+    {{-- `$allImages` অ্যারেতে ছবি থাকলেই শুধু বাটনটি দেখানো হবে --}}
+    @if (!empty($allImages))
+        <button class="btn btn-sm btn-outline-dark fw-semibold" data-bs-toggle="modal" data-bs-target="#realImageModal">
+            <i class="bi bi-camera me-1"></i>
+            Real Image
+        </button>
+    @endif
+</div>
                     <p class="h6 text-muted mb-4">SKU: BDL-{{ $bundleDeal->id }}</p>
                     <div class="d-flex align-items-baseline mb-4">
                          @if($bundleDeal->discount_price > 0 && $bundleDeal->discount_price < $totalBasePrice)
-                            <del class="text-muted h4 me-2">৳ {{ number_format($totalBasePrice) }}</del>
+                            <del class="text-muted h4 me-2" style="font-weight: 100 !important;">৳ {{ number_format($totalBasePrice) }}</del>
                             <span class="h3 fw-bold text-dark">৳ {{ number_format($bundleDeal->discount_price) }}</span>
                         @else
                             <span class="h3 fw-bold text-dark">৳ {{ number_format($totalBasePrice) }}</span>
@@ -176,11 +241,7 @@
 
                             <!-- Section: People Watching and Delivery/Payment -->
                             <div class="mt-4 pt-4 border-top">
-                                <!-- People Watching -->
-                                <div class="d-flex align-items-center bg-light p-3 rounded-3 mb-3">
-                                    <i class="bi bi-eye text-muted me-2"></i>
-                                    <span class="small text-muted">18 People watching this product now!</span>
-                                </div>
+                                
 
                                 <!-- Delivery Information -->
                                 <div class="bg-white border p-3 rounded-3 mb-3">
@@ -224,7 +285,13 @@
                 </div>
             </div>
         </section>
-        <section class="section">
+        @php
+    // Get the first main image from the bundle for the background, with a fallback.
+    $reviewBgImage = !empty($allImages)
+                   ? $front_ins_url . 'public/uploads/' . $allImages[0]
+                   : ''; 
+@endphp
+        <section class="section" id="customer-reviews-section" style="background-image: url('{{ $reviewBgImage }}');">
         <div class="container">
             <h2 class="h5 fw-semibold mb-3">Description</h2>
             <div class="bg-white p-4 rounded-3 border">
@@ -276,8 +343,13 @@
                     </div>
                     @else
                     <div class="text-center py-4">
-                        <p class="text-muted">There are no reviews yet for the products in this bundle.</p>
-                        <p class="small">Be the first to leave a review after your purchase!</p>
+                        @if($totalReviewsCount > 0)
+            <p class="text-muted">{{ $totalReviewsCount }} {{ Str::plural('review', $totalReviewsCount) }} in total for products in this bundle</p>
+            <p class="mt-4 small fw-semibold">Overall Rating: {{ number_format($overallAverageRating, 1) }}/5.0</p>
+        @else
+            <p class="text-muted mt-2">There are no reviews yet for the products in this bundle.</p>
+            <p class="small">Be the first to leave a review after your purchase!</p>
+        @endif
                     </div>
                     @endif
                 </div>
@@ -363,7 +435,28 @@
     </div>
 </div>
 
-
+{{-- Real Image Viewer Modal --}}
+@if (!empty($allImages))
+<div class="modal fade" id="realImageModal" tabindex="-1" aria-labelledby="realImageModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="realImageModalLabel">{{ $bundleDeal->title }} - Images</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div id="real-image-slider" class="real-image-slider">
+                    @foreach($allImages as $image)
+                        <div>
+                            <img src="{{ $front_ins_url .'public/uploads/' . $image }}" alt="Real bundle image">
+                        </div>
+                    @endforeach
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+@endif
 @endsection
 <script id="products-with-variants-data" type="application/json">
     @json($productsCollection->keyBy('id'))
@@ -373,6 +466,51 @@
 <script>
     
     $(document).ready(function(){
+
+        // --- Real Image Modal Slider Initialization ---
+const realImageModal = document.getElementById('realImageModal');
+if (realImageModal) {
+    realImageModal.addEventListener('shown.bs.modal', function () {
+        const slider = $('#real-image-slider');
+        
+        // স্লাইডারটি আগে থেকে চালু না থাকলে তবেই চালু করবে
+        if (!slider.hasClass('slick-initialized')) {
+            slider.slick({
+                dots: true,
+                infinite: true,
+                speed: 300,
+                slidesToShow: 1,
+                adaptiveHeight: true,
+                arrows: true
+            });
+        }
+    });
+}
+
+       // --- Real-Time "People Watching" Counter for Bundle ---
+const watchingContainer = $('.d-flex[data-bundle-id]');
+const watchingCountElement = $('#watching-count');
+
+if (watchingContainer.length && watchingCountElement.length) {
+    const bundleId = watchingContainer.data('bundle-id');
+    const urlTemplate = "{{ route('bundle.view_count', ['id' => ':id']) }}";
+
+    setInterval(function() {
+        const finalUrl = urlTemplate.replace(':id', bundleId);
+        $.ajax({
+            url: finalUrl,
+            type: 'GET',
+            success: function(response) {
+                if (response.success) {
+                    watchingCountElement.text(response.view_count);
+                }
+            },
+            error: function() {
+                console.log('Could not fetch new bundle view count.');
+            }
+        });
+    }, 9000); // প্রতি ৯ সেকেন্ড পর পর চেক করবে
+}
         // 1. Initialize the Slick sliders for the main product image gallery
         $('#main-product-slider').slick({
             slidesToShow: 1,
