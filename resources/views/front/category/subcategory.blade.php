@@ -306,173 +306,287 @@
     });
 </script>
 <script>
-$(document).ready(function() {
-    let page = 2;
-    let hasMorePages = {{ $products->hasMorePages() ? 'true' : 'false' }};
-    let isLoading = false;
-    let currentRequest = null;
+    // Handles all the filtering, AJAX loading, and URL updating logic
+    $(document).ready(function() {
+        let page = 2;
+        let hasMorePages = {{ $products->hasMorePages() ? 'true' : 'false' }};
+        let isLoading = false;
+        let currentRequest = null;
 
-    /**
-     * NEW: This function reads all active filters and generates the visual tags.
-     */
-    function updateActiveFiltersDisplay() {
-        const filtersList = $('#active-filters-list');
-        const filtersContainer = $('#active-filters-container');
-        filtersList.html(''); // Clear existing tags
-        let hasActiveFilters = false;
+        /**
+         * Reads the current URL's query string and sets the filter inputs
+         * to match. This runs once on page load.
+         */
+        function setFiltersFromUrl() {
+            const params = new URLSearchParams(window.location.search);
 
-        // Check for any manually selected category or subcategory
-        $('.main-category-filter.active, .subcategory-filter.active').each(function() {
-            // Only show a tag if it's not the base subcategory of the page itself
-            if ($(this).data('id') != $('#product-list').data('base-subcategory-id')) {
-                 const text = $(this).text();
-                 const id = $(this).data('id');
-                 const type = $(this).hasClass('main-category-filter') ? 'category' : 'subcategory';
-                 filtersList.append(`<span class="filter-tag" data-filter-type="${type}" data-filter-value="${id}">${text} <span class="remove-filter" title="Remove filter">&times;</span></span>`);
-                 hasActiveFilters = true;
+            // Set Price sliders
+            if (params.has('min_price')) $('#min-price-slider').val(params.get('min_price'));
+            if (params.has('max_price')) $('#max-price-slider').val(params.get('max_price'));
+            
+            // Update Price range display text
+            let min = $('#min-price-slider').val();
+            let max = $('#max-price-slider').val();
+            $('#price-range-display').text(`Price: ৳ ${min} - ৳ ${max}`);
+
+            // Set Stock Status radio button
+            if (params.has('stock_status')) {
+                $(`input[name="stock-status"][value="${params.get('stock_status')}"]`).prop('checked', true);
             }
-        });
 
-        const minPrice = $('#min-price-slider').val();
-        const maxPrice = $('#max-price-slider').val();
-        if (minPrice > 0 || maxPrice < 10000) {
-            filtersList.append(`<span class="filter-tag" data-filter-type="price">Price: ৳ ${minPrice} - ৳ ${maxPrice} <span class="remove-filter" title="Remove filter">&times;</span></span>`);
-            hasActiveFilters = true;
+            // Set Size checkboxes
+            if (params.has('sizes[]')) {
+                const sizes = params.getAll('sizes[]');
+                $('.size-filter').prop('checked', false); // First, uncheck all
+                sizes.forEach(size => {
+                    $(`.size-filter[value="${size}"]`).prop('checked', true);
+                });
+            }
+            
+            // Set active category links
+            $('.main-category-filter, .subcategory-filter, .animation-category-filter').removeClass('active');
+            if (params.has('category_id')) $('.main-category-filter[data-id="' + params.get('category_id') + '"]').addClass('active');
+            if (params.has('subcategory_id')) $('.subcategory-filter[data-id="' + params.get('subcategory_id') + '"]').addClass('active');
+            if (params.has('animation_category_id')) $('.animation-category-filter[data-id="' + params.get('animation_category_id') + '"]').addClass('active');
+
+            // Set Sorting dropdown
+            if (params.has('sort_by')) {
+                $('#sort-select-new').val(params.get('sort_by'));
+            }
+
+            updateActiveFiltersDisplay();
         }
 
-        const stockStatus = $('input[name="stock-status"]:checked');
-        if (stockStatus.val() !== "") {
-            const text = stockStatus.next('label').text();
-            filtersList.append(`<span class="filter-tag" data-filter-type="stock">${text} <span class="remove-filter" title="Remove filter">&times;</span></span>`);
-            hasActiveFilters = true;
-        }
-
-        $('.size-filter:checked').each(function() {
-            const size = $(this).val();
-            filtersList.append(`<span class="filter-tag" data-filter-type="size" data-filter-value="${size}">${size} <span class="remove-filter" title="Remove filter">&times;</span></span>`);
-            hasActiveFilters = true;
-        });
-
-         // --- START: NEW CODE FOR SORTING TAG ---
-        const sortSelect = $('#sort-select-new');
-        const sortValue = sortSelect.val();
-        if (sortValue && sortValue !== 'default') {
-            const sortText = sortSelect.find('option:selected').text();
-            filtersList.append(
-                `<span class="filter-tag" data-filter-type="sort">Sort by: ${sortText} <span class="remove-filter" title="Remove filter">&times;</span></span>`
+        /**
+         * Reads the current filter state and updates the browser's URL
+         * without reloading the page.
+         */
+        function updateUrl() {
+            const filters = getFilters();
+            // Remove empty or null values so the URL is clean
+            const cleanFilters = Object.fromEntries(
+                Object.entries(filters).filter(([_, v]) => v != null && v !== '' && v.length !== 0)
             );
-            hasActiveFilters = true;
-        }
-        // --- END: NEW CODE FOR SORTING TAG ---
-
-        if (hasActiveFilters) {
-            filtersContainer.slideDown(200);
-        } else {
-            filtersContainer.slideUp(200);
-        }
-    }
-
-    // Your getFilters function is already correct for this page's context.
-    function getFilters() {
-        const selectedSizes = $('.size-filter:checked').map(function() { return $(this).val(); }).get();
-        let filters = {
-            min_price: $('#min-price-slider').val(),
-            max_price: $('#max-price-slider').val(),
-            stock_status: $('input[name="stock-status"]:checked').val(),
-            sort_by: $('#sort-select-new').val(),
-            sizes: selectedSizes
-        };
-
-        const activeMainCategory = $('.main-category-filter.active').data('id');
-        const activeSubcategory = $('.subcategory-filter.active').data('id');
-
-        if (activeMainCategory) {
-            filters.category_id = activeMainCategory;
-        } else if (activeSubcategory) {
-            filters.subcategory_id = activeSubcategory;
-        } else {
-            const baseSubcategoryId = $('#product-list').data('base-subcategory-id');
-            if (baseSubcategoryId) {
-                filters.subcategory_id = baseSubcategoryId;
-            }
-        }
-        return filters;
-    }
-
-    function loadProducts(reset = false) {
-        if (isLoading) return;
-        if (reset) {
-            page = 1;
-            $('#product-list').html('');
+            
+            const queryString = $.param(cleanFilters);
+            const newUrl = window.location.pathname + (queryString ? '?' + queryString : '');
+            
+            // Use pushState to change the URL
+            history.pushState({path: newUrl}, '', newUrl);
         }
         
-        updateActiveFiltersDisplay(); // Call this function to update tags every time
+        /**
+         * Reads all filter inputs and returns a clean object
+         * for the AJAX request and URL update.
+         */
+        function getFilters() {
+            const selectedSizes = $('.size-filter:checked').map(function() { return $(this).val(); }).get();
+            return {
+                category_id: $('.main-category-filter.active').data('id'),
+                subcategory_id: $('.subcategory-filter.active').data('id'),
+                animation_category_id: $('.animation-category-filter.active').data('id'),
+                min_price: $('#min-price-slider').val(),
+                max_price: $('#max-price-slider').val(),
+                stock_status: $('input[name="stock-status"]:checked').val(),
+                sort_by: $('#sort-select-new').val(),
+                'sizes[]': selectedSizes // Use 'sizes[]' to send as an array
+            };
+        }
 
-        isLoading = true;
-        $('#loading-spinner').show();
-        if (currentRequest) currentRequest.abort();
+        /**
+         * Loads products via AJAX. If it's a new filter action, it updates the URL first.
+         * @param {boolean} reset - If true, clears the product list and resets to page 1.
+         */
+        function loadProducts(reset = false) {
+            if (isLoading) return;
 
-        currentRequest = $.ajax({
-            url: `{{ route('products.filter') }}?page=${page}`,
-            type: 'GET',
-            data: getFilters(),
-            success: function(response) {
-                if (reset) $('#product-list').html(response.html);
-                else $('#product-list').append(response.html);
-                hasMorePages = response.hasMorePages;
-                page++;
-                if (!hasMorePages) $('#loading-spinner').hide();
-            },
-            error: function(xhr, status, error) { if (status !== 'abort') console.error("Error:", error); },
-            complete: function() { isLoading = false; if (hasMorePages) $('#loading-spinner').hide(); }
-        });
+            if (reset) {
+                page = 1;
+                $('#product-list').html('');
+                updateUrl(); // This is the key change for shareable links
+            }
+            
+            updateActiveFiltersDisplay();
+            isLoading = true;
+            $('#loading-spinner').show();
+            if (currentRequest) currentRequest.abort();
+
+            // Determine the correct AJAX endpoint based on the current page
+            let ajaxUrl = '{{ route("shop.ajax_filter") }}'; // Default to shop filter
+            @if(Request::routeIs('category.show') || Request::routeIs('subcategory.show'))
+                ajaxUrl = '{{ route("products.filter") }}';
+            @elseif(Request::routeIs('animation.category.show'))
+                ajaxUrl = '{{ route("animation.category.filter") }}';
+            @elseif(Request::routeIs('products.search'))
+                ajaxUrl = '{{ route("products.ajax_search_filter") }}';
+            @elseif(Request::routeIs('extra_category_offer.show'))
+                ajaxUrl = '{{ route("discount.ajax_filter") }}';
+            @endif
+
+            currentRequest = $.ajax({
+                url: `${ajaxUrl}?page=${page}`,
+                type: 'GET',
+                data: getFilters(),
+                success: function(response) {
+                    if (reset) $('#product-list').html(response.html);
+                    else $('#product-list').append(response.html);
+                    hasMorePages = response.hasMorePages;
+                    page++;
+                    if (!hasMorePages) $('#loading-spinner').hide();
+                },
+                error: function(xhr, status, error) { if (status !== 'abort') console.error("Error:", error); },
+                complete: function() { isLoading = false; if (hasMorePages) $('#loading-spinner').hide(); }
+            });
+        }
+        
+        /**
+         * Manages the "active filter" tags displayed above the product grid.
+         * This function does not need changes.
+         */
+        function updateActiveFiltersDisplay() {
+    const filtersList = $('#active-filters-list');
+    const filtersContainer = $('#active-filters-container');
+    filtersList.html(''); // Clear existing tags
+    let hasActiveFilters = false;
+    
+    // NEW: A Set to keep track of IDs we've already created a tag for.
+    const processedIds = new Set();
+
+    $('.main-category-filter.active, .subcategory-filter.active, .animation-category-filter.active').each(function() {
+        const id = $(this).data('id');
+
+        // NEW: If we've already processed this ID, skip to the next item.
+        if (processedIds.has(id)) {
+            return; // This is like 'continue' in a for loop
+        }
+        // NEW: Add the current ID to our set so we don't process it again.
+        processedIds.add(id);
+
+        const text = $(this).text();
+        const type = $(this).hasClass('main-category-filter') ? 'category' :
+                     $(this).hasClass('subcategory-filter') ? 'subcategory' : 'animation';
+        
+        filtersList.append(
+            `<span class="filter-tag" data-filter-type="${type}" data-filter-value="${id}">${text} <span class="remove-filter" title="Remove filter">&times;</span></span>`
+        );
+        hasActiveFilters = true;
+    });
+
+    // The rest of the function for price, stock, size, and sorting remains the same
+    const minPrice = $('#min-price-slider').val();
+    const maxPrice = $('#max-price-slider').val();
+    if (minPrice > 0 || maxPrice < 10000) {
+        filtersList.append(`<span class="filter-tag" data-filter-type="price">Price: ৳ ${minPrice} - ৳ ${maxPrice} <span class="remove-filter" title="Remove filter">&times;</span></span>`);
+        hasActiveFilters = true;
     }
-    
-    // Initial call to set tags on page load
-    updateActiveFiltersDisplay();
+    const stockStatus = $('input[name="stock-status"]:checked');
+    if (stockStatus.val() !== "") {
+        filtersList.append(`<span class="filter-tag" data-filter-type="stock">${stockStatus.next('label').text()} <span class="remove-filter" title="Remove filter">&times;</span></span>`);
+        hasActiveFilters = true;
+    }
+    $('.size-filter:checked').each(function() {
+        const size = $(this).val();
+        filtersList.append(`<span class="filter-tag" data-filter-type="size" data-filter-value="${size}">${size} <span class="remove-filter" title="Remove filter">&times;</span></span>`);
+        hasActiveFilters = true;
+    });
+    const sortSelect = $('#sort-select-new');
+    if (sortSelect.val() && sortSelect.val() !== 'default') {
+        filtersList.append(`<span class="filter-tag" data-filter-type="sort">Sort by: ${sortSelect.find('option:selected').text()} <span class="remove-filter" title="Remove filter">&times;</span></span>`);
+        hasActiveFilters = true;
+    }
 
-    // Scroll listener - no changes
-    $(window).scroll(function() { if ($('#product-list').length) { const productListBottom = $('#product-list').offset().top + $('#product-list').height(); const screenBottom = $(window).scrollTop() + $(window).height(); if (screenBottom >= productListBottom - 500) { if (hasMorePages && !isLoading) { loadProducts(); } } } });
+    if (hasActiveFilters) {
+        filtersContainer.slideDown(200);
+    } else {
+        filtersContainer.slideUp(200);
+    }
+}
 
-    // Sidebar filter listeners - no changes needed
-    $('#sort-select-new').on('change', () => loadProducts(true));
-    $('#price-filter-btn').on('click', () => loadProducts(true));
-    $(document).on('change', '.stock-status-filter, .size-filter', () => loadProducts(true));
-    $(document).on('click', '.main-category-filter', function(e) { e.preventDefault(); $('.subcategory-filter').removeClass('active'); if ($(this).hasClass('active')) { $(this).removeClass('active'); } else { $('.main-category-filter').removeClass('active'); $(this).addClass('active'); } loadProducts(true); });
-    $(document).on('click', '.subcategory-filter', function(e) { e.preventDefault(); $('.main-category-filter').removeClass('active'); if ($(this).hasClass('active')) { $(this).removeClass('active'); } else { $('.subcategory-filter').removeClass('active'); $(this).addClass('active'); } loadProducts(true); });
-    $('#min-price-slider, #max-price-slider').on('input', function() { let minPrice = parseInt($('#min-price-slider').val()); let maxPrice = parseInt($('#max-price-slider').val()); if (minPrice > maxPrice) [minPrice, maxPrice] = [maxPrice, minPrice]; $('#price-range-display').text(`Price: ৳ ${minPrice} - ৳ ${maxPrice}`); });
-    
-    // NEW: Listeners for removing/clearing tags
+        /* -------------------------------------------------------------------------- */
+        /* EVENT LISTENERS                              */
+        /* -------------------------------------------------------------------------- */
+
+        // Set the initial state of the UI from the URL on page load
+        setFiltersFromUrl();
+
+        // Listen for changes on all filter inputs
+        $('#sort-select-new, .stock-status-filter, .size-filter').on('change', () => loadProducts(true));
+        $('#price-filter-btn').on('click', () => loadProducts(true));
+
+        function handleCategoryClick(selector) {
+            $(document).on('click', selector, function(e) {
+                e.preventDefault();
+                const $el = $(this);
+                const wasActive = $el.hasClass('active');
+                $('.main-category-filter, .subcategory-filter, .animation-category-filter').removeClass('active');
+                if (!wasActive) {
+                    $el.addClass('active');
+                }
+                loadProducts(true);
+            });
+        }
+        handleCategoryClick('.main-category-filter');
+        handleCategoryClick('.subcategory-filter');
+        handleCategoryClick('.animation-category-filter');
+
+        // Update price range text as sliders move
+        $('#min-price-slider, #max-price-slider').on('input', function() { 
+            let min = parseInt($('#min-price-slider').val()), max = parseInt($('#max-price-slider').val()); 
+            if (min > max) [min, max] = [max, min]; 
+            $('#price-range-display').text(`Price: ৳ ${min} - ৳ ${max}`); 
+        });
+
+        // Event listener for removing a single filter tag
     $(document).on('click', '.remove-filter', function() {
         const tag = $(this).closest('.filter-tag');
         const type = tag.data('filter-type');
         const value = tag.data('filter-value');
 
-        if (type === 'category' || type === 'subcategory') {
-            $(`a[data-id="${value}"]`).removeClass('active');
-        } else if (type === 'price') {
-            $('#min-price-slider').val(0); $('#max-price-slider').val(10000); $('#price-range-display').text(`Price: ৳ 0 - ৳ 10000`);
-        } else if (type === 'stock') {
-            $('#all-stock').prop('checked', true);
-        } else if (type === 'size') {
-            $(`.size-filter[value="${value}"]`).prop('checked', false);
-        } else if (type === 'sort') {
-            $('#sort-select-new').val('default');
+        switch(type) {
+            case 'category':
+            case 'subcategory':
+            case 'animation':
+                $(`a[data-id="${value}"]`).removeClass('active');
+                break;
+            case 'price':
+                $('#min-price-slider').val(0);
+                $('#max-price-slider').val(10000);
+                $('#price-range-display').text(`Price: ৳ 0 - ৳ 10000`);
+                break;
+            case 'stock':
+                $('#all-stock').prop('checked', true);
+                break;
+            case 'size':
+                $(`.size-filter[value="${value}"]`).prop('checked', false);
+                break;
+             // --- START: NEW CASE FOR SORTING ---
+            case 'sort':
+                $('#sort-select-new').val('default');
+                break;
+            // --- END: NEW CASE FOR SORTING ---
         }
         loadProducts(true);
     });
 
+    // Event listener for the "Clear All" button
     $('#clear-all-filters').on('click', function(e) {
         e.preventDefault();
-        // Reset all manual filter inputs
-        $('.main-category-filter, .subcategory-filter').removeClass('active');
-        $('#min-price-slider').val(0); $('#max-price-slider').val(10000); $('#price-range-display').text(`Price: ৳ 0 - ৳ 10000`);
+        $('.main-category-filter, .subcategory-filter, .animation-category-filter').removeClass('active');
+        $('#min-price-slider').val(0);
+        $('#max-price-slider').val(10000);
+        $('#price-range-display').text(`Price: ৳ 0 - ৳ 10000`);
         $('#all-stock').prop('checked', true);
         $('.size-filter').prop('checked', false);
         $('#sort-select-new').val('default');
-        // Reload products, which will revert to the page's base subcategory
         loadProducts(true);
     });
-});
+        
+        // Infinite scroll loader
+        $(window).scroll(function() { 
+            if ($('#product-list').length > 0 && ($(window).scrollTop() + $(window).height() >= $('#product-list').offset().top + $('#product-list').height() - 500)) { 
+                if (hasMorePages && !isLoading) loadProducts(); 
+            } 
+        });
+    });
 </script>
 @endsection
