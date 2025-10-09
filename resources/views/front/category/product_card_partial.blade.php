@@ -63,7 +63,9 @@
     </a>
             <div class="product-details-body">
                 <h5 class="product-title mb-1"><a href="{{ route('product.show', $product->slug) }}">{{$product->name}}</a></h5>
-                <p class="product-meta mb-1">Category: {{ $product->category->name ?? 'N/A' }}</p>
+                {{-- ▼▼▼ THIS LINE IS NOW UPDATED ▼▼▼ --}}
+                <p class="product-meta mb-1">Category: {{ $product->productCategoryAssignment->category->name ?? 'N/A' }}</p>
+                {{-- ▲▲▲ THIS LINE IS NOW UPDATED ▲▲▲ --}}
 
                 @if($totalStock > 0)
                     <p class="product-meta text-success fw-bold mb-1"><i class="bi bi-check-circle-fill"></i> In stock</p>

@@ -309,6 +309,7 @@
         });
     });
 </script>
+
 <script>
     // Handles all the filtering, AJAX loading, and URL updating logic
     $(document).ready(function() {
@@ -385,9 +386,20 @@
          */
         function getFilters() {
             const selectedSizes = $('.size-filter:checked').map(function() { return $(this).val(); }).get();
+
+            // **MODIFIED**: Start with active filters, then fall back to the page's base category ID.
+            let categoryId = $('.main-category-filter.active').data('id');
+            let subcategoryId = $('.subcategory-filter.active').data('id');
+
+            // **NEW**: If no filter is actively clicked, use the base ID from the page's main container.
+            if (!categoryId && !subcategoryId) {
+                categoryId = $('#product-list').data('base-category-id');
+                subcategoryId = $('#product-list').data('base-subcategory-id');
+            }
+
             return {
-                category_id: $('.main-category-filter.active').data('id'),
-                subcategory_id: $('.subcategory-filter.active').data('id'),
+                category_id: categoryId,
+                subcategory_id: subcategoryId,
                 animation_category_id: $('.animation-category-filter.active').data('id'),
                 min_price: $('#min-price-slider').val(),
                 max_price: $('#max-price-slider').val(),

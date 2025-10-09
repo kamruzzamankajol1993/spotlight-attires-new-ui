@@ -165,8 +165,8 @@
                             <div class="d-flex flex-wrap align-items-center justify-content-between mb-2">
     <h1 class="h3 fw-semibold text-dark mb-0">{{ $product->name }}</h1>
 
-    {{-- Show this button ONLY if thumbnail_image exist --}}
-    @if(isset($product->thumbnail_image) && is_array($product->thumbnail_image) && count($product->thumbnail_image) > 0)
+    {{-- Show this button ONLY if real_image exist --}}
+    @if(isset($product->real_image) && is_array($product->real_image) && count($product->real_image) > 0)
         <button class="btn btn-sm btn-outline-dark fw-semibold" data-bs-toggle="modal" data-bs-target="#realImageModal">
             <i class="bi bi-camera me-1"></i>
             Real Image
@@ -446,7 +446,7 @@
     </section>
     </main>
     {{-- Real Image Viewer Modal --}}
-@if(isset($product->thumbnail_image) && is_array($product->thumbnail_image) && count($product->thumbnail_image) > 0)
+@if(isset($product->real_image) && is_array($product->real_image) && count($product->real_image) > 0)
 <div class="modal fade" id="realImageModal" tabindex="-1" aria-labelledby="realImageModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-xl">
         <div class="modal-content">
@@ -456,7 +456,7 @@
             </div>
             <div class="modal-body">
                 <div id="real-image-slider" class="real-image-slider">
-                    @foreach($product->thumbnail_image as $image)
+                    @foreach($product->real_image as $image)
                         <div>
                             <img src="{{ $front_ins_url . 'public/uploads/' . $image }}" alt="Real product image">
                         </div>

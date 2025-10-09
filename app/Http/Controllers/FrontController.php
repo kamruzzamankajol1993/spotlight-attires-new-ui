@@ -116,7 +116,7 @@ class FrontController extends Controller
 
         $products = Product::where('status', 1)
         
-            ->with(['category', 'variants']) ->withCount('reviews')
+            ->with(['category', 'variants', 'productCategoryAssignment.category']) ->withCount('reviews')
     ->withAvg('reviews', 'rating')
                            ->where('name', 'LIKE', "{$query}%")
                            ->select('name', 'slug', 'main_image', 'base_price', 'discount_price')
@@ -151,6 +151,7 @@ class FrontController extends Controller
             $productsCollection = Product::whereIn('id', $productIds)
                 ->with([
                     'variants.color', 
+                    'productCategoryAssignment.category',
                     'reviews.user',
                     'reviews.images'
                 ])
@@ -208,7 +209,7 @@ public function getBundleViewCount($id)
    public function quickView($id)
 {
     // 1. Fetch the product without the old 'category' relationship
-    $product = Product::with(['variants.color'])
+    $product = Product::with(['variants.color', 'productCategoryAssignment.category'])
         ->findOrFail($id);
     
     // 2. Find the category assignment from the pivot table
@@ -232,7 +233,8 @@ public function getBundleViewCount($id)
     // 1. Fetch the product, removing 'category' and 'subcategory' from the with() array.
     $product = Product::where('slug', $slug)
         ->with([
-            'variants.color',
+            'variants.color'
+            , 'productCategoryAssignment.category',
             'assignChart.entries',
             'reviews.user',
             'reviews.images'
@@ -300,7 +302,7 @@ public function getProductViewCount($id)
 
     $products = Product::where('status', 1)
         ->whereIn('id', $getAllid)
-        ->with(['category', 'variants']) ->withCount('reviews')
+        ->with(['category', 'variants', 'productCategoryAssignment.category']) ->withCount('reviews')
     ->withAvg('reviews', 'rating')
         ->latest()
         ->paginate(12);
@@ -342,7 +344,7 @@ public function extra_category_offer(Request $request, $slug)
     $query = $this->applyFilters($request, $query);
 
     // 5. Paginate the final, filtered results.
-    $products = $query->with(['variants'])
+    $products = $query->with(['variants', 'productCategoryAssignment.category'])
         ->withCount('reviews')
         ->withAvg('reviews', 'rating')
         ->paginate(12);
@@ -367,7 +369,7 @@ public function ajaxDiscountFilter(Request $request)
     // 3. Use the central helper to apply all other filters.
     $query = $this->applyFilters($request, $query);
 
-    $products = $query->with(['variants'])
+    $products = $query->with(['variants', 'productCategoryAssignment.category'])
         ->withCount('reviews')
         ->withAvg('reviews', 'rating')
         ->paginate(12);
@@ -411,7 +413,7 @@ public function ajaxDiscountFilter(Request $request)
         $productIds = AssignCategory::where('category_name', $topProductsType)->pluck('product_id');
         if ($productIds->isNotEmpty()) {
             $products = Product::whereIn('id', $productIds)->where('status', 1)
-            ->with(['category', 'variants','assigns']) 
+            ->with(['category', 'variants','assigns', 'productCategoryAssignment.category']) 
             ->withCount('reviews')
     ->withAvg('reviews', 'rating')->latest()->take(8)->get();
         }
@@ -425,7 +427,7 @@ public function ajaxDiscountFilter(Request $request)
         $secondRowTitle = $titles[$secondRowType] ?? 'More For You';
         $productIds = AssignCategory::where('category_name', $secondRowType)->pluck('product_id');
         if ($productIds->isNotEmpty()) {
-            $secondRowProducts = Product::whereIn('id', $productIds)->where('status', 1)->with(['category', 'variants','assigns']) ->withCount('reviews')
+            $secondRowProducts = Product::whereIn('id', $productIds)->where('status', 1)->with(['category', 'variants','assigns', 'productCategoryAssignment.category']) ->withCount('reviews')
     ->withAvg('reviews', 'rating')->latest()->take(8)->get();
         }
     }
@@ -441,7 +443,7 @@ if ($homepageRow1 && $homepageRow1->category) {
     $productIds = AssignCategory::where('category_id', $homepageRow1->category_id)->where('type','product_category')->pluck('product_id');
     $row1Products = Product::whereIn('id', $productIds)
         ->where('status', 1)
-        ->with('variants','assigns')
+        ->with('variants','assigns', 'productCategoryAssignment.category')
          ->withCount('reviews')
     ->withAvg('reviews', 'rating')
         ->latest()
@@ -455,7 +457,7 @@ if ($homepageRow2 && $homepageRow2->category) {
     $productIds = AssignCategory::where('category_id', $homepageRow2->category_id)->where('type','product_category')->pluck('product_id');
     $row2Products = Product::whereIn('id', $productIds)
         ->where('status', 1)
-        ->with('variants','assigns')
+        ->with('variants','assigns', 'productCategoryAssignment.category')
          ->withCount('reviews')
     ->withAvg('reviews', 'rating')
         ->latest()
@@ -518,7 +520,7 @@ public function category(Request $request, $slug)
     $query = $this->applyFilters($request, $query);
 
     // 4. Paginate the final, filtered results.
-    $products = $query->with(['variants'])
+    $products = $query->with(['variants', 'productCategoryAssignment.category'])
         ->withCount('reviews')
         ->withAvg('reviews', 'rating')
         ->paginate(12);
@@ -544,7 +546,7 @@ public function category(Request $request, $slug)
     $query = $this->applyFilters($request, $query);
 
     // Paginate the final, fully-filtered results
-    $products = $query->with(['variants'])
+    $products = $query->with(['variants', 'productCategoryAssignment.category'])
         ->withCount('reviews')
         ->withAvg('reviews', 'rating')
         ->paginate(16);
@@ -569,7 +571,7 @@ public function ajaxSearchFilter(Request $request)
     $query = $this->applyFilters($request, $query);
 
     // Fetch and paginate the results
-    $products = $query->with(['variants'])
+    $products = $query->with(['variants', 'productCategoryAssignment.category'])
         ->withCount('reviews')
         ->withAvg('reviews', 'rating')
         ->paginate(12);
@@ -591,7 +593,7 @@ public function ajaxSearchFilter(Request $request)
     $query = $this->applyFilters($request, $query);
 
 
-    $products = $query->with(['category', 'variants']) ->withCount('reviews')
+    $products = $query->with(['category', 'variants', 'productCategoryAssignment.category']) ->withCount('reviews')
         ->withAvg('reviews', 'rating')
         ->latest()
         ->paginate(12);
@@ -632,7 +634,7 @@ public function ajaxSearchFilter(Request $request)
     // শুধু একটি লাইন দিয়ে সব ফিল্টার প্রয়োগ করুন
     $query = $this->applyFilters($request, $query);
 
-    $products = $query->with(['category', 'variants'])->withCount('reviews')
+    $products = $query->with(['category', 'variants', 'productCategoryAssignment.category'])->withCount('reviews')
     ->withAvg('reviews', 'rating')->paginate(12);
 
     $html = view('front.category.product_card_partial', compact('products'))->render();
@@ -658,7 +660,7 @@ public function ajaxSearchFilter(Request $request)
     $query = $this->applyFilters($request, $query);
 
     // 4. Paginate the final, filtered results.
-    $products = $query->with(['variants'])
+    $products = $query->with(['variants', 'productCategoryAssignment.category'])
         ->withCount('reviews')
         ->withAvg('reviews', 'rating')
         ->paginate(12);
@@ -737,7 +739,7 @@ public function filterProducts(Request $request)
     $query = $this->applyFilters($request, $query);
 
     // Paginate the final, filtered results.
-    $products = $query->with(['variants'])
+    $products = $query->with(['variants', 'productCategoryAssignment.category'])
         ->withCount('reviews')
         ->withAvg('reviews', 'rating')
         ->paginate(12);
@@ -781,7 +783,7 @@ public function filterProducts(Request $request)
     $query = $this->applyFilters($request, $query);
 
     // 4. Paginate the final, filtered results.
-    $products = $query->with(['variants'])
+    $products = $query->with(['variants', 'productCategoryAssignment.category'])
         ->withCount('reviews')
         ->withAvg('reviews', 'rating')
         ->paginate(12);
@@ -803,7 +805,7 @@ public function filterProducts(Request $request)
     $query = $this->applyFilters($request, $query);
 
     // Paginate the final, filtered results.
-    $products = $query->with(['variants'])
+    $products = $query->with(['variants', 'productCategoryAssignment.category'])
         ->withCount('reviews')
         ->withAvg('reviews', 'rating')
         ->paginate(12);

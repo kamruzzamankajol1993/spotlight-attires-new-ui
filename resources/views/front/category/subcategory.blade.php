@@ -306,6 +306,43 @@
     });
 </script>
 <script>
+    $(document).ready(function() {
+        // Use event delegation for buttons in sliders
+        $('body').on('click', '.btn-add-cart', function(e) {
+            e.preventDefault(); // Prevents the link from jumping to the top of the page
+
+            const productId = $(this).data('product-id');
+            const modal = $('#quickViewModal');
+            const modalBody = $('#quickViewModalBody');
+
+            // --- START: MODIFIED URL GENERATION ---
+            // Create a URL template using the named route and a placeholder
+            let urlTemplate = "{{ route('product.quick_view', ['id' => ':id']) }}";
+            // Replace the placeholder with the actual product ID
+            let productUrl = urlTemplate.replace(':id', productId);
+            // --- END: MODIFIED URL GENERATION ---
+
+            // Show the modal
+            modal.modal('show');
+
+            // Set a loading state
+            modalBody.html('<div class="text-center p-5"><div class="spinner-border" style="width: 3rem; height: 3rem;" role="status"><span class="visually-hidden">Loading...</span></div></div>');
+
+            // Fetch product details via AJAX
+            $.ajax({
+                url: productUrl, // Use the dynamically generated URL
+                type: 'GET',
+                success: function(response) {
+                    modalBody.html(response);
+                },
+                error: function() {
+                    modalBody.html('<p class="text-danger text-center">Sorry, we could not load the product details. Please try again.</p>');
+                }
+            });
+        });
+    });
+</script>
+<script>
     // Handles all the filtering, AJAX loading, and URL updating logic
     $(document).ready(function() {
         let page = 2;
@@ -381,9 +418,20 @@
          */
         function getFilters() {
             const selectedSizes = $('.size-filter:checked').map(function() { return $(this).val(); }).get();
+
+            // **MODIFIED**: Start with active filters, then fall back to the page's base category ID.
+            let categoryId = $('.main-category-filter.active').data('id');
+            let subcategoryId = $('.subcategory-filter.active').data('id');
+
+            // **NEW**: If no filter is actively clicked, use the base ID from the page's main container.
+            if (!categoryId && !subcategoryId) {
+                categoryId = $('#product-list').data('base-category-id');
+                subcategoryId = $('#product-list').data('base-subcategory-id');
+            }
+
             return {
-                category_id: $('.main-category-filter.active').data('id'),
-                subcategory_id: $('.subcategory-filter.active').data('id'),
+                category_id: categoryId,
+                subcategory_id: subcategoryId,
                 animation_category_id: $('.animation-category-filter.active').data('id'),
                 min_price: $('#min-price-slider').val(),
                 max_price: $('#max-price-slider').val(),

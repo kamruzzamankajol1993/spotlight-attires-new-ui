@@ -33,6 +33,7 @@ class Product extends Model
         'purchase_price',
         'main_image',
         'thumbnail_image',
+        'real_image',
         'status',
     ];
 
@@ -40,7 +41,13 @@ class Product extends Model
     protected $casts = [
         'thumbnail_image' => 'array', // This is the important change
         'main_image' => 'array',
+        'real_image' => 'array',
     ];
+
+     public function productCategoryAssignment()
+    {
+        return $this->hasOne(AssignCategory::class)->where('type', 'product_category');
+    }
 
     /**
      * Get all of the variants for the Product.

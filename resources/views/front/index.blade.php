@@ -412,7 +412,7 @@
         <h5 class="product-title mb-1"><a href="{{ route('product.show', $product->slug) }}">
                         {{ $product->name }}
                         </a></h5>
-        <p class="product-meta mb-1">Category: {{ $product->category->name ?? 'N/A' }}</p>
+        <p class="product-meta mb-1">Category: {{ $product->productCategoryAssignment->category->name ?? 'N/A' }}</p>
         <p class="product-meta mb-1">SKU: {{ $product->product_code ?? 'N/A' }}</p>
 
         @if($totalStock > 0)
@@ -660,7 +660,7 @@
         <h5 class="product-title mb-1"><a href="{{ route('product.show', $product->slug) }}">
                         {{ $product->name }}
                         </a></h5>
-        <p class="product-meta mb-1">Category: {{ $product->category->name ?? 'N/A' }}</p>
+        <p class="product-meta mb-1">Category: {{ $product->productCategoryAssignment->category->name ?? 'N/A' }}</p>
         <p class="product-meta mb-1">SKU: {{ $product->product_code ?? 'N/A' }}</p>
 
         @if($totalStock > 0)
@@ -804,7 +804,7 @@
         <h5 class="product-title mb-1"><a href="{{ route('product.show', $product->slug) }}">
                         {{ $product->name }}
                         </a></h5>
-        <p class="product-meta mb-1">Category: {{ $product->category->name ?? 'N/A' }}</p>
+        <p class="product-meta mb-1">Category: {{ $product->productCategoryAssignment->category->name ?? 'N/A' }}</p>
         <p class="product-meta mb-1">SKU: {{ $product->product_code ?? 'N/A' }}</p>
 
         @if($totalStock > 0)
@@ -1057,7 +1057,7 @@
         <h5 class="product-title mb-1"><a href="{{ route('product.show', $product->slug) }}">
                         {{ $product->name }}
                         </a></h5>
-        <p class="product-meta mb-1">Category: {{ $product->category->name ?? 'N/A' }}</p>
+        <p class="product-meta mb-1">Category: {{ $product->productCategoryAssignment->category->name ?? 'N/A' }}</p>
         <p class="product-meta mb-1">SKU: {{ $product->product_code ?? 'N/A' }}</p>
 
         @if($totalStock > 0)
