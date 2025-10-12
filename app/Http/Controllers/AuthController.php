@@ -232,6 +232,7 @@ $cleanPhoneNumber = trim($phone);
         'phone' => $tempUserData['phone'],
         'status' => 1,
         'type' => 'normal',
+        'source' => 'website',
         'password' => $tempUserData['password'],
         'slug' => Str::slug($tempUserData['name']).'-'.uniqid(),
         'user_id' => $user->id,

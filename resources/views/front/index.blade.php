@@ -1307,6 +1307,7 @@
                 // --- END: UPDATED PRICE CALCULATION LOGIC ---
             @endphp
 @if(isset($firstProduct))
+<a href="{{ route('offerProduct.show', $deal->id) }}">
             <div class="product-card-offer card">
                 <img src="{{ $front_ins_url . 'public/uploads/' .$firstProduct->main_image[0] }}" class="card-img-left" alt="{{ $deal->title }}">
                 <div class="product-details-offer">
@@ -1323,6 +1324,7 @@
                     </p>
                 </div>
             </div>
+</a>
         @endif
         @empty
             <div class="col-12">

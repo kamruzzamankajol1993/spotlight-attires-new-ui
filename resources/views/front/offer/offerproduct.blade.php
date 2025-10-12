@@ -245,26 +245,18 @@
 
                                 <!-- Delivery Information -->
                                 <div class="bg-white border p-3 rounded-3 mb-3">
+                                   @foreach($areaWisePrice as $area)
                                     <div class="d-flex justify-content-between align-items-center mb-2">
                                         <div class="d-flex align-items-center">
                                             <i class="bi bi-truck me-2"></i>
-                                            <span class="small">Regular Product Delivery</span>
+                                            <span class="small">{{ $area->label }}</span>
                                         </div>
                                         <div class="d-flex align-items-center small text-muted">
-                                            <span>2-3 Days</span>
-                                            <span class="fw-semibold text-dark ms-3">Inside Dhaka BDT 70</span>
+                                            <span>{{$area->days}} Days</span>
+                                            <span class="fw-semibold text-dark ms-3">{{$area->area}} BDT {{$area->price}}</span>
                                         </div>
                                     </div>
-                                    <div class="d-flex justify-content-between align-items-center">
-                                        <div class="d-flex align-items-center">
-                                            <i class="bi bi-truck me-2"></i>
-                                            <span class="small">Customized Product Delivery</span>
-                                        </div>
-                                        <div class="d-flex align-items-center small text-muted">
-                                            <span>4-6 Days</span>
-                                            <span class="fw-semibold text-dark ms-3">Outside Dhaka BDT 130</span>
-                                        </div>
-                                    </div>
+                                    @endforeach
                                 </div>
 
                                 <!-- Payment Methods -->

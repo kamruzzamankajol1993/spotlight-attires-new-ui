@@ -18,6 +18,7 @@ class Customer extends Authenticatable
         'slug',
         'type',
         'name',
+        'source',
         'email',
         'phone',
         'password',

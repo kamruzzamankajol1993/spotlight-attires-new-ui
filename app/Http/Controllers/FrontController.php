@@ -20,7 +20,8 @@ use App\Models\HomepageSection;
 use App\Models\HeroLeftSlider;
 use App\Models\HeroRightSlider;
 use App\Models\FooterBanner;
-use App\Models\ExtraCategory; 
+use App\Models\ExtraCategory;
+use App\Models\AreaWisePrice; 
 class FrontController extends Controller
 {
 
@@ -30,7 +31,7 @@ class FrontController extends Controller
 
     // NEW: Handle the search query filter
     if ($request->filled('query')) {
-        $query->where('name', 'LIKE',  $request->input('query') . '%');
+        $query->where('name', 'LIKE', '%' . $request->input('query') . '%');
     }
     // Filter by Category, Subcategory, or Animation Category
     $categoryId = $request->input('category_id') ?: $request->input('subcategory_id');
@@ -118,7 +119,7 @@ class FrontController extends Controller
         
             ->with(['category', 'variants', 'productCategoryAssignment.category']) ->withCount('reviews')
     ->withAvg('reviews', 'rating')
-                           ->where('name', 'LIKE', "{$query}%")
+                           ->where('name', 'LIKE', "%{$query}%")
                            ->select('name', 'slug', 'main_image', 'base_price', 'discount_price')
                            ->take(10) // Limit the number of results
                            ->get();
@@ -188,12 +189,13 @@ class FrontController extends Controller
         }
 
         $allImages = array_unique($allImages);
-
+$areaWisePrice = AreaWisePrice::all();
         return view('front.offer.offerproduct', compact(
             'bundleDeal',
             'productsCollection',
             'allImages',
-            'totalBasePrice'
+            'totalBasePrice',
+            'areaWisePrice'
         ));
     }
 public function getBundleViewCount($id)
@@ -280,7 +282,9 @@ $product->increment('view_count');
         }
     }
 
-    return view('front.product.show', compact('product'));
+    $areaWisePrice = AreaWisePrice::all();
+
+    return view('front.product.show', compact('product', 'areaWisePrice'));
 }
 public function getProductViewCount($id)
 {
