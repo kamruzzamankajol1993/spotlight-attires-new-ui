@@ -125,6 +125,15 @@
                                 </div>
                             </div>
 
+                            <div class="row">
+                                <div class="col-md-12">
+                                    <div class="spotlight_user_profile_form-group">
+                                        <label for="secondary_phone" class="spotlight_user_profile_form-label">Secondary Mobile No</label>
+                                        <input type="tel" id="secondary_phone" class="form-control" value="{{ optional(Auth::user())->secondary_phone }}">
+                                    </div>
+                                </div>
+                            </div>
+
                             </div>
 
                             {{-- <div class="row mt-4">
@@ -284,6 +293,7 @@ $(document).ready(function() {
                 name: $('#fullName').val(),
                 gender: $('#gender').val(),
                 dob: $('#dob').val(),
+                                secondary_phone: $('#secondary_phone').val(),
             },
             success: function(response) {
                 if(response.success){

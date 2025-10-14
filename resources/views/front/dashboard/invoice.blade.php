@@ -54,6 +54,9 @@
                         {{ $order->shipping_address }}<br>
                         {{ $order->customer->email }}<br>
                         {{ $order->customer->phone }}
+                        @if($order->customer->secondary_phone)
+                            <br>{{ $order->customer->secondary_phone }} (Secondary)
+                        @endif
                     </td>
                     <td style="width: 50%;" class="text-right">
                         <strong>Invoice #:</strong> {{ $order->invoice_no }}<br>

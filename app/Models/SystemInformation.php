@@ -20,7 +20,9 @@ class SystemInformation extends Model
             'icon',
             'address',
             'email',
-            'phone',11,
+        'email_one', // Added secondary email
+        'phone',
+        'phone_one', // Added secondary phone
             'main_url',
             'admin_url',
             'tax',

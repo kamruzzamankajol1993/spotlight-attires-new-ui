@@ -19,6 +19,10 @@
                         </div>
                         <div class="contact-info">
                            {{$front_ins_email}}
+                           {{-- Display secondary email if it exists --}}
+                       @if(!empty($front_ins_email_one))
+                            <br>{{$front_ins_email_one}}
+                       @endif
                         </div>
                     </div>
                 </div>
@@ -29,6 +33,9 @@
                         </div>
                         <div class="contact-info">
                          {{$front_ins_phone}}
+                          @if(!empty($front_ins_phone_one))
+                        <br>{{$front_ins_phone_one}}
+                     @endif
                         </div>
                     </div>
                 </div>

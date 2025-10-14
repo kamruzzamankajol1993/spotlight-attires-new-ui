@@ -31,6 +31,7 @@ class User extends Authenticatable
         'gender',
         'dob',
         'phone',
+          'secondary_phone',
         'address',
         'email',
         'type',

@@ -441,6 +441,7 @@ $cleanPhoneNumber = trim($phone);
     {
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255',
+             'secondary_phone' => 'nullable|string|digits:11',
             // Add validation for gender and dob if you have them in the db
         ]);
 
@@ -452,10 +453,12 @@ $cleanPhoneNumber = trim($phone);
         $user->name = $request->name;
         $user->gender = $request->gender;
         $user->dob = $request->dob;
+         $user->secondary_phone = $request->secondary_phone;
         $user->save();
 
         if ($user->customer) {
             $user->customer->name = $request->name;
+            $user->customer->secondary_phone = $request->secondary_phone;
             $user->customer->save();
         }
 

@@ -68,6 +68,10 @@ class AppServiceProvider extends ServiceProvider
 
                 $front_develop_by = $frontEndData->develop_by;
 
+                // Fetch secondary contact info
+                $front_ins_email_one = $frontEndData->email_one;
+                $front_ins_phone_one = $frontEndData->phone_one;
+
             } else {
                 // Default values if no data is found
                 $front_icon_name = '';
@@ -81,6 +85,8 @@ class AppServiceProvider extends ServiceProvider
                 $front_ins_k = '';
                 $front_ins_d = '';
                 $front_develop_by = '';
+                 $front_ins_email_one = '';
+                $front_ins_phone_one = '';
             }
 
               view()->share('front_icon_name', $front_icon_name);
@@ -93,6 +99,9 @@ class AppServiceProvider extends ServiceProvider
               view()->share('front_ins_k', $front_ins_k);
               view()->share('front_ins_d', $front_ins_d);
               view()->share('front_develop_by', $front_develop_by);
+
+                view()->share('front_ins_email_one', $front_ins_email_one);
+            view()->share('front_ins_phone_one', $front_ins_phone_one);
 
             //provider code for frontend end
 
