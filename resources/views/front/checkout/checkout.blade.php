@@ -150,7 +150,16 @@
                                             <label class="custom-checkbox-card" data-name="payment_method"><input type="radio" name="payment_method" value="cod" checked><div class="d-flex align-items-center"><i class="bi bi-cash-coin icon me-3"></i><div><div class="title">Cash on Delivery</div><div class="description">Pay upon arrival</div></div></div></label>
                                         </div>
                                         <div class="col-6">
-                                            <label class="custom-checkbox-card" data-name="payment_method"><input type="radio" name="payment_method" value="sslcommerz"><div class="d-flex align-items-center"><i class="bi bi-credit-card-2-front-fill icon me-3"></i><div><div class="title">SSLCommerz</div><div class="description">Card, MFS, Banking</div></div></div></label>
+                                            <label class="custom-checkbox-card disabled-option" data-name="payment_method">
+                                                <input type="radio" name="payment_method" value="sslcommerz" disabled>
+                                                <div class="d-flex align-items-center">
+                                                    <i class="bi bi-credit-card-2-front-fill icon me-3"></i>
+                                                    <div>
+                                                        <div class="title">SSLCommerz</div>
+                                                        <div class="description">Card, MFS, Banking</div>
+                                                    </div>
+                                                </div>
+                                            </label>
                                         </div>
                                          <div class="col-6 mt-2">
                                             <label class="custom-checkbox-card" data-name="payment_method"><input type="radio" name="payment_method" value="bkash"><div class="d-flex align-items-center"><i class="bi bi-wallet2 icon me-3"></i><div><div class="title">bKash</div><div class="description">Pay with bKash</div></div></div></label>
@@ -242,6 +251,11 @@ $(document).ready(function() {
 }
 
     $('.custom-checkbox-card').on('click', function() {
+        // ADDED: If the card is disabled, do nothing
+        if ($(this).hasClass('disabled-option')) {
+            return;
+        }
+        
         const radioName = $(this).find('input[type="radio"]').attr('name');
         $(`.custom-checkbox-card input[name="${radioName}"]`).closest('.custom-checkbox-card').removeClass('selected');
         $(this).addClass('selected').find('input[type="radio"]').prop('checked', true).trigger('change');

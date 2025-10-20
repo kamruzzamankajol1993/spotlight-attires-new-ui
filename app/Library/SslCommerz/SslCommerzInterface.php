@@ -1,6 +1,6 @@
 <?php
 namespace App\Library\SslCommerz;
-
+use Illuminate\Support\Facades\Http;
 interface SslCommerzInterface
 {
     public function makePayment(array $data);

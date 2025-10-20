@@ -14,6 +14,7 @@ use App\Models\Product;
 use App\Models\OrderDetail;
 use Exception;
 use App\Library\SslCommerz\SslCommerzNotification;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Cookie; // ADDED: For handling cookies
 use App\Models\User;
 class CheckoutController extends Controller
@@ -31,17 +32,17 @@ class CheckoutController extends Controller
         // Sandbox
         $this->base_url = 'https://tokenized.sandbox.bka.sh/v1.2.0-beta';
         // Live
-//     $this->base_url = 'https://tokenized.pay.bka.sh/v1.2.0-beta'; 
-// $BKASH_CHECKOUT_URL_USER_NAME ='01965665880';
-// $BKASH_CHECKOUT_URL_PASSWORD = 'iRI:SK7tWbz';
-// $BKASH_CHECKOUT_URL_APP_KEY = 'JTKshr429pkbVxT6sJYjUrDPtc';
-// $BKASH_CHECKOUT_URL_APP_SECRET ='cdjFKfCvfzZxReRTogc60eASv9ZnNDZrtu3K5GzXCUunTyW1CxYz';
+    $this->base_url = 'https://tokenized.pay.bka.sh/v1.2.0-beta'; 
+$BKASH_CHECKOUT_URL_USER_NAME ='01965665880';
+$BKASH_CHECKOUT_URL_PASSWORD = 'iRI:SK7tWbz';
+$BKASH_CHECKOUT_URL_APP_KEY = 'JTKshr429pkbVxT6sJYjUrDPtc';
+$BKASH_CHECKOUT_URL_APP_SECRET ='cdjFKfCvfzZxReRTogc60eASv9ZnNDZrtu3K5GzXCUunTyW1CxYz';
 
 //sandbox
-$BKASH_CHECKOUT_URL_USER_NAME ='sandboxTokenizedUser02';
-$BKASH_CHECKOUT_URL_PASSWORD = 'sandboxTokenizedUser02@12345';
-$BKASH_CHECKOUT_URL_APP_KEY = '4f6o0cjiki2rfm34kfdadl1eqq';
-$BKASH_CHECKOUT_URL_APP_SECRET ='2is7hdktrekvrbljjh44ll3d9l1dtjo4pasmjvs5vl5qr3fug4b';
+// $BKASH_CHECKOUT_URL_USER_NAME ='sandboxTokenizedUser02';
+// $BKASH_CHECKOUT_URL_PASSWORD = 'sandboxTokenizedUser02@12345';
+// $BKASH_CHECKOUT_URL_APP_KEY = '4f6o0cjiki2rfm34kfdadl1eqq';
+// $BKASH_CHECKOUT_URL_APP_SECRET ='2is7hdktrekvrbljjh44ll3d9l1dtjo4pasmjvs5vl5qr3fug4b';
 
 
         $this->app_key = $BKASH_CHECKOUT_URL_APP_KEY;
@@ -53,60 +54,42 @@ $BKASH_CHECKOUT_URL_APP_SECRET ='2is7hdktrekvrbljjh44ll3d9l1dtjo4pasmjvs5vl5qr3f
     }
 
     // BKASH HELPER: Get bKash auth token
+  // BKASH HELPER: Get bKash auth token
     private function bkashGetToken()
     {
-        $post_token = [
-            'app_key' => $this->app_key,
-            'app_secret' => $this->app_secret,
-        ];
-
         $url = $this->base_url . '/tokenized/checkout/token/grant';
-        $header = [
-            'Content-Type:application/json',
-            'username:' . $this->username,
-            'password:' . $this->password,
-        ];
 
-        $ch = curl_init();
-        curl_setopt($ch, CURLOPT_URL, $url);
-        curl_setopt($ch, CURLOPT_HTTPHEADER, $header);
-        curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "POST");
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($post_token));
-        curl_setopt($ch, CURLOPT_FOLLOWLOCATION, 1);
-        curl_setopt($ch, CURLOPT_IPRESOLVE, CURL_IPRESOLVE_V4);
-        $resultdata = curl_exec($ch);
-        curl_close($ch);
+        $response = Http::withHeaders([
+            'Content-Type' => 'application/json',
+            'username'     => $this->username,
+            'password'     => $this->password,
+        ])->post($url, [
+            'app_key'    => $this->app_key,
+            'app_secret' => $this->app_secret,
+        ]);
 
-        $response = json_decode($resultdata, true);
-
-        if (isset($response['id_token'])) {
-            return $response['id_token'];
+        // Check if the request was successful and the token exists
+        if ($response->successful() && $response->json('id_token')) {
+            return $response->json('id_token');
         }
+
+        // Optional: Log the error for debugging
+        \Log::error('bKash Token Error: ' . $response->body());
         return null;
     }
 
     // BKASH HELPER: Make an API call to bKash
+    // BKASH HELPER: Make an API call to bKash
     private function bkashApiCall($url, $post_data, $token)
     {
-        $header = [
-            'Content-Type:application/json',
-            'Authorization:' . $token,
-            'X-App-Key:' . $this->app_key,
-        ];
+        $response = Http::withHeaders([
+            'Content-Type'  => 'application/json',
+            'Authorization' => $token,
+            'X-App-Key'     => $this->app_key,
+        ])->post($url, $post_data);
 
-        $ch = curl_init();
-        curl_setopt($ch, CURLOPT_URL, $url);
-        curl_setopt($ch, CURLOPT_HTTPHEADER, $header);
-        curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "POST");
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($post_data));
-        curl_setopt($ch, CURLOPT_FOLLOWLOCATION, 1);
-        curl_setopt($ch, CURLOPT_IPRESOLVE, CURL_IPRESOLVE_V4);
-        $resultdata = curl_exec($ch);
-        curl_close($ch);
-
-        return json_decode($resultdata, true);
+        // Return the JSON response as an array
+        return $response->json();
     }
     private function getCartData()
 {
@@ -337,7 +320,7 @@ $BKASH_CHECKOUT_URL_APP_SECRET ='2is7hdktrekvrbljjh44ll3d9l1dtjo4pasmjvs5vl5qr3f
                     'mode' => '0011',
                     'payerReference' => ' ',
                     'callbackURL' => route('bkash.callback'),
-                    'amount' => $order->total_amount,
+                    'amount' => $order->total_amount, // For testing, use 10. Change to $order->total_amount in production
                     'currency' => 'BDT',
                     'intent' => 'sale',
                     'merchantInvoiceNumber' => $order->invoice_no,
@@ -394,7 +377,7 @@ $BKASH_CHECKOUT_URL_APP_SECRET ='2is7hdktrekvrbljjh44ll3d9l1dtjo4pasmjvs5vl5qr3f
 
         if (isset($response['statusCode']) && $response['statusCode'] == '0000') {
             // Verify amount
-            if ($response['amount'] != $order->total_amount) {
+            if ($response['amount'] != $order->total_amount) { // For testing, use 10. Change to $order->total_amount in production
                 // You should handle this case by refunding the payment via bKash API and marking the order as failed.
                 \Log::error('bKash amount mismatch for order: '.$order->id);
                 return redirect()->route('cart.show')->with('error', 'Payment amount mismatch. Please contact support.');
