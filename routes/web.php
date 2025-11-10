@@ -105,6 +105,13 @@ Route::post('/verify-otp', [AuthController::class, 'verifyOtp'])->name('customer
 Route::post('/resend-otp', [AuthController::class, 'resendOtp'])->name('customer.resendOtp');
 Route::post('/logout', [AuthController::class, 'logout'])->name('customer.logout');
 
+// --- MODIFIED: Password Reset Routes (Phone OTP Based) ---
+Route::post('/password/send-otp', [AuthController::class, 'sendPasswordResetOtp'])->name('password.sendOtp');
+Route::post('/password/verify-otp', [AuthController::class, 'verifyPasswordResetOtp'])->name('password.verifyOtp');
+Route::post('/password/update-new', [AuthController::class, 'updatePasswordFromOtp'])->name('password.updateNew');
+Route::post('/password/resend-otp', [AuthController::class, 'resendPasswordResetOtp'])->name('password.resendOtp');
+// --- END: Password Reset Routes ---
+
 Route::post('/forgot-password', [AuthController::class, 'sendPasswordResetLink'])->name('password.email');
 Route::get('/reset-password/{token}', [AuthController::class, 'showResetForm'])->name('password.reset');
 Route::post('/reset-password', [AuthController::class, 'resetPassword'])->name('password.update');

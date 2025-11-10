@@ -1231,6 +1231,7 @@
 
 @endif
 @endif
+
 @if(isset($offerSectionSetting) && $offerSectionSetting->is_visible && $offerSectionSetting->bundleOffer)
         @php
                             
@@ -1390,21 +1391,102 @@
 </section>
  @endif
         @if(isset($footerBanner))
-<section class="why-section">
+        
+        <section class="why-section">
     <div class="container">
         <div class="why-header">
             <h2>WHY Spotlight Attires STORE?</h2>
         </div>
-        <div class="row why-layout">
-            <div class="col-lg-12">
-                {{-- The background-image is now pulled from the database --}}
-                <div class="left-banner" style="background-image: url('{{ $front_ins_url . 'public/' . $footerBanner->image }}');">
-                    {{-- The inner logo div has been removed as requested --}}
+                    <div class="row why-layout">
+                <!-- Left side: Banner -->
+                <div class="col-lg-5">
+                    <div class="left-banner">
+                        <div class="left-banner-content">
+                            <img src="{{ $front_ins_url . 'public/' . $footerBanner->image }}">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right side: Benefits Grid -->
+                <div class="col-lg-7">
+                    <div class="d-flex align-items-center">
+                    <div class="row right-benefits-grid ">
+                        <!-- Benefit 1 -->
+                        <div class="col-md-6 mb-4">
+                            <div class="benefit-item">
+                                <div class="icon-container"><i class="bi bi-person-bounding-box"></i></div>
+                                <div class="benefit-item-content">
+                                    <h5>UNIQUENESS AND STYLE</h5>
+                                    <p>Stand out with exclusive designs that celebrate your individuality.</p>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Benefit 2 -->
+                        <div class="col-md-6 mb-4">
+                            <div class="benefit-item">
+                                <div class="icon-container"><i class="bi bi-tags-fill"></i></div>
+                                <div class="benefit-item-content">
+                                    <h5>QUALITY AND AFFORDABILITY</h5>
+                                    <p>High-quality fashion at prices that won't break the bank.</p>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Benefit 3 -->
+                        <div class="col-md-6 mb-4">
+                            <div class="benefit-item">
+                                <div class="icon-container"><i class="bi bi-toggles2"></i></div>
+                                <div class="benefit-item-content">
+                                    <h5>VERSATILITY FOR EVERYONE</h5>
+                                    <p>From casual to polished, find styles that fit every lifestyle.</p>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Benefit 4 -->
+                        <div class="col-md-6 mb-4">
+                            <div class="benefit-item">
+                                <div class="icon-container"><i class="bi bi-emoji-smile"></i></div>
+                                <div class="benefit-item-content">
+                                    <h5>CONFIDENCE AND COMFORT</h5>
+                                    <p>Feel confident and comfortable with every piece you wear.</p>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Benefit 5 -->
+                        <div class="col-md-6 mb-4">
+                            <div class="benefit-item">
+                                <div class="icon-container"><i class="bi bi-hand-thumbs-up"></i></div>
+                                <div class="benefit-item-content">
+                                    <h5>CUSTOMER-CENTRIC APPROACH</h5>
+                                    <p>Designed with you in mind, offering unmatched experiences.</p>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Benefit 6 -->
+                        <div class="col-md-6 mb-4">
+                            <div class="benefit-item">
+                                <div class="icon-container"><i class="bi bi-lightbulb-fill"></i></div>
+                                <div class="benefit-item-content">
+                                    <h5>DISCOVER THE UNEXPECTED</h5>
+                                    <p>Innovative pieces that refresh your style effortlessly.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    </div>
                 </div>
             </div>
-        </div>
+        <!--<div class="row why-layout">-->
+        <!--    <div class="col-lg-12">-->
+        <!--        -->
+        <!--        <div class="left-banner" style="background-image: url('https://testadmin.spotlightattires.com/public/uploads/banners/footer-banner-43178bab-bf94-4175-83ee-a24538366b85.webp');">-->
+        <!--            -->
+        <!--        </div>-->
+        <!--    </div>-->
+        <!--</div>-->
     </div>
 </section>
+
+
 @endif
 
     </main>

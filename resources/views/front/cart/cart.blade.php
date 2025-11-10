@@ -42,13 +42,14 @@ Your Cart
                                 <div class="table-responsive">
                                     <table class="spotlight_cart_table">
                                         <thead>
-    <tr>
-        <th class="text-start">PRODUCT</th>
-        <th>PRICE</th>
-        <th>QUANTITY</th>
-        <th>SUBTOTAL</th>
-        <th></th> </tr>
-</thead>
+                                            <tr>
+                                                <th class="text-start">PRODUCT</th>
+                                                <th>PRICE</th>
+                                                <th>QUANTITY</th>
+                                                <th>SUBTOTAL</th>
+                                                <th></th> 
+                                            </tr>
+                                        </thead>
                                         <tbody id="main-cart-body">
                                             {{-- Cart items will be loaded here by JavaScript --}}
                                             <tr>
@@ -61,46 +62,8 @@ Your Cart
                                         </tbody>
                                     </table>
                                 </div>
-
-                          
                             </div>
 
-                            <div class="spotlight_cart_interest_card">
-                                <h5 class="fw-semibold">You May Be Interested In...</h5>
-                                <div class="row row-cols-2 row-cols-md-4 g-3 mt-3">
-                                   {{-- This section is now dynamic --}}
-                                   @forelse($suggestedProducts as $product)
-                                        <div class="col">
-                                            <div class="product-card card h-100">
-                                                @php
-                                                    $image = (is_array($product->main_image) && count($product->main_image) > 0)
-                                                                ? $front_ins_url . 'public/uploads/' . $product->main_image[0]
-                                                                : 'https://placehold.co/400x400';
-                                                @endphp
-                                                <a href="{{ route('product.show', $product->slug) }}">
-                                                    <img src="{{ $image }}" class="card-img-top" alt="{{ $product->name }}">
-                                                </a>
-                                                <div class="product-details-body">
-                                                    <h5 class="product-title mb-1">{{ Str::limit($product->name, 20) }}</h5>
-                                                    <p class="price-tag mb-2">
-                                                        @if($product->discount_price)
-                                                            <del class="text-muted">৳ {{ number_format($product->base_price) }}</del>
-                                                            <span class="fw-bold">৳ {{ number_format($product->discount_price) }}</span>
-                                                        @else
-                                                            <span class="fw-bold">৳ {{ number_format($product->base_price) }}</span>
-                                                        @endif
-                                                    </p>
-                                                    <a href="#" class="btn btn-primary btn-add-cart w-100" data-product-id="{{ $product->id }}">Add to Cart</a>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    @empty
-                                        <div class="col-12">
-                                            <p>No other products to suggest at the moment.</p>
-                                        </div>
-                                    @endforelse
-                                </div>
-                            </div>
                         </div>
 
                         <div class="col-12 col-lg-4">
@@ -138,9 +101,43 @@ Your Cart
                         {{-- DYNAMIC CHECKOUT BUTTON --}}
                         <button id="proceed-to-checkout-btn" class="btn btn-dark spotlight_cart_action_button mt-3">Proceed To Checkout</button>
                     </div>
-
-                            <div class="spotlight_cart_summary_card">
-                               {{-- ... your static accordion content ... --}}
+                        </div>
+                        <div class="col-lg-8 col-sm-12 col-12">
+                                                        <div class="spotlight_cart_interest_card">
+                                <h5 class="fw-semibold">You May Be Interested In...</h5>
+                                <div class="row row-cols-2 row-cols-md-4 g-3 mt-3">
+                                   {{-- This section is now dynamic --}}
+                                   @forelse($suggestedProducts as $product)
+                                        <div class="col">
+                                            <div class="product-card card h-100">
+                                                @php
+                                                    $image = (is_array($product->main_image) && count($product->main_image) > 0)
+                                                                ? $front_ins_url . 'public/uploads/' . $product->main_image[0]
+                                                                : 'https://placehold.co/400x400';
+                                                @endphp
+                                                <a href="{{ route('product.show', $product->slug) }}">
+                                                    <img src="{{ $image }}" class="card-img-top" alt="{{ $product->name }}">
+                                                </a>
+                                                <div class="product-details-body">
+                                                    <h5 class="product-title mb-1">{{ Str::limit($product->name, 20) }}</h5>
+                                                    <p class="price-tag mb-2">
+                                                        @if($product->discount_price)
+                                                            <del class="text-muted">৳ {{ number_format($product->base_price) }}</del>
+                                                            <span class="fw-bold">৳ {{ number_format($product->discount_price) }}</span>
+                                                        @else
+                                                            <span class="fw-bold">৳ {{ number_format($product->base_price) }}</span>
+                                                        @endif
+                                                    </p>
+                                                    <a href="#" class="btn btn-primary btn-add-cart w-100" data-product-id="{{ $product->id }}">Add to Cart</a>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    @empty
+                                        <div class="col-12">
+                                            <p>No other products to suggest at the moment.</p>
+                                        </div>
+                                    @endforelse
+                                </div>
                             </div>
                         </div>
                     </div>

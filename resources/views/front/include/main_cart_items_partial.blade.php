@@ -16,22 +16,23 @@
                 </div>
             </td>
             {{-- Bundle Price --}}
-            <td data-label="PRICE" class="fw-semibold">৳ {{ number_format($item['price'], 2) }}</td>
+            <td data-label="PRICE" class="fw-semibold">৳{{ number_format($item['price'], 2) }}</td>
             {{-- Bundle Quantity --}}
             <td data-label="QUANTITY">
-                <div class="spotlight_cart_item_quantity mx-auto">
+                <div class="spotlight_cart_item_quantity">
                     <button class="btn btn-light update-main-cart-item" data-row-id="{{ $item['rowId'] }}" data-action="decrease">-</button>
                     <span class="px-2">{{ $item['quantity'] }}</span>
                     <button class="btn btn-light update-main-cart-item" data-row-id="{{ $item['rowId'] }}" data-action="increase">+</button>
                 </div>
             </td>
             {{-- Bundle Subtotal --}}
-            <td data-label="SUBTOTAL" class="fw-semibold">৳ {{ number_format($item['price'] * $item['quantity'], 2) }}</td>
-            {{-- New Remove Button Column --}}
-            <td class="text-center">
-                <button class="btn btn-danger btn-sm remove-main-cart-item" data-row-id="{{ $item['rowId'] }}" title="Remove item">
+            <td data-label="SUBTOTAL" class="fw-semibold">
+                <div class="cart_subtotal">
+                ৳{{ number_format($item['price'] * $item['quantity'], 2) }}
+                <button class="btn btn-danger btn-sm remove-main-cart-item ms-2" data-row-id="{{ $item['rowId'] }}" title="Remove item">
                     <i class="bi bi-x-lg"></i>
                 </button>
+                </div>
             </td>
         </tr>
 
@@ -64,7 +65,7 @@
     @else
         {{-- ======================= REGULAR ITEM DISPLAY ======================= --}}
         <tr class="main-cart-item">
-            <td class="text-start" data-label="PRODUCT">
+            <td class="text-start cart_product" data-label="PRODUCT">
                  <div class="d-flex align-items-center">
                     <img src="{{$front_ins_url . 'public/uploads/' . $item['image']  ?? 'https://placehold.co/100x100' }}"
                          alt="{{ $item['name'] }}" class="spotlight_cart_item_image me-3">
@@ -79,21 +80,23 @@
                     </div>
                 </div>
             </td>
-            <td data-label="PRICE" class="fw-semibold">৳ {{ number_format($item['price'], 2) }}</td>
+            <td data-label="PRICE" class="fw-semibold">৳{{ number_format($item['price'], 2) }}</td>
             <td data-label="QUANTITY">
-                <div class="spotlight_cart_item_quantity mx-auto">
+                <div class="spotlight_cart_item_quantity">
                      <button class="btn btn-light update-main-cart-item" data-row-id="{{ $item['rowId'] }}" data-action="decrease">-</button>
                      <span class="px-2">{{ $item['quantity'] }}</span>
                      <button class="btn btn-light update-main-cart-item" data-row-id="{{ $item['rowId'] }}" data-action="increase">+</button>
                 </div>
             </td>
-            <td data-label="SUBTOTAL" class="fw-semibold">৳ {{ number_format($item['price'] * $item['quantity'], 2) }}</td>
-            {{-- New Remove Button Column --}}
-            <td class="text-center">
-                <button class="btn btn-danger btn-sm remove-main-cart-item" data-row-id="{{ $item['rowId'] }}" title="Remove item">
+            <td data-label="SUBTOTAL" class="fw-semibold">
+                <div class="cart_subtotal">
+                ৳{{ number_format($item['price'] * $item['quantity'], 2) }}
+                <button class="btn btn-danger btn-sm remove-main-cart-item ms-2" data-row-id="{{ $item['rowId'] }}" title="Remove item">
                     <i class="bi bi-x-lg"></i>
                 </button>
+                </div>
             </td>
+
         </tr>
     @endif
 @empty

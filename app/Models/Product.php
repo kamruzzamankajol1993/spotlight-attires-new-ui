@@ -35,6 +35,7 @@ class Product extends Model
         'thumbnail_image',
         'real_image',
         'status',
+        'is_free_delivery',
     ];
 
 
@@ -42,6 +43,7 @@ class Product extends Model
         'thumbnail_image' => 'array', // This is the important change
         'main_image' => 'array',
         'real_image' => 'array',
+        'is_free_delivery' => 'boolean',
     ];
 
      public function productCategoryAssignment()

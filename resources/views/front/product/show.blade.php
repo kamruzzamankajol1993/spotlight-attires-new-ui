@@ -6,7 +6,8 @@
 @section('css')
 <style>
    
-#realImageModal .modal-body {
+#realImageModal .modal-body,
+#mainImageModal .modal-body {
     padding: 0.5rem; /* Add some padding around the slider */
 }
 
@@ -20,7 +21,8 @@
 /* Slick slider arrow customization for the modal */
 .real-image-slider .slick-prev,
 .real-image-slider .slick-next {
-    z-index: 10;
+    /* MODIFIED: Increased z-index to appear above the modal content */
+    z-index: 1060; 
     width: 40px;
     height: 40px;
 }
@@ -31,7 +33,7 @@
 .real-image-slider .slick-next:before {
     font-size: 30px;
     opacity: .75;
-    color: #333;
+    color: #333; /* Make sure your slick.css or slick-theme.css is loaded for the arrow font */
 }
     #customer-reviews-section {
     position: relative;
@@ -79,6 +81,11 @@
     }
      .star-rating .bi-star-fill { color: #ffc107; }
     .review-images-container img { width: 70px; height: 70px; object-fit: cover; border-radius: 5px; cursor: pointer; }
+
+    /* NEW: Add cursor pointer to main slider images */
+    #main-product-slider .slick-slide img {
+        cursor: pointer;
+    }
 </style>
 @endsection
 @section('body')
@@ -87,7 +94,6 @@
             <div class="container">
                 <div class="product-container container my-5 p-4 bg-white rounded-4 shadow">
 
-                    <!-- Product Page Header -->
                     <div class="d-flex align-items-center text-muted small mb-4">
                          <a href="{{ url('/') }}" class="text-muted text-decoration-none">Home</a>
                     @if($product->category)
@@ -103,8 +109,7 @@
                     </div>
 
                     <div class="row g-4">
-                        <!-- Left Side: Image Gallery -->
-                       <div class="col-12 col-lg-6"> <div class="d-flex">
+                        <div class="col-12 col-lg-6"> <div class="d-flex">
         <div class="d-flex flex-column align-items-center">
             <div id="thumbnail-nav-slider" class="w-100" style="max-width: 100px;">
                 @php
@@ -160,7 +165,6 @@
     </div>
 </div>
 
-                        <!-- Right Side: Product Details -->
                         <div class="col-12 col-lg-6 d-flex flex-column p-4 spotlight_product_details">
                             <div class="d-flex flex-wrap align-items-center justify-content-between mb-2">
     <h1 class="h3 fw-semibold text-dark mb-0">{{ $product->name }}</h1>
@@ -188,8 +192,7 @@
                             @endif
                             </div>
 
-                            <!--- color --->
-                             @if($product->variants->isNotEmpty() && $product->variants->first()->color)
+                            @if($product->variants->isNotEmpty() && $product->variants->first()->color)
                         <div class="mb-4">
                             <h2 class="h5 fw-semibold mb-2">Color: <span id="selected-color-name">{{ $product->variants->first()->color->name }}</span></h2>
                             <div class="d-flex gap-2">
@@ -209,20 +212,13 @@
                         </div>
                         @endif
 
-                            <!--end color--->
-
-                           
-
-                            <!-- Size Selection -->
-                             <div class="mb-4">
+                            <div class="mb-4">
                             <p class="mb-2">Size: <span id="selected-size-name" class="fw-semibold text-dark">Select a size</span></p>
                             <div id="size-options-container" class="d-flex gap-2">
                                 {{-- Size buttons will be dynamically inserted here by JavaScript --}}
                             </div>
                         </div>
-                         <!-- size Chart-->
-
-                             @if($product->assignChart && $product->assignChart->entries->isNotEmpty())
+                         @if($product->assignChart && $product->assignChart->entries->isNotEmpty())
                         <div class="mb-4">
                             <h2 class="h5 fw-semibold mb-2">Size Chart:</h2>
                             <table class="table table-bordered table-sm text-center">
@@ -250,8 +246,7 @@
                         </div>
                         @endif
 
-                            <!-- Quantity and Buttons -->
-                           <div class="d-flex flex-column flex-sm-row align-items-center gap-4 mb-4">
+                            <div class="d-flex flex-column flex-sm-row align-items-center gap-4 mb-4">
                             <div class="d-flex align-items-center border rounded-3 overflow-hidden">
                                 <button class="btn btn-light rounded-0" id="quantity-minus">-</button>
                                 <span class="px-3" id="quantity-value">1</span>
@@ -261,7 +256,6 @@
                             <button class="btn btn-secondary fw-semibold rounded-3 flex-grow-1 buy-button" id="buy-now">Buy Now</button>
                         </div>
 
-                            <!-- Actions and Share with Bootstrap Icons -->
                             <div class="d-flex flex-column flex-sm-row align-items-center justify-content-between mt-4">
                                 <div class="d-flex align-items-center gap-2 mb-4 mb-sm-0">
     <a href="#" id="add-to-compare" class="btn btn-sm btn-outline-secondary d-flex align-items-center">
@@ -290,15 +284,12 @@
                                 </div>
                             </div>
 
-                            <!-- Section: People Watching and Delivery/Payment -->
                             <div class="mt-4 pt-4 border-top">
-                                <!-- People Watching -->
                                 {{-- <div class="d-flex align-items-center bg-light p-3 rounded-3 mb-3">
                                     <i class="bi bi-eye text-muted me-2"></i>
                                     <span class="small text-muted">18 People watching this product now!</span>
                                 </div> --}}
 
-                                <!-- Delivery Information -->
                                 <div class="bg-white border p-3 rounded-3 mb-3">
 
                                     @foreach($areaWisePrice as $area)
@@ -316,7 +307,6 @@
 
                                 </div>
 
-                                <!-- Payment Methods -->
                                 <div>
                                     <h3 class="small fw-semibold mb-2">Payment Methods:</h3>
                                     <div class="d-flex align-items-center gap-2">
@@ -429,6 +419,46 @@
         </div>
     </section>
     </main>
+
+    <div class="modal fade" id="mainImageModal" tabindex="-1" aria-labelledby="mainImageModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-xl">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="mainImageModalLabel">{{ $product->name }}</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="main-image-modal-slider" class="real-image-slider">
+                        @php
+                            // Re-using the same logic from the main slider for initial load
+                            $initialMainImages = $product->main_image ?? [];
+                            $firstVariant = $product->variants->first();
+                            if ($firstVariant && is_array($firstVariant->main_image)) {
+                                $initialMainImages = array_merge($initialMainImages, $firstVariant->main_image);
+                            }
+                            $imageCount = count($initialMainImages);
+                            if ($imageCount > 0 && $imageCount < 4) {
+                                $needed = 4 - $imageCount;
+                                for ($i = 0; $i < $needed; $i++) {
+                                    $initialMainImages[] = $initialMainImages[$i % $imageCount];
+                                }
+                            }
+                        @endphp
+                        @forelse ($initialMainImages as $image)
+                            <div>
+                                <img src="{{ $front_ins_url . 'public/uploads/' . $image }}" alt="{{ $product->name }}">
+                            </div>
+                        @empty
+                            <div>
+                                <img src="https://placehold.co/1000x1000/F5F5F5/4B5563?text=No+Image" alt="No Product Image">
+                            </div>
+                        @endforelse
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     {{-- Real Image Viewer Modal --}}
 @if(isset($product->real_image) && is_array($product->real_image) && count($product->real_image) > 0)
 <div class="modal fade" id="realImageModal" tabindex="-1" aria-labelledby="realImageModalLabel" aria-hidden="true">
@@ -453,18 +483,40 @@
 @endif
 @endsection
 @section('script')
+@section('script')
 <script>
 $(document).ready(function() {
 
-    // --- Real Image Modal Slider Initialization ---
-const realImageModal = document.getElementById('realImageModal');
-if (realImageModal) {
-    realImageModal.addEventListener('shown.bs.modal', function () {
-        const slider = $('#real-image-slider');
-        
-        // Initialize slider only if it hasn't been initialized before
-        if (!slider.hasClass('slick-initialized')) {
-            slider.slick({
+    // --- Modal Slider Initializations ---
+
+    // Real Image Modal
+    const realImageModal = document.getElementById('realImageModal');
+    if (realImageModal) {
+        realImageModal.addEventListener('shown.bs.modal', function () {
+            const slider = $('#real-image-slider');
+            if (!slider.hasClass('slick-initialized')) {
+                slider.slick({
+                    dots: true,
+                    infinite: true,
+                    speed: 300,
+                    slidesToShow: 1,
+                    adaptiveHeight: true,
+                    arrows: true // Arrows are enabled
+                });
+            }
+        });
+    }
+
+    // --- MODIFICATION FOR MAIN IMAGE POPUP ---
+    let mainSliderClickedIndex = 0; // Global var to store which slide was clicked
+    const mainImageModal = document.getElementById('mainImageModal');
+
+    if (mainImageModal) {
+        const modalSlider = $('#main-image-modal-slider');
+
+        // When the modal is fully shown, INIT the slider
+        mainImageModal.addEventListener('shown.bs.modal', function () {
+            modalSlider.slick({
                 dots: true,
                 infinite: true,
                 speed: 300,
@@ -472,9 +524,24 @@ if (realImageModal) {
                 adaptiveHeight: true,
                 arrows: true
             });
-        }
+            // Go to the slide the user clicked on
+            modalSlider.slick('slickGoTo', mainSliderClickedIndex);
+        });
+
+        // When the modal is fully hidden, DESTROY the slider
+        mainImageModal.addEventListener('hidden.bs.modal', function () {
+            modalSlider.slick('unslick');
+        });
+    }
+    // --- END OF MODIFICATION ---
+
+
+    // NEW: Click handler for the main product slider
+    $('#main-product-slider').on('click', '.slick-slide', function() {
+        mainSliderClickedIndex = $(this).data('slick-index');
+        $('#mainImageModal').modal('show');
     });
-}
+
 
     // --- Real-Time "People Watching" Counter ---
     const watchingContainer = $('.d-flex[data-product-id]');
@@ -537,7 +604,8 @@ if (realImageModal) {
             asNavFor: '#main-product-slider',
             dots: false,
             arrows: false,
-            focusOnSelect: true,
+            focusOnSelect: true
+            /*
             responsive: [{
                 breakpoint: 768,
                 settings: {
@@ -545,6 +613,7 @@ if (realImageModal) {
                     vertical: false
                 }
             }]
+            */
         });
     }
 
@@ -578,22 +647,35 @@ if (realImageModal) {
         }
     }
 
+    // UPDATED: This function now updates the main slider AND the new modal slider
     function updateImages(mainImages, thumbImages) {
         const mainSlider = $('#main-product-slider');
         const thumbSlider = $('#thumbnail-nav-slider');
+        const modalSlider = $('#main-image-modal-slider'); // NEW: Get the modal slider
+
+        // NEW: Destroy the modal slider so it can be rebuilt
+        if (modalSlider.hasClass('slick-initialized')) {
+            modalSlider.slick('unslick');
+        }
         
         mainSlider.empty();
         thumbSlider.empty();
+        modalSlider.empty(); // NEW: Empty the modal slider too
 
         mainImages.forEach(img => {
-            mainSlider.append(`<div><img src="${IMAGE_BASE_URL}${img}" class="img-fluid rounded-3"></div>`);
+            const mainSlideHTML = `<div><img src="${IMAGE_BASE_URL}${img}" class="img-fluid rounded-3"></div>`;
+            const modalSlideHTML = `<div><img src="${IMAGE_BASE_URL}${img}" alt="{{ $product->name }}"></div>`;
+
+            mainSlider.append(mainSlideHTML);
+            modalSlider.append(modalSlideHTML); // NEW: Add image to modal slider
         });
 
         thumbImages.forEach(img => {
             thumbSlider.append(`<div><img src="${IMAGE_BASE_URL}${img}" class="img-fluid rounded-3 thumbnail-image"></div>`);
         });
 
-        initializeSlick();
+        initializeSlick(); // This re-initializes the *page* sliders
+        // The modal slider will be initialized if/when it is opened
     }
     
     function updatePrice(additionalPrice) {

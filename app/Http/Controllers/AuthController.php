@@ -7,7 +7,7 @@ use App\Models\CustomerAddress;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\DB; // <-- Ensure this is present
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Password;
@@ -15,7 +15,7 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\File; 
 use Mpdf\Mpdf;
-use Exception;
+use Exception; // <-- Ensure this is present
 use GuzzleHttp\Client; 
 use Illuminate\Support\Facades\Cookie;
 use Illuminate\Support\Facades\Session;
@@ -140,29 +140,44 @@ $cleanPhoneNumber = trim($phone);
         return response()->json(['success' => false, 'message' => 'The provided credentials do not match our records.'], 401);
     }
 
-    /**
+   /**
      * Handle a registration request and send OTP.
      */
      public function register(Request $request)
     {
-          // === MODIFIED SECTION START ===
-
         // Prepend '0' to the 10-digit phone number to make it 11 digits
         if ($request->has('phone')) {
             $request->merge([
                 'phone' => '0' . $request->phone
             ]);
         }
+        $formattedPhone = $request->phone;
 
-        // The validation logic now correctly checks for an 11-digit unique number
-        $validator = Validator::make($request->all(), [
+        // --- MODIFIED VALIDATION LOGIC ---
+        $existingCustomer = Customer::where('phone', $formattedPhone)->first();
+        $existingUser = User::where('phone', $formattedPhone)->first();
+
+        $rules = [
             'name'      => 'required|string|max:255',
-            'email'     => 'nullable|string|email|max:255|unique:users,email|unique:customers,email',
-            'phone'     => 'required|string|digits:11|unique:users,phone|unique:customers,phone',
+            'email'     => 'nullable|string|email|max:255',
+            'phone'     => 'required|string|digits:11',
             'password'  => 'required|string|min:8|confirmed',
-        ]);
+        ];
 
-        // === MODIFIED SECTION END ===
+        if ($existingCustomer && !$existingUser) {
+            // Scenario 1: Customer exists, User does not.
+            // Only validate email uniqueness against the users table.
+            $rules['email'] .= '|unique:users,email';
+        } else {
+            // Scenario 2: New customer OR (Customer exists AND User exists).
+            // Apply all unique rules. This will correctly fail if the user is already fully registered.
+            $rules['email'] .= '|unique:users,email|unique:customers,email';
+            $rules['phone'] .= '|unique:users,phone|unique:customers,phone';
+        }
+
+        $validator = Validator::make($request->all(), $rules);
+        // --- END MODIFIED VALIDATION LOGIC ---
+
 
         if ($validator->fails()) {
             return response()->json(['success' => false, 'errors' => $validator->errors()], 422);
@@ -183,6 +198,9 @@ $cleanPhoneNumber = trim($phone);
 
         $otp = random_int(100000, 999999);
         $tempUserData['otp'] = $otp;
+
+        // --- ADDED: Store existing customer ID in session ---
+        $tempUserData['existing_customer_id'] = $existingCustomer ? $existingCustomer->id : null;
 
         session(['temp_user_data' => $tempUserData]);
 
@@ -213,57 +231,105 @@ $cleanPhoneNumber = trim($phone);
         return response()->json(['success' => false, 'message' => 'The provided OTP is invalid.'], 400);
     }
 
-    // 3. UPDATED USER CREATION (REMOVED address and image)
-    $user = User::create([
-        'name' => $tempUserData['name'],
-        'email' => $tempUserData['email'],
-        'phone' => $tempUserData['phone'],
-        'password' => Hash::make($tempUserData['password']),
-        'viewpassword' => $tempUserData['password'],
-        'email_verified_at' => now(),
-        'user_type' => 1,
-        'status' => 1,
-    ]);
+    // --- MODIFIED CREATION/UPDATE LOGIC ---
+    $existingCustomerId = $tempUserData['existing_customer_id'] ?? null;
+    $user = null;
 
-    // 4. UPDATED CUSTOMER CREATION (REMOVED address)
-    $customer = Customer::create([
-        'name' => $tempUserData['name'],
-        'email' => $tempUserData['email'],
-        'phone' => $tempUserData['phone'],
-        'status' => 1,
-        'type' => 'normal',
-        'source' => 'website',
-        'password' => $tempUserData['password'],
-        'slug' => Str::slug($tempUserData['name']).'-'.uniqid(),
-        'user_id' => $user->id,
-    ]);
+    DB::beginTransaction();
+    try {
+        if ($existingCustomerId) {
+            // --- SCENARIO 1: UPDATE EXISTING CUSTOMER, CREATE NEW USER ---
 
-    $user->customer_id = $customer->id;
-    $user->save();
-    
-    // 5. REMOVED ADDRESS CREATION LOGIC
-    // CustomerAddress::create([...]) lines are removed.
+            // 1. Create the User
+            $user = User::create([
+                'name' => $tempUserData['name'],
+                'email' => $tempUserData['email'],
+                'phone' => $tempUserData['phone'],
+                'password' => Hash::make($tempUserData['password']),
+                'viewpassword' => $tempUserData['password'],
+                'email_verified_at' => now(),
+                'user_type' => 1,
+                'status' => 1,
+            ]);
 
-    session()->forget('temp_user_data');
-    
-    Auth::login($user);
+            // 2. Find and Update the Customer
+            $customer = Customer::findOrFail($existingCustomerId);
+            $customer->update([
+                'name' => $tempUserData['name'],
+                'email' => $tempUserData['email'],
+                'password' => $tempUserData['password'], // Setter in Customer model will hash
+                'user_id' => $user->id,
+                'slug' => Str::slug($tempUserData['name']).'-'.uniqid(),
+                'source' => 'website',
+                'status' => 1,
+            ]);
 
-    return response()->json(['success' => true, 'redirect_url' => route('dashboard.user')]);
+            // 3. Link User back to Customer
+            $user->customer_id = $customer->id;
+            $user->save();
+
+        } else {
+            // --- SCENARIO 2: CREATE NEW USER AND NEW CUSTOMER (Original Logic) ---
+
+            // 1. Create User
+            $user = User::create([
+                'name' => $tempUserData['name'],
+                'email' => $tempUserData['email'],
+                'phone' => $tempUserData['phone'],
+                'password' => Hash::make($tempUserData['password']),
+                'viewpassword' => $tempUserData['password'],
+                'email_verified_at' => now(),
+                'user_type' => 1,
+                'status' => 1,
+            ]);
+
+            // 2. Create Customer
+            $customer = Customer::create([
+                'name' => $tempUserData['name'],
+                'email' => $tempUserData['email'],
+                'phone' => $tempUserData['phone'],
+                'status' => 1,
+                'type' => 'normal',
+                'source' => 'website',
+                'password' => $tempUserData['password'], // Setter will hash
+                'slug' => Str::slug($tempUserData['name']).'-'.uniqid(),
+                'user_id' => $user->id,
+            ]);
+
+            // 3. Link User to Customer
+            $user->customer_id = $customer->id;
+            $user->save();
+        }
+
+        DB::commit();
+
+        // Continue to login
+        session()->forget('temp_user_data');
+        Auth::login($user);
+        return response()->json(['success' => true, 'redirect_url' => route('dashboard.user')]);
+
+    } catch (Exception $e) {
+        DB::rollBack();
+        \Log::error('Registration Error: ' . $e->getMessage(), ['data' => $tempUserData]);
+        return response()->json(['success' => false, 'message' => 'An error occurred during registration. Please try again.'], 500);
+    }
+    // --- END MODIFIED LOGIC ---
 }
     
     /**
-     * Resend the OTP.
+     * Resend the OTP for registration.
      */
     public function resendOtp()
     {
         $tempUserData = session('temp_user_data');
 
-        if (!$tempUserData || !isset($tempUserData['email'])) {
+        if (!$tempUserData || !isset($tempUserData['phone'])) {
             return response()->json(['success' => false, 'message' => 'Your session has expired. Please register again.'], 422);
         }
 
         $otp = random_int(100000, 999999);
         $tempUserData['otp'] = $otp;
+        session(['temp_user_data' => $tempUserData]); // Resave session with new OTP
 
         // --- UPDATED: Resend OTP via SMS ---
         if ($this->sendSmsOtp($tempUserData['phone'], $otp)) {
@@ -332,88 +398,120 @@ $cleanPhoneNumber = trim($phone);
         ]);
     }
 
-    public function sendPasswordResetLink(Request $request)
+
+    // ====================================================================
+    // --- NEW PASSWORD RESET (PHONE OTP) METHODS ---
+    // ====================================================================
+
+    /**
+     * Send a password reset OTP to the user's phone.
+     */
+    public function sendPasswordResetOtp(Request $request)
     {
+        // Prepend '0' to the 10-digit phone number
+        if ($request->has('phone')) {
+            $request->merge([
+                'phone' => '0' . $request->phone
+            ]);
+        }
+        $formattedPhone = $request->phone;
+
         $validator = Validator::make($request->all(), [
-            'email' => 'required|email|exists:users,email',
+            'phone' => 'required|string|digits:11|exists:users,phone',
+        ], [
+            'phone.exists' => 'No account found with this phone number.'
         ]);
 
         if ($validator->fails()) {
             return response()->json(['success' => false, 'errors' => $validator->errors()], 422);
         }
 
-        try {
-            $token = Str::random(60);
+        $otp = random_int(100000, 999999);
 
-            // Store the token in the 'password_reset_tokens' table
-            DB::table('password_reset_tokens')->updateOrInsert(
-                ['email' => $request->email],
-                ['token' => Hash::make($token), 'created_at' => now()]
-            );
+        // Store reset data in a separate session key to avoid conflict with registration
+        session(['password_reset_data' => [
+            'phone' => $formattedPhone,
+            'otp'   => $otp,
+        ]]);
 
-            $name = User::where('email', $request->email)->value('name');
-
-            $resetUrl = route('password.reset', ['token' => $token, 'email' => $request->email]);
-
-            Mail::send('front.emails.password_reset_email', ['resetUrl' => $resetUrl, 'name' => $name], function ($message) use ($request) {
-                $message->to($request->email);
-                $message->subject('Your Password Reset Link');
-            });
-
-            return response()->json(['success' => true, 'message' => 'A password reset link has been sent to your email address.']);
-
-        } catch (Exception $e) {
-            \Log::error("Password reset link sending failed: " . $e->getMessage());
-            return response()->json(['success' => false, 'message' => 'Could not send reset link. Please try again.'], 500);
+        if ($this->sendSmsOtp($formattedPhone, $otp)) {
+            return response()->json(['success' => true, 'message' => 'An OTP has been sent to your phone number.']);
+        } else {
+            return response()->json(['success' => false, 'message' => 'Could not send OTP. Please try again.'], 500);
         }
     }
 
     /**
-     * Display the password reset view.
+     * Verify the password reset OTP.
      */
-    public function showResetForm(Request $request, $token)
-    {
-        // Check the 'password_reset_tokens' table
-        $resetRecord = DB::table('password_reset_tokens')->where('email', $request->email)->first();
-
-        if (!$resetRecord || !Hash::check($token, $resetRecord->token)) {
-            return redirect()->route('home.index')->with('error', 'Invalid or expired password reset link.');
-        }
-        
-        if (now()->subMinutes(config('auth.passwords.users.expire', 60))->gt($resetRecord->created_at)) {
-             return redirect()->route('home.index')->with('error', 'Invalid or expired password reset link.');
-        }
-
-        return view('front.auth.reset_password', [
-            'token' => $token,
-            'email' => $request->email
-        ]);
-    }
-
-    /**
-     * Handle the actual password reset.
-     */
-    public function resetPassword(Request $request)
+    public function verifyPasswordResetOtp(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'token'                 => 'required',
-            'email'                 => 'required|email|exists:users,email',
-            'password'              => 'required|string|min:8|confirmed',
+            'otp' => 'required|numeric|digits:6',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['success' => false, 'message' => 'Please enter a valid 6-digit OTP.'], 422);
+        }
+
+        $resetData = session('password_reset_data');
+        if (!$resetData || $resetData['otp'] != $request->otp) {
+            return response()->json(['success' => false, 'message' => 'The provided OTP is invalid.'], 400);
+        }
+
+        // OTP is correct. Store the verified phone in the session for the final step
+        // and clear the OTP data.
+        session(['password_reset_verified_phone' => $resetData['phone']]);
+        session()->forget('password_reset_data');
+
+        return response()->json(['success' => true]);
+    }
+
+    /**
+     * Resend the password reset OTP.
+     */
+    public function resendPasswordResetOtp()
+    {
+        $resetData = session('password_reset_data');
+
+        if (!$resetData || !isset($resetData['phone'])) {
+            return response()->json(['success' => false, 'message' => 'Your session has expired. Please try again.'], 422);
+        }
+
+        $otp = random_int(100000, 999999);
+        $resetData['otp'] = $otp;
+        session(['password_reset_data' => $resetData]); // Resave session with new OTP
+
+        if ($this->sendSmsOtp($resetData['phone'], $otp)) {
+            return response()->json(['success' => true, 'message' => 'A new OTP has been sent.']);
+        } else {
+            return response()->json(['success' => false, 'message' => 'Could not resend OTP.'], 500);
+        }
+    }
+
+
+    /**
+     * Update the password after successful OTP verification.
+     */
+    public function updatePasswordFromOtp(Request $request)
+    {
+        // Check if the user has been verified via
+        $phone = session('password_reset_verified_phone');
+        if (!$phone) {
+            return response()->json(['success' => false, 'message' => 'Your verification session has expired. Please try again.'], 403);
+        }
+
+        $validator = Validator::make($request->all(), [
+            'password' => 'required|string|min:8|confirmed',
         ]);
 
         if ($validator->fails()) {
             return response()->json(['success' => false, 'errors' => $validator->errors()], 422);
         }
-        
-        // Check the 'password_reset_tokens' table
-        $resetRecord = DB::table('password_reset_tokens')->where('email', $request->email)->first();
 
-        if (!$resetRecord || !Hash::check($request->token, $resetRecord->token)) {
-             return response()->json(['success' => false, 'message' => 'Invalid or expired token.'], 400);
-        }
-
-        $user = User::where('email', $request->email)->first();
+        $user = User::where('phone', $phone)->first();
         if (!$user) {
+            // This should not happen if session is secure, but as a safeguard.
             return response()->json(['success' => false, 'message' => 'User not found.'], 404);
         }
 
@@ -421,18 +519,23 @@ $cleanPhoneNumber = trim($phone);
         $user->viewpassword = $request->password;
         $user->save();
         
+        // Also update the customer record if it exists
         if ($user->customer) {
-            $user->customer->password = $request->password;
+            $user->customer->password = $request->password; // Uses setter in Customer model
             $user->customer->save();
         }
 
-        // Delete from the 'password_reset_tokens' table
-        DB::table('password_reset_tokens')->where('email', $request->email)->delete();
+        // Clear the verification session
+        session()->forget('password_reset_verified_phone');
 
+        // Log the user in
         Auth::login($user);
 
         return response()->json(['success' => true, 'redirect_url' => route('dashboard.user')]);
     }
+
+    // --- END NEW PASSWORD RESET METHODS ---
+
 
     /**
      * Update basic user profile information (Name, Gender, DOB).
@@ -836,4 +939,3 @@ $cleanPhoneNumber = trim($phone);
     }
 
 }
-

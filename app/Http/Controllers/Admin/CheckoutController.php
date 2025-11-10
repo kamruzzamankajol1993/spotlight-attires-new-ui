@@ -12,6 +12,7 @@ use App\Models\RedexArea;
 use App\Models\Order;
 use App\Models\Product;
 use App\Models\OrderDetail;
+use App\Models\BundleOfferProduct;
 use Exception;
 use App\Library\SslCommerz\SslCommerzNotification;
 use Illuminate\Support\Facades\Http;
@@ -175,7 +176,49 @@ $BKASH_CHECKOUT_URL_APP_SECRET ='cdjFKfCvfzZxReRTogc60eASv9ZnNDZrtu3K5GzXCUunTyW
         if ($validator->fails()) {
             return response()->json(['success' => false, 'message' => 'Please select a valid address.'], 422);
         }
+
+        // --- START: NEW FREE SHIPPING LOGIC ---
+        $cart = Session::get('cart', []);
+        $productIds = [];
+        $bundleOfferProductIds = []; // This will hold the BundleOfferProduct IDs from the cart
+
+        foreach ($cart as $item) {
+            if (isset($item['is_bundle']) && $item['is_bundle']) {
+                // 'id' in a bundle item is the BundleOfferProduct ID
+                $bundleOfferProductIds[] = $item['id']; 
+            } else {
+                $productIds[] = $item['product_id'];
+            }
+        }
+
+        // Check 1: Do any of the regular products have free delivery?
+        if (count($productIds) > 0) {
+            $hasFreeShippingProduct = Product::whereIn('id', $productIds)
+                                              ->where('is_free_delivery', true)
+                                              ->exists();
+            if ($hasFreeShippingProduct) {
+                // Found a free shipping product, so the charge is 0.
+                return response()->json(['success' => true, 'shipping_charge' => 0]);
+            }
+        }
         
+        // Check 2: Do any of the bundles have free delivery?
+        if (count($bundleOfferProductIds) > 0) {
+            // We check if any BundleOfferProduct in the cart belongs to a BundleOffer that has free delivery.
+            $hasFreeShippingBundle = BundleOfferProduct::whereIn('id', $bundleOfferProductIds)
+                ->whereHas('bundleOffer', function ($query) {
+                    $query->where('is_free_delivery', true);
+                })
+                ->exists();
+
+            if ($hasFreeShippingBundle) {
+                // Found a free shipping bundle, so the charge is 0.
+                return response()->json(['success' => true, 'shipping_charge' => 0]);
+            }
+        }
+        // --- END: NEW FREE SHIPPING LOGIC ---
+
+        // If we're still here, no free shipping was found. Proceed with normal calculation.
         $customer = Auth::user()->customer;
         $address = $customer->addresses()->findOrFail($request->address_id);
         
@@ -190,7 +233,7 @@ $BKASH_CHECKOUT_URL_APP_SECRET ='cdjFKfCvfzZxReRTogc60eASv9ZnNDZrtu3K5GzXCUunTyW
 
         $area = RedexArea::where('District', $district)->where('Upazila_Thana', $upazila)->first();
 
-        $shippingCharge = $area ? $area->Delivery_Charge : 130; // Default if not found
+        $shippingCharge = $area ? $area->Delivery_Charge : 70; // Default if not found
 
         return response()->json([
             'success' => true,

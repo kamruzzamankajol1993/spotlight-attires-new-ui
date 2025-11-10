@@ -56,6 +56,8 @@ class AppServiceProvider extends ServiceProvider
 
                 $front_icon_name = $frontEndData->icon;
                 $front_logo_name = $frontEndData->logo;
+                 $front_mobile_version_logo = $frontEndData->mobile_version_logo;
+                ;
                 $front_ins_name = $frontEndData->ins_name;
                 $front_ins_url = $frontEndData->main_url;
                 $front_ins_add = $frontEndData->address;
@@ -76,6 +78,7 @@ class AppServiceProvider extends ServiceProvider
                 // Default values if no data is found
                 $front_icon_name = '';
                 $front_logo_name = '';
+                $front_mobile_version_logo = '';
                 $front_ins_name = '';
                 $front_ins_add = '';
                $front_ins_url = '';
@@ -92,6 +95,7 @@ class AppServiceProvider extends ServiceProvider
               view()->share('front_icon_name', $front_icon_name);
               view()->share('front_ins_url', $front_ins_url);
               view()->share('front_logo_name', $front_logo_name);
+              view()->share('front_mobile_version_logo', $front_mobile_version_logo);
               view()->share('front_ins_name', $front_ins_name);
               view()->share('front_ins_add', $front_ins_add);
               view()->share('front_ins_email', $front_ins_email);
@@ -114,6 +118,7 @@ class AppServiceProvider extends ServiceProvider
         if (!$data) {
             $icon_name = '';
             $logo_name ='';
+            
             $ins_name = '';
             $ins_add = '';
             $ins_url = '';

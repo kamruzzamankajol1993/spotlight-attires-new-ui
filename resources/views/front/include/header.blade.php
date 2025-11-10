@@ -160,7 +160,7 @@
                     <span class="navbar-toggler-icon"></span>
                 </button>
                 <a class="navbar-brand mx-auto" href="{{route('home.index')}}">
-                    <img src="{{$front_ins_url}}{{$front_logo_name}}" style="width: 120px;height:21px;" alt="Random Store">
+                    <img src="{{$front_ins_url}}{{$front_mobile_version_logo}}" class="mobile_img" alt="Random Store">
                 </a>
                 <!-- Updated User icon to trigger the new offcanvas -->
                 <a class="nav-link text-light" href="#" data-bs-toggle="offcanvas" data-bs-target="#signInOffcanvas"

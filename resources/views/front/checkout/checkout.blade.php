@@ -100,6 +100,24 @@
 
                         <div class="col-lg-5">
                             <div class="spotlight_checkout_order-summary">
+                                <div class="mb-4">
+                                    <h5 class="mb-3">Delivery Type</h5>
+                                    <p class="text-muted small mb-2">Express delivery available only inside Dhaka .</p>
+                                    <div class="row g-2">
+                                        <div class="col-6">
+                                            <label class="custom-checkbox-card" data-name="delivery_type">
+                                                <input type="radio" name="delivery_type" value="regular" checked>
+                                                <div class="d-flex align-items-center"><i class="bi bi-truck icon me-3"></i><div><div class="title">Regular</div><div class="description">3-5 days</div></div></div>
+                                            </label>
+                                        </div>
+                                        <div class="col-6">
+                                            <label id="express-delivery-option" class="custom-checkbox-card" data-name="delivery_type">
+                                                <input id="express-delivery-input" type="radio" name="delivery_type" value="express">
+                                                <div class="d-flex align-items-center"><i class="bi bi-lightning-charge-fill icon me-3"></i><div><div class="title">Express</div><div class="description">1-2 days</div></div></div>
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
                                 <h3 class="spotlight_checkout_section-title">YOUR ORDER</h3>
                                 <div class="table-responsive">
                                     <table class="table table-borderless">
@@ -124,24 +142,7 @@
                                 <div class="spotlight_checkout_subtotal"><span>Shipping</span><span id="shipping-charge-text">Select an address</span></div>
                                 <div class="spotlight_checkout_total"><span>Total</span><span id="grand-total-text">৳ {{ number_format($subtotal - $discount, 2) }}</span></div>
                                 
-                                <div class="my-4">
-    <h5 class="mb-3">Delivery Type</h5>
-    <p class="text-muted small mb-2">Express delivery available only inside Dhaka .</p>
-    <div class="row g-2">
-        <div class="col-6">
-            <label class="custom-checkbox-card" data-name="delivery_type">
-                <input type="radio" name="delivery_type" value="regular" checked>
-                <div class="d-flex align-items-center"><i class="bi bi-truck icon me-3"></i><div><div class="title">Regular</div><div class="description">3-5 days</div></div></div>
-            </label>
-        </div>
-        <div class="col-6">
-            <label id="express-delivery-option" class="custom-checkbox-card" data-name="delivery_type">
-                <input id="express-delivery-input" type="radio" name="delivery_type" value="express">
-                <div class="d-flex align-items-center"><i class="bi bi-lightning-charge-fill icon me-3"></i><div><div class="title">Express</div><div class="description">1-2 days</div></div></div>
-            </label>
-        </div>
-    </div>
-</div>
+
 
                                 <div class="my-4">
                                     <h5 class="mb-3">Payment Method</h5>
