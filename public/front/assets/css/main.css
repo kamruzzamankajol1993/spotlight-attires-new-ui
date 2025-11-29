@@ -156,7 +156,7 @@ h6 {
 
 .mobile_img
 {
-    /* height: 40px; */
+    /*height: 40px;*/
     width: 128px;
 }
 
@@ -191,6 +191,13 @@ h6 {
 .nav-link
 {
     font-weight: bold;
+    text-transform: uppercase;
+    color:black;
+}
+
+.nav-link:hover
+{
+    color: #2e433f;
 }
 
 .nav-tabs .nav-link {
@@ -366,135 +373,143 @@ h6 {
 # Global Footer
 --------------------------------------------------------------*/
 
-.footer-section {
-    background-color: #F9F5F0;
-    padding: 4rem 0 0 0;
-    color: #333;
+/* Footer Main Section */
+.spotlight_footer_footer-section {
+  background-color: #1a1a1a; /* Dark charcoal/black */
+  color: #ffffff;
+  padding-top: 80px;
+  padding-bottom: 40px;
+  margin-top: auto;
+  position: relative;
 }
 
-@media (max-width: 991.98px) {
-.footer-section {
-    padding: 4rem 0 100px 0;
-}
-}
-
-.contact-card {
-    background-color: #f8f9fa;
-    border-radius: 1rem;
-    padding: 1.5rem;
-    display: flex;
-    align-items: center;
-    margin-bottom: 2rem;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+/* Typography */
+/* Scoped specifically to footer to avoid conflicts */
+.spotlight_footer_footer-section h4,
+.spotlight_footer_brand-name {
+  font-family: "Oswald", sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 25px;
+  font-weight: 500;
+  color: white;
 }
 
-.contact-card .icon-circle {
-    background-color: black;
-    width: 48px;
-    height: 48px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-    margin-right: 1rem;
+.spotlight_footer_footer-section p,
+.spotlight_footer_footer-section a,
+.spotlight_footer_footer-section span {
+  color: #cccccc;
+  font-size: 16px;
+  text-decoration: none;
+  transition: 0.3s;
 }
 
-.contact-card .icon-circle i {
-    color: #fff;
-    font-size: 1.5rem;
+/* Column 1: Brand */
+.spotlight_footer_brand-logo-icon {
+  width: 100%;
+  height: auto;
+  margin-bottom: 20px;
 }
 
-.contact-card .contact-info {
-    font-size: 0.9rem;
-    color: #555;
+.spotlight_footer_brand-logo-icon img {
+  height: 100%;
+  width: 100%;
 }
 
-.footer-logo-container {
-    margin-bottom: 2rem;
+.spotlight_footer_brand-name {
+  font-size: 28px;
+  font-weight: 700;
+  margin-bottom: 5px;
+  color: #fff;
 }
 
-.footer-logo {
-    width: 180px;
-    height: auto;
-    margin-bottom: 1rem;
+.spotlight_footer_brand-phone {
+  font-size: 22px;
+  color: #fff;
+  margin-bottom: 20px;
+  display: block;
 }
 
-.footer-social-icons a {
-    display: inline-block;
-    width: 40px;
-    height: 40px;
-    background-color: black;
-    color: #fff;
-    border-radius: 0.5rem;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    margin-right: 0.5rem;
-    transition: all 0.3s ease-in-out;
+.spotlight_footer_social-icons a {
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  color: #fff;
+  margin-right: 10px;
+  font-size: 30px;
+  transition: 0.3s;
 }
 
-.footer-social-icons a:hover {
-    background-color: black;
+.spotlight_footer_social-icons a:hover {
+  color: #aaa;
 }
 
-.footer-heading {
-    color: black;
-    font-weight: bold;
-    font-size: 1.25rem;
-    margin-bottom: 1.5rem;
+/* Column 2: Quick Links */
+.spotlight_footer_footer-links {
+  list-style: none;
+  padding: 0;
+  margin: 0;
 }
 
-.footer-links li a {
-    color: #555;
-    text-decoration: none;
-    transition: color 0.3s ease-in-out;
-    font-size: 0.9rem;
+.spotlight_footer_footer-links li {
+  margin-bottom: 12px;
 }
 
-.footer-links li a:hover {
-    color: var(--primary-color);
+.spotlight_footer_footer-links a:hover {
+  color: #fff;
+  padding-left: 5px; /* Slight movement effect */
 }
 
-.newsletter-input-group {
-    display: flex;
-    align-items: center;
+/* Column 3: Contact */
+.spotlight_footer_contact-item {
+  display: flex;
+  align-items: flex-start;
+  margin-bottom: 15px;
 }
 
-.newsletter-input-group .form-control {
-    border-radius: 0.5rem 0 0 0.5rem;
-    border: 1px solid #ced4da;
-    box-shadow: none;
+.spotlight_footer_contact-icon {
+  margin-right: 15px;
+  font-size: 18px;
+  margin-top: 2px;
+  width: 20px; /* Fixed width for alignment */
+  text-align: center;
 }
 
-.newsletter-input-group .btn-send {
-    background-color: var(--primary-color);
-    color: #fff;
-    border: 1px solid var(--primary-color);
-    border-radius: 0 0.5rem 0.5rem 0;
-    padding: 0.5rem 1rem;
-    transition: background-color 0.3s ease-in-out;
+.spotlight_footer_contact-item {
+  display: flex;
+  align-items: flex-start;
+  margin-bottom: 15px;
 }
 
-.newsletter-input-group .btn-send:hover {
-    background-color: var(--primary-color);
+.spotlight_footer_contact-icon {
+  margin-right: 15px;
+  font-size: 18px;
+  margin-top: 2px;
+  width: 20px; /* Fixed width for alignment */
+  text-align: center;
+}
+/* Copyright Bar */
+.spotlight_footer_copyright-bar {
+  background-color: #000000; /* Pitch black */
+  padding: 25px 0;
+  text-align: center;
+  position: relative;
+  border-top: 1px solid #333;
 }
 
-.footer-bottom-text {
-    border-top: 1px solid #e9ecef;
-    text-align: center;
-    font-size: 0.9rem;
-    color: #6c757d;
+.spotlight_footer_copyright-text {
+  color: #fff;
+  font-size: 12px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  margin: 0;
 }
 
-@media (max-width: 768px) {
-    .contact-card {
-        flex-direction: column;
-        text-align: center;
-    }
-    .contact-card .icon-circle {
-        margin: 0 0 1rem 0;
-    }
+/* Responsive adjustments */
+@media (max-width: 991px) {
+  .spotlight_footer_footer-column {
+    margin-bottom: 40px;
+  }
 }
 
 
@@ -610,7 +625,7 @@ section,
     left: 0;
     width: 100%;
     height: 100%;
-    background-color: rgba(0, 0, 0, 0.5);
+    background-color: rgba(0, 0, 0, 0.3);
     z-index: 5;
     border-radius: 3px;
 }
@@ -664,7 +679,7 @@ section,
     left: 0;
     width: 100%;
     height: 100%;
-    background-color: rgba(0, 0, 0, 0.5);
+    background-color: rgba(0, 0, 0, 0.3);
     z-index: 5;
     border-radius: 3px;
 }
@@ -1488,6 +1503,35 @@ section,
     background-color: white;
     border-radius: 1rem;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.Product_Main {
+  height: 600px;
+  width: 600px;
+}
+
+.Product_Main img {
+  height: 100%;
+  width: 100%;
+  object-fit: contain;
+}
+
+.thumbnail-image {
+  height: 150px;
+  width: 100px;
+  object-fit: cover;
+}
+
+@media (max-width: 768px) {
+.Product_Main {
+  height: 250px;
+  width: 250px;
+}
+  .thumbnail-image {
+    height: 70px;
+    width: 100px;
+    object-fit: contain;
+  }
 }
 
 

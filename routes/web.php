@@ -145,6 +145,14 @@ Route::get('/offers', 'offers')->name('offers');
     Route::get('/animation-category-filter', 'filterAnimationCategory')->name('animation.category.filter');
 
     Route::get('/shop', 'shop')->name('shop.show');
+  
+  Route::get('/privacy_policy', 'privacy_policy')->name('privacy_policy.show');
+  Route::get('/term_and_condition', 'term_and_condition')->name('term_and_condition.show');
+  Route::get('/return_policy', 'return_policy')->name('return_policy.show');
+  Route::get('/contact_us', 'contact_us')->name('contact_us.show');
+  
+    
+    
     Route::get('/product/{slug}', 'product')->name('product.show');
     Route::get('/shop-filter', 'ajaxShopFilter')->name('shop.ajax_filter');
     Route::get('products-filter', 'filterProducts')->name('products.filter');

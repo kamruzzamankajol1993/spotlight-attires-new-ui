@@ -127,9 +127,9 @@
                     }
                 @endphp
                 @forelse ($initialThumbnails as $thumb)
-                    <div><img src="{{ $front_ins_url . 'public/uploads/' . $thumb }}" alt="Thumbnail Image" class="img-fluid rounded-3 thumbnail-image"></div>
+                    <div><img src="{{ $front_ins_url . 'public/uploads/' . $thumb }}" alt="Thumbnail Image" class="img-fluid thumbnail-image"></div>
                 @empty
-                    <div><img src="https://placehold.co/100x100/F5F5F5/4B5563?text=No+Image" alt="No Thumbnail" class="img-fluid rounded-3"></div>
+                    <div><img src="https://placehold.co/100x100/F5F5F5/4B5563?text=No+Image" alt="No Thumbnail" class="img-fluid"></div>
                 @endforelse
             </div>
             <div class="custom-arrows d-flex justify-content-start align-items-center w-100 mt-2">
@@ -138,7 +138,7 @@
             </div>
         </div>
 
-        <div id="main-product-slider" class="flex-grow-1 rounded-3 overflow-hidden ms-4">
+        <div id="main-product-slider" class="flex-grow-1 overflow-hidden ms-4 Product_Main">
             @php
                 $initialMainImages = $product->main_image ?? [];
                 if ($firstVariant && is_array($firstVariant->main_image)) {
@@ -153,13 +153,13 @@
                 }
             @endphp
             @forelse ($initialMainImages as $image)
-                <div><img src="{{ $front_ins_url . 'public/uploads/' . $image }}" alt="{{ $product->name }}" class="img-fluid rounded-3"></div>
+                <div><img src="{{ $front_ins_url . 'public/uploads/' . $image }}" alt="{{ $product->name }}" class="img-fluid "></div>
             @empty
-                <div><img src="https://placehold.co/1000x1000/F5F5F5/4B5563?text=No+Image" alt="No Product Image" class="img-fluid rounded-3"></div>
+                <div><img src="https://placehold.co/1000x1000/F5F5F5/4B5563?text=No+Image" alt="No Product Image" class="img-fluid"></div>
             @endforelse
         </div>
     </div>
-    <div class="d-flex align-items-center justify-content-center mt-3  p-3 rounded-3" data-product-id="{{ $product->id }}">
+    <div class="d-flex align-items-center justify-content-center mt-3  p-3" data-product-id="{{ $product->id }}">
     <i class="bi bi-eye text-muted me-2"></i>
          <span id="watching-count">{{ $product->view_count }} </span> <span style="padding-left: 5px;">People watching this product now!</span>
     </div>
@@ -171,7 +171,7 @@
 
     {{-- Show this button ONLY if real_image exist --}}
     @if(isset($product->real_image) && is_array($product->real_image) && count($product->real_image) > 0)
-        <button class="btn btn-sm btn-outline-dark fw-semibold" data-bs-toggle="modal" data-bs-target="#realImageModal">
+        <button class="btn btn-sm btn-outline-dark fw-semibold mt-3" data-bs-toggle="modal" data-bs-target="#realImageModal">
             <i class="bi bi-camera me-1"></i>
             Real Image
         </button>
@@ -221,6 +221,7 @@
                          @if($product->assignChart && $product->assignChart->entries->isNotEmpty())
                         <div class="mb-4">
                             <h2 class="h5 fw-semibold mb-2">Size Chart:</h2>
+                            <div class="table-responsive">
                             <table class="table table-bordered table-sm text-center">
                                 <thead>
                                     <tr class="bg-light">
@@ -243,10 +244,11 @@
                                     @endforeach
                                 </tbody>
                             </table>
+                            </div>
                         </div>
                         @endif
 
-                            <div class="d-flex flex-column flex-sm-row align-items-center gap-4 mb-4">
+                            <div class="d-flex flex-wrap align-items-center gap-4 mb-4">
                             <div class="d-flex align-items-center border rounded-3 overflow-hidden">
                                 <button class="btn btn-light rounded-0" id="quantity-minus">-</button>
                                 <span class="px-3" id="quantity-value">1</span>
@@ -291,31 +293,40 @@
                                 </div> --}}
 
                                 <div class="bg-white border p-3 rounded-3 mb-3">
-
+                                    <div class="table-responsive">
+                                      <table class="table">
+                                        <tbody>
                                     @foreach($areaWisePrice as $area)
-                                    <div class="d-flex justify-content-between align-items-center mb-2">
-                                        <div class="d-flex align-items-center">
-                                            <i class="bi bi-truck me-2"></i>
-                                            <span class="small">{{ $area->label }}</span>
-                                        </div>
-                                        <div class="d-flex align-items-center small text-muted">
-                                            <span>{{$area->days}} Days</span>
-                                            <span class="fw-semibold text-dark ms-3">{{$area->area}} BDT {{$area->price}}</span>
-                                        </div>
-                                    </div>
+
+                                          <tr>
+                                            <td>{{$area->area}}</td>
+                                            <td>{{$area->days}} Days</td>
+                                            <td>BDT {{$area->price}}</td>
+                                          </tr>
+                                        
+                                    
+                                    <!--<div class="d-flex justify-content-between align-items-center mb-2">-->
+                                    <!--    <div class="d-flex align-items-center">-->
+                                    <!--        <i class="bi bi-truck me-2"></i>-->
+                                    <!--        <span class="small">{{ $area->label }}</span>-->
+                                    <!--    </div>-->
+                                    <!--    <div class="d-flex align-items-center small text-muted">-->
+                                    <!--        <span>{{$area->days}} Days</span>-->
+                                    <!--        <span class="fw-semibold text-dark ms-3">{{$area->area}} BDT {{$area->price}}</span>-->
+                                    <!--    </div>-->
+                                    <!--</div>-->
                                     @endforeach
+                                    </tbody>
+                                      </table>
+                                    </div>
 
                                 </div>
 
                                 <div>
                                     <h3 class="small fw-semibold mb-2">Payment Methods:</h3>
-                                    <div class="d-flex align-items-center gap-2">
-                                        <img src="https://placehold.co/40x20/F5F5F5/4B5563?text=Bank" alt="Bank"
-                                            class="img-fluid" style="height: 20px;">
-                                        <img src="https://placehold.co/40x20/F5F5F5/4B5563?text=Bikash" alt="Bikash"
-                                            class="img-fluid" style="height: 20px;">
-                                        <img src="https://placehold.co/40x20/F5F5F5/4B5563?text=Visa" alt="Visa"
-                                            class="img-fluid" style="height: 20px;">
+                                    <div class="d-flex justify-content-center">
+                                        <img src="{{ asset('public/front/assets/img/PaymentBanner.png') }}" alt="Bank"
+                                            class="img-fluid">
                                     </div>
                                 </div>
                             </div>
@@ -404,7 +415,11 @@
                         @if($review->images->isNotEmpty())
                         <div class="review-images-container">
                             @foreach($review->images as $image)
+                                             @if($image->is_upload_from_admin == 1)
+      <img src="{{  $front_ins_url .'public/'.$image->image_path }}" alt="Review image" >
+   @else
                                 <img src="{{ asset('public/'.$image->image_path) }}" alt="Review image">
+    @endif
                             @endforeach
                         </div>
                         @endif
@@ -663,7 +678,7 @@ $(document).ready(function() {
         modalSlider.empty(); // NEW: Empty the modal slider too
 
         mainImages.forEach(img => {
-            const mainSlideHTML = `<div><img src="${IMAGE_BASE_URL}${img}" class="img-fluid rounded-3"></div>`;
+            const mainSlideHTML = `<div><img src="${IMAGE_BASE_URL}${img}" class="img-fluid "></div>`;
             const modalSlideHTML = `<div><img src="${IMAGE_BASE_URL}${img}" alt="{{ $product->name }}"></div>`;
 
             mainSlider.append(mainSlideHTML);
@@ -671,7 +686,7 @@ $(document).ready(function() {
         });
 
         thumbImages.forEach(img => {
-            thumbSlider.append(`<div><img src="${IMAGE_BASE_URL}${img}" class="img-fluid rounded-3 thumbnail-image"></div>`);
+            thumbSlider.append(`<div><img src="${IMAGE_BASE_URL}${img}" class="img-fluid thumbnail-image"></div>`);
         });
 
         initializeSlick(); // This re-initializes the *page* sliders

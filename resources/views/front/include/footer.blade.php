@@ -1,68 +1,85 @@
-    
-    <footer class="footer-section">
-        <div class="container">
-            <div class="row">
-                <div class="col-lg-12">
-                    <div class="footer-logo-container d-flex justify-content-center align-items-center flex-column">
-                        <img src="{{$front_ins_url}}public/black.png" alt="Spotlight Attires" class="footer-logo">
-                        <div class="footer-social-icons">
-                                                                                                 @if(isset($socialLinks) && !$socialLinks->isEmpty())
-                                @foreach($socialLinks as $link)
-                                    <a href="{{ $link->link }}" target="_blank" title="{{ $link->title }}"><i class="bi bi-{{ strtolower($link->title) }}"></i></a>
-                                @endforeach
-                            @endif
-                                                                                    </div>
+<!-- Footer Section -->
+<footer class="spotlight_footer_footer-section">
+    <div class="container">
+        <div class="row">
+
+            <!-- Column 1: Brand & Logo -->
+            <div class="col-lg-3 col-md-6 spotlight_footer_footer-column">
+                <div class="text-start">
+                    <!-- Using a generic icon to represent the logo in the image -->
+                    <div class="spotlight_footer_brand-logo-icon">
+                        <img src="{{$front_ins_url}}{{$front_mobile_version_logo}}" alt="Logo">
                     </div>
-                </div>
-                <!-- Contact Cards -->
-                <div class="col-md-4">
-                    <div class="contact-card">
-                        <div class="icon-circle">
-                            <i class="bi bi-geo-alt-fill"></i>
-                        </div>
-                        <div class="contact-info">
-                           {{$front_ins_add}}
-                        </div>
+                    <div class="spotlight_footer_brand-name">Spotlight Attires</div>
+                    <div class="spotlight_footer_brand-phone">+8801915-903735</div>
+
+                    <div class="spotlight_footer_social-icons">
+                        @if(isset($socialLinks) && !$socialLinks->isEmpty())
+                        @foreach($socialLinks as $link)
+                        <a href="{{ $link->link }}" target="_blank" title="{{ $link->title }}"><i
+                                class="bi bi-{{ strtolower($link->title) }}"></i></a>
+                        @endforeach
+                        @endif
                     </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="contact-card">
-                        <div class="icon-circle">
-                            <i class="bi bi-envelope-fill"></i>
-                        </div>
-                        <div class="contact-info">
-                          {{$front_ins_email}}
-                           {{-- Display secondary email if it exists --}}
-                       @if(!empty($front_ins_email_one))
-                            <br>{{$front_ins_email_one}}
-                       @endif
-                           
-                                               </div>
-                    </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="contact-card">
-                        <div class="icon-circle">
-                            <i class="bi bi-telephone-fill"></i>
-                        </div>
-                        <div class="contact-info">
-                        {{$front_ins_phone}}
-                          @if(!empty($front_ins_phone_one))
-                        <br>{{$front_ins_phone_one}}
-                     @endif
-                                             </div>
-                    </div>
+
                 </div>
             </div>
 
-            <div class="row">
-                <div class="col-12">
-                    <div class="footer-bottom-text">
-                        Copyright© 2025 Spotlight Attires
-                    </div>
+            <!-- Column 2: Quick Links -->
+            <div class="col-lg-3 col-md-6 spotlight_footer_footer-column">
+                <h4>QUICK LINKS</h4>
+                <ul class="spotlight_footer_footer-links">
+                    <li><a href="{{route('privacy_policy.show')}}">Privacy Policy</a></li>
+                    <li><a href="{{route('term_and_condition.show')}}">Terms & Condition</a></li>
+                    <li><a href="{{route('return_policy.show')}}">Return Policy</a></li>
+                    <li><a href="#">Contact Us</a></li>
+                </ul>
+            </div>
+
+            <!-- Column 3: Contact Us -->
+            <div class="col-lg-3 col-md-6 spotlight_footer_footer-column">
+                <h4>CONTACT US</h4>
+                <div class="spotlight_footer_contact-item">
+                    <div class="spotlight_footer_contact-icon"><i class="bi bi-map"></i></div>
+                    <span>{{$front_ins_add}}</span>
+                </div>
+                <div class="spotlight_footer_contact-item">
+                    <div class="spotlight_footer_contact-icon"><i class="bi bi-phone"></i></div>
+                    <span>
+                        {{$front_ins_phone}}
+                        @if(!empty($front_ins_phone_one))
+                        <br>{{$front_ins_phone_one}}
+                        @endif
+                    </span>
+                </div>
+                <div class="spotlight_footer_contact-item">
+                    <div class="spotlight_footer_contact-icon"><i class="bi bi-envelope"></i></div>
+                    <span>
+                        {{$front_ins_email}}
+                        {{-- Display secondary email if it exists --}}
+                        @if(!empty($front_ins_email_one))
+                        <br>{{$front_ins_email_one}}
+                        @endif
+                    </span>
                 </div>
             </div>
+
+            <!-- Column 4: Facebook Page Plugin -->
+            <div class="col-lg-3 col-md-6 spotlight_footer_footer-column">
+                <iframe
+                    src="https://www.facebook.com/plugins/page.php?href=https%3A%2F%2Fwww.facebook.com%2Fspotlightattiresbangladesh&tabs=timeline&width=340&height=500&small_header=false&adapt_container_width=true&hide_cover=false&show_facepile=true&appId"
+                    width="100%" height="300" style="border:none;overflow:hidden" scrolling="no" frameborder="0"
+                    allowfullscreen="true"
+                    allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share"></iframe>
+            </div>
+
         </div>
-    </footer>
-    
-    
+    </div>
+</footer>
+
+<!-- Copyright Bar -->
+<div class="spotlight_footer_copyright-bar">
+    <div class="container">
+        <p class="spotlight_footer_copyright-text">&copy; 2025 Spotlight Attires.ALL RIGHTS RESERVED.</p>
+    </div>
+</div>

@@ -99,10 +99,10 @@
                         <i class="bi bi-list me-2"></i> All Category
                     </button>
                     <!-- Added the Menu link here -->
-                    <a class="nav-link text-dark mx-2 d-none d-xl-block" href="{{route('shop.show')}}" >All Product</a>
+                    <a class="nav-link mx-2 d-none d-xl-block" href="{{route('shop.show')}}" >All Product</a>
                     @if(isset($menuItems) && $menuItems->count() > 0)
     @foreach($menuItems as $item)
-        <a class="nav-link text-dark mx-2 d-none d-xl-block" href="{{ url($item->route) }}">{{ $item->name }}</a>
+        <a class="nav-link mx-2 d-none d-xl-block" href="{{ url($item->route) }}">{{ $item->name }}</a>
     @endforeach
 @endif
                 </div>

@@ -24,23 +24,51 @@ use App\Models\ExtraCategory;
 use App\Models\AreaWisePrice; 
 class FrontController extends Controller
 {
+  
+  public function privacy_policy(){
+    
+    
+    return view('front.include.privacy_policies_spotlight');
+  
+  
+  }
+  
+  public function term_and_condition(){
+    
+    
+    return view('front.include.terms_and_conditions');
+  
+  
+  }
+  
+   public function return_policy(){
+    
+    
+    return view('front.include.return_refund');
+  
+  
+  }
 
 
     private function applyFilters(\Illuminate\Http\Request $request, $query)
 {
-
     // NEW: Handle the search query filter
     if ($request->filled('query')) {
         $query->where('name', 'LIKE', '%' . $request->input('query') . '%');
     }
+
     // Filter by Category, Subcategory, or Animation Category
     $categoryId = $request->input('category_id') ?: $request->input('subcategory_id');
     if ($categoryId) {
-        $productIds = \App\Models\AssignCategory::where('category_id', $categoryId)->where('type', 'product_category')->pluck('product_id');
+        $productIds = \App\Models\AssignCategory::where('category_id', $categoryId)
+            ->where('type', 'product_category')
+            ->pluck('product_id');
         $query->whereIn('id', $productIds);
     }
     if ($request->filled('animation_category_id')) {
-        $productIds = \App\Models\AssignCategory::where('category_id', $request->animation_category_id)->where('type', 'animation')->pluck('product_id');
+        $productIds = \App\Models\AssignCategory::where('category_id', $request->animation_category_id)
+            ->where('type', 'animation')
+            ->pluck('product_id');
         $query->whereIn('id', $productIds);
     }
 
@@ -57,24 +85,48 @@ class FrontController extends Controller
         if ($request->stock_status === 'offer') {
             $query->whereNotNull('discount_price')->where('discount_price', '>', 0);
         } elseif ($request->stock_status === 'in_stock') {
+            // Checks if there is at least one variant with any size data available
             $query->whereHas('variants', fn($q) => $q->whereJsonLength('sizes', '>', 0));
         }
     }
 
-    // Filter by Size
+    // --- UPDATED: Filter by Size with Stock Check ---
     if ($request->filled('sizes') && is_array($request->sizes)) {
         $selectedSizeNames = $request->sizes;
         $sizeIds = \App\Models\Size::whereIn('name', $selectedSizeNames)->pluck('id')->toArray();
+
         if (!empty($sizeIds)) {
             $query->whereHas('variants', function ($variantQuery) use ($sizeIds) {
                 $variantQuery->where(function ($q) use ($sizeIds) {
                     foreach ($sizeIds as $sizeId) {
-                        $q->orWhereJsonContains('sizes', ['size_id' => (string)$sizeId]);
+                        $strSizeId = (string)$sizeId;
+
+                        $q->orWhere(function ($subQ) use ($strSizeId) {
+                            // 1. Ensure the JSON array contains the specific size_id
+                            $subQ->whereJsonContains('sizes', ['size_id' => $strSizeId])
+                                // 2. Raw SQL to find the quantity for that specific size_id and check if > 0
+                                // logic: Find path of size_id -> replace path string '.size_id' with '.quantity' -> extract value -> check > 0
+                                ->whereRaw('
+                                    CAST(
+                                        JSON_UNQUOTE(
+                                            JSON_EXTRACT(
+                                                sizes, 
+                                                REPLACE(
+                                                    JSON_UNQUOTE(JSON_SEARCH(sizes, "one", ?, NULL, "$[*].size_id")), 
+                                                    ".size_id", 
+                                                    ".quantity"
+                                                )
+                                            )
+                                        ) AS UNSIGNED
+                                    ) > 0
+                                ', [$strSizeId]);
+                        });
                     }
                 });
             });
         }
     }
+    // ------------------------------------------------
 
     // Sorting Logic
     $sortBy = $request->input('sort_by', 'newest');
@@ -635,7 +687,7 @@ public function ajaxSearchFilter(Request $request)
 {
     $query = Product::where('status', 1);
 
-    // শুধু একটি লাইন দিয়ে সব ফিল্টার প্রয়োগ করুন
+    // শুধু কটি লাইন দিে সব ফিল্টা প্রয়োগ করু
     $query = $this->applyFilters($request, $query);
 
     $products = $query->with(['category', 'variants', 'productCategoryAssignment.category'])->withCount('reviews')

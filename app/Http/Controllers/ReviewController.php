@@ -81,6 +81,7 @@ class ReviewController extends Controller
                 'product_id'  => $request->product_id,
                 'rating'      => $request->rating,
                 'description' => $request->description,
+                'is_upload_from_admin' => 0,
             ]);
 
             if ($request->hasFile('images')) {
@@ -91,6 +92,7 @@ class ReviewController extends Controller
                     ProductReviewImage::create([
                         'product_review_id' => $review->id,
                         'image_path'        => 'uploads/review_images/' . $imageName,
+                        'is_upload_from_admin' => 0,
                     ]);
                 }
             }
