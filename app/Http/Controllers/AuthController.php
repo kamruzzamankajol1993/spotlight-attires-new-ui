@@ -135,7 +135,16 @@ $cleanPhoneNumber = trim($phone);
         // Attempt to log in
         if (Auth::attempt($credentials)) {
             $request->session()->regenerate();
-            return response()->json(['success' => true, 'redirect_url' => route('dashboard.user')]);
+
+            // --- CHECK REDIRECT CONTEXT ---
+            $redirectUrl = route('dashboard.user'); // Default to dashboard
+
+            // If the login request specifically asks for checkout redirect
+            if ($request->input('redirect_context') === 'checkout') {
+                $redirectUrl = route('user.checkout');
+            }
+
+            return response()->json(['success' => true, 'redirect_url' => $redirectUrl]);
         }
 
         return response()->json(['success' => false, 'message' => 'The provided credentials do not match our records.'], 401);

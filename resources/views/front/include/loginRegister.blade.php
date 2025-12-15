@@ -10,6 +10,7 @@
         {{-- Login Form --}}
         <form id="loginForm" novalidate>
              @csrf
+             <input type="hidden" name="redirect_context" id="redirectContext" value="">
             <div class="mb-3">
                 <label for="loginEmail" class="form-label">Email or Phone <span class="text-danger">*</span></label>
                 <input type="text" class="form-control" name="email" id="loginEmail" required>

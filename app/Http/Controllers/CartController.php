@@ -333,11 +333,11 @@ public function getMainCartContent()
           $coupon = Coupon::where('code', $request->coupon_code)
                         ->where('status', true)
                         ->where(function ($query) {
-                            $query->where('start_date', '<=', now())
+                            $query->where('start_date', '<=', date('Y-m-d'))
                                   ->orWhereNull('start_date');
                         })
                         ->where(function ($query) {
-                            $query->where('expires_at', '>=', now())
+                            $query->where('expires_at', '>=', date('Y-m-d'))
                                   ->orWhereNull('expires_at');
                         })
                         ->first();

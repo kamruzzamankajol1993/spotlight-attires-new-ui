@@ -835,6 +835,7 @@ $(document).ready(function() {
     });
 
      // --- NEW SEPARATE "Buy Now" Handler ---
+    // --- NEW SEPARATE "Buy Now" Handler ---
     $('#buy-now').on('click', function() {
         if (!selectedVariantId) {
             Swal.fire({ icon: 'warning', title: 'Hold on!', text: 'Please select a color.' });
@@ -865,28 +866,21 @@ $(document).ready(function() {
                 if (response.success) {
                     updateCartOffcanvas();
                     
-                     @auth
-                        // If user is logged in, redirect straight to checkout
-                        window.location.href = "{{ route('user.checkout') }}";
-                    @else
-                        // If user is a guest, open the login/register offcanvas
-                        const signInOffcanvas = new bootstrap.Offcanvas(document.getElementById('signInOffcanvas'));
-                        signInOffcanvas.show();
-                    @endauth
+                    // MODIFIED: Redirect everyone (Guest or Auth) to the cart page immediately
+                    window.location.href = "{{ route('cart.show') }}";
+                    
                 } else {
                     Swal.fire({ icon: 'error', title: 'Oops...', text: response.message || 'An error occurred.' });
+                    // Re-enable button if there was an error
+                    $button.prop('disabled', false).html('Buy Now');
                 }
             },
             error: function() {
                 Swal.fire({ icon: 'error', title: 'Request Failed', text: 'Something went wrong.' });
-            },
-            complete: function() {
-                // Only re-enable the button if the user is a guest (and the modal is shown)
-                // Otherwise, the page will redirect.
-                @guest
-                    $button.prop('disabled', false).html('Buy Now');
-                @endguest
+                // Re-enable button if there was an error
+                $button.prop('disabled', false).html('Buy Now');
             }
+            // Removed 'complete' block to keep button disabled during redirect
         });
     });
 

@@ -286,6 +286,7 @@ $(document).ready(function() {
     });
 
     // --- PROCEED TO CHECKOUT BUTTON ---
+    // --- PROCEED TO CHECKOUT BUTTON ---
     $('#proceed-to-checkout-btn').on('click', function(e) {
         e.preventDefault();
         
@@ -293,11 +294,13 @@ $(document).ready(function() {
             // If user is logged in, redirect to checkout
             window.location.href = '{{ route("user.checkout") }}';
         @else
-            // If user is a guest, open the login/register modal
-             // If user is a guest, open the login/register offcanvas
-        const signInOffcanvas = new bootstrap.Offcanvas(document.getElementById('signInOffcanvas')); // <-- CORRECT
-        
-        signInOffcanvas.show();
+            // If user is a guest:
+            // 1. Set the hidden input in the login form to 'checkout'
+            $('#redirectContext').val('checkout');
+
+            // 2. Open the login/register offcanvas
+            const signInOffcanvas = new bootstrap.Offcanvas(document.getElementById('signInOffcanvas'));
+            signInOffcanvas.show();
         @endauth
     });
 

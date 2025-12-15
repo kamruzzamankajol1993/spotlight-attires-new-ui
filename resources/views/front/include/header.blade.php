@@ -328,7 +328,7 @@
             </p>
             <a href="{{route('cart.show')}}" class="btn btn-outline-dark">View Cart</a>
             @if (Auth::check())
-            <a href="{{route('user.checkout')}}" class="btn btn-dark">Checkout</a>
+            <!--<a href="{{route('user.checkout')}}" class="btn btn-dark">Checkout</a>-->
             @else
              <a href="#" class="btn btn-dark" data-bs-toggle="offcanvas"
                         data-bs-target="#signInOffcanvas" aria-controls="signInOffcanvas">Checkout</a>

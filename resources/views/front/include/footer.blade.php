@@ -8,10 +8,10 @@
                 <div class="text-start">
                     <!-- Using a generic icon to represent the logo in the image -->
                     <div class="spotlight_footer_brand-logo-icon">
-                        <img src="{{$front_ins_url}}{{$front_mobile_version_logo}}" alt="Logo">
+                        <img src="{{asset('/')}}public/logo_white.png" alt="Logo">
                     </div>
                     <div class="spotlight_footer_brand-name">Spotlight Attires</div>
-                    <div class="spotlight_footer_brand-phone">+8801915-903735</div>
+                    <div class="spotlight_footer_brand-phone">+8801965665880</div>
 
                     <div class="spotlight_footer_social-icons">
                         @if(isset($socialLinks) && !$socialLinks->isEmpty())
