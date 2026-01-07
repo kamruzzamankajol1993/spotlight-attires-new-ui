@@ -20,6 +20,10 @@ Route::get('/clear', function() {
 });
 
 Route::controller(CheckoutController::class)->group(function () {
+
+    // --- NEW: Reward Point Routes ---
+    Route::post('/checkout-apply-points', 'applyRewardPoints')->name('checkout.apply_points');
+    Route::post('/checkout-remove-points', 'removeRewardPoints')->name('checkout.remove_points');
    // --- ADDED: SSLCOMMERZ PAYMENT GATEWAY ROUTES ---
          Route::post('/pay', 'pay')->name('pay');
         Route::post('/ssl/success', 'sslSuccess')->name('sslcommerz.success');

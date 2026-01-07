@@ -559,39 +559,52 @@ if (watchingContainer.length && watchingCountElement.length) {
             currentSlotIndex = $(this).data('slot-index');
         });
 
+        // offerproduct.blade.php এর ৫৬৪ নম্বর লাইনের আশেপাশের কোডটি এভাবে পরিবর্তন করুন:
+
         $(document).on('click', '.initial-product-option', function() {
             const productId = $(this).data('productId');
             const product = productsData[productId];
             let variantHTML = '<div class="row row-cols-2 row-cols-md-3 g-3">';
-            product.variants.forEach(variant => {
-                variant.detailed_sizes.forEach(sizeInfo => {
-                    const imagePath = (variant.variant_image && variant.variant_image.length > 0)
-                        ? variant.variant_image[0]
-                        : (product.main_image && product.main_image.length > 0 ? product.main_image[0] : null);
-                    const variantImage = imagePath ? `{{ $front_ins_url . 'public/uploads/' }}${imagePath}` : 'https://placehold.co/300x300';
+            
+            if (product.variants && Array.isArray(product.variants)) {
+                product.variants.forEach(variant => {
+                    if (variant.detailed_sizes && Array.isArray(variant.detailed_sizes)) {
+                        variant.detailed_sizes.forEach(sizeInfo => {
+                            
+                            // --- নতুন কন্ডিশন: শুধুমাত্র স্টক থাকলে (quantity > 0) সাইজটি দেখাবে ---
+                            if (parseInt(sizeInfo.quantity) > 0) { 
+                                
+                                const imagePath = (variant.variant_image && variant.variant_image.length > 0)
+                                    ? variant.variant_image[0]
+                                    : (product.main_image && product.main_image.length > 0 ? product.main_image[0] : null);
+                                const variantImage = imagePath ? `{{ $front_ins_url . 'public/uploads/' }}${imagePath}` : 'https://placehold.co/300x300';
 
-                    const basePrice = parseFloat(product.base_price) + parseFloat(variant.additional_price || 0);
-                    const discountedPrice = {{ $bundleDeal->discount_price / $bundleDeal->buy_quantity }};
+                                const basePrice = parseFloat(product.base_price) + parseFloat(variant.additional_price || 0);
+                                const discountedPrice = {{ $bundleDeal->discount_price / $bundleDeal->buy_quantity }};
 
-                    variantHTML += `
-                        <div class="col">
-                            <div class="card h-100 final-variant-option" style="cursor: pointer;"
-                                 data-product-id="${product.id}" data-variant-id="${variant.id}" data-size-name="${sizeInfo.name}"
-                                 data-product-name="${product.name}" data-color-name="${variant.color ? variant.color.name : ''}"
-                                 data-base-price="${basePrice}" data-final-price="${discountedPrice}" data-product-image="${variantImage}">
-                                <img src="${variantImage}" class="card-img-top" alt="${product.name}">
-                                <div class="card-body text-center p-2">
-                                    <h6 class="card-title small mb-1">${product.name}</h6>
-                                    <p class="card-text small mb-1">Size: ${sizeInfo.name}</p>
-                                    <p class="card-text small">
-                                        <del class="text-muted me-1">৳ ${basePrice.toFixed(1)}</del>
-                                        <span class="fw-bold">৳ ${discountedPrice.toFixed(1)}</span>
-                                    </p>
-                                </div>
-                            </div>
-                        </div>`;
+                                variantHTML += `
+                                    <div class="col">
+                                        <div class="card h-100 final-variant-option" style="cursor: pointer;"
+                                            data-product-id="${product.id}" data-variant-id="${variant.id}" data-size-name="${sizeInfo.name}"
+                                            data-product-name="${product.name}" data-color-name="${variant.color ? variant.color.name : ''}"
+                                            data-base-price="${basePrice}" data-final-price="${discountedPrice}" data-product-image="${variantImage}">
+                                            <img src="${variantImage}" class="card-img-top" alt="${product.name}">
+                                            <div class="card-body text-center p-2">
+                                                <h6 class="card-title small mb-1">${product.name}</h6>
+                                                <p class="card-text small mb-1">Size: ${sizeInfo.name}</p>
+                                                <p class="card-text small">
+                                                    <del class="text-muted me-1">৳ ${basePrice.toFixed(1)}</del>
+                                                    <span class="fw-bold">৳ ${discountedPrice.toFixed(1)}</span>
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>`;
+                            } 
+                            // --- কন্ডিশন শেষ ---
+                        });
+                    }
                 });
-            });
+            }
             variantHTML += '</div>';
             modalTitle.text(product.name);
             variantView.html(variantHTML).show();

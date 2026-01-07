@@ -36,6 +36,8 @@ class Product extends Model
         'real_image',
         'status',
         'is_free_delivery',
+         'is_pre_order', // নতুন
+    'pre_order_msg', // নতুন
     ];
 
 

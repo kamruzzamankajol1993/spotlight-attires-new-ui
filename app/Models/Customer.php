@@ -17,6 +17,7 @@ class Customer extends Authenticatable
         'user_id',
         'slug',
         'type',
+         'discount_in_percent',
         'name',
         'source',
         'email',

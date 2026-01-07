@@ -7,7 +7,13 @@
         <div class="col-md-7">
             <h3 class="fw-semibold">{{ $product->name }}</h3>
             <p class="text-muted">SKU: <span id="quick-view-sku">{{ $product->product_code }}</span></p>
-
+{{-- START: Pre Order Message --}}
+@if($product->is_pre_order == 1)
+    <p class="text-danger fw-bold mb-2">
+        Pre Order: {{ $product->pre_order_msg ?? 'Delivery time may vary.' }}
+    </p>
+@endif
+{{-- END: Pre Order Message --}}
             <div class="mb-3">
                 @if($product->discount_price)
                     <span class="h4 fw-bold text-dark" id="quick-view-price">৳ {{ number_format($product->discount_price, 2) }}</span>

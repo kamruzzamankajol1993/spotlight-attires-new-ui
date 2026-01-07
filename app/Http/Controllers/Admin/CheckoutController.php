@@ -18,6 +18,8 @@ use App\Library\SslCommerz\SslCommerzNotification;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Cookie; // ADDED: For handling cookies
 use App\Models\User;
+use App\Models\RewardPointSetting;
+use App\Models\RewardPoint;
 class CheckoutController extends Controller
 {
 
@@ -92,10 +94,13 @@ $BKASH_CHECKOUT_URL_APP_SECRET ='cdjFKfCvfzZxReRTogc60eASv9ZnNDZrtu3K5GzXCUunTyW
         // Return the JSON response as an array
         return $response->json();
     }
-    private function getCartData()
+    // এই ফাংশনটি CheckoutController ক্লাসের ভেতরে পেস্ট করুন এবং গের getCartData রিপ্লেস করুন
+
+private function getCartData()
 {
     $cart = Session::get('cart', []);
     $subtotal = 0;
+    
     foreach ($cart as $item) {
         $subtotal += $item['price'] * $item['quantity'];
     }
@@ -103,27 +108,34 @@ $BKASH_CHECKOUT_URL_APP_SECRET ='cdjFKfCvfzZxReRTogc60eASv9ZnNDZrtu3K5GzXCUunTyW
     $coupon = Session::get('coupon');
     $discount = 0;
     
+    // Default values
+    $discountType = 'fixed';
+    $discountValue = 0;
+
+    // ১. কুপন থাকলে সেটিই প্রাধান্য পাবে
     if ($coupon) {
         $eligibleSubtotal = 0;
         $productIdsInCart = collect($cart)->where('is_bundle', false)->pluck('product_id')->unique()->all();
         
         if(!empty($productIdsInCart)){
             $products = Product::whereIn('id', $productIdsInCart)->get()->keyBy('id');
+            
+            $couponProductIds = is_array($coupon->product_ids) ? $coupon->product_ids : json_decode($coupon->product_ids, true);
+            $couponCategoryIds = is_array($coupon->category_ids) ? $coupon->category_ids : json_decode($coupon->category_ids, true);
+
             foreach ($cart as $item) {
-                // Skip bundles or items whose product details couldn't be fetched
                 if (isset($item['is_bundle']) && $item['is_bundle']) continue;
                 if (!isset($products[$item['product_id']])) continue;
 
                 $product = $products[$item['product_id']];
 
-                // --- CORE CHANGE: Skip products that are already on discount ---
                 if (isset($product->discount_price) && $product->discount_price > 0) {
                     continue;
                 }
 
-                $isCouponForAll = empty($coupon->product_ids) && empty($coupon->category_ids);
-                $isProductEligible = !empty($coupon->product_ids) && in_array($product->id, $coupon->product_ids);
-                $isCategoryEligible = !empty($coupon->category_ids) && in_array($product->category_id, $coupon->category_ids);
+                $isCouponForAll = empty($couponProductIds) && empty($couponCategoryIds);
+                $isProductEligible = !empty($couponProductIds) && in_array($product->id, $couponProductIds);
+                $isCategoryEligible = !empty($couponCategoryIds) && in_array($product->category_id, $couponCategoryIds);
                 
                 if ($isCouponForAll || $isProductEligible || $isCategoryEligible) {
                     $eligibleSubtotal += $item['price'] * $item['quantity'];
@@ -133,18 +145,45 @@ $BKASH_CHECKOUT_URL_APP_SECRET ='cdjFKfCvfzZxReRTogc60eASv9ZnNDZrtu3K5GzXCUunTyW
         
         if ($coupon->type === 'fixed') {
             $discount = $coupon->value;
+            $discountType = 'fixed';
+            $discountValue = $coupon->value;
         } elseif ($coupon->type === 'percent') {
             $discount = ($eligibleSubtotal * $coupon->value) / 100;
+            $discountType = 'percent';
+            $discountValue = $coupon->value;
         }
         
         $discount = min($discount, $eligibleSubtotal);
+    } 
+    // ২. কুপন না থাকলে কাস্টমার ডিসকাউন্ট চেক করুন
+    elseif (Auth::check() && Auth::user()->customer) {
+        $customerDiscountPercent = Auth::user()->customer->discount_in_percent ?? 0;
+
+        if ($customerDiscountPercent > 0) {
+            $discount = ($subtotal * $customerDiscountPercent) / 100;
+            $discountType = 'percent';
+            $discountValue = $customerDiscountPercent;
+        }
     }
+
+    // --- START: NEW REWARD POINT LOGIC (Added without changing previous code) ---
+    $rewardSession = Session::get('reward_point_discount');
+    $rewardDiscount = 0;
+    if ($rewardSession) {
+        $rewardDiscount = $rewardSession['amount'];
+    }
+    // --- END: NEW REWARD POINT LOGIC ---
     
     return [
-        'cart'       => $cart,
-        'subtotal'   => $subtotal,
-        'discount'   => $discount,
-        'coupon'     => $coupon,
+        'cart'           => $cart,
+        'subtotal'       => $subtotal,
+        'discount'       => $discount,
+        'coupon'         => $coupon,
+        'discount_type'  => $discountType,  // Return type
+        'discount_value' => $discountValue,  // Return value
+        
+        // New Return Key
+        'reward_discount'=> $rewardDiscount 
     ];
 }
 
@@ -252,24 +291,26 @@ $BKASH_CHECKOUT_URL_APP_SECRET ='cdjFKfCvfzZxReRTogc60eASv9ZnNDZrtu3K5GzXCUunTyW
             'shipping_cost'       => 'required|numeric|min:0',
         ]);
 
-        $cartData = $this->getCartData();
+        // Get cart data with the updated logic (Coupon vs Customer Discount + Reward Discount)
+        $cartData = $this->getCartData(); 
+
         if (count($cartData['cart']) == 0) {
             return redirect()->route('cart.show')->with('error', 'Your cart is empty.');
         }
-
-       
 
         $user = Auth::user();
         $customer = $user->customer;
         $shippingAddress = $customer->addresses()->findOrFail($request->shipping_address_id);
 
-         // ADDED: Store user's phone in a temporary cookie (10 minutes)
-        // This cookie will be used to log them back in after payment.
-        //dd($user->phone);
-            
-        
-        //dd(Cookie::get('user_phone_for_login'));
-        $totalAmount = ($cartData['subtotal'] - $cartData['discount']) + $request->shipping_cost;
+        // Calculate total amount
+        // Formula: (Subtotal - Coupon/Customer Discount - Reward Discount) + Shipping
+        $rewardDiscount = $cartData['reward_discount'] ?? 0;
+        $totalAmount = ($cartData['subtotal'] - $cartData['discount'] - $rewardDiscount) + $request->shipping_cost;
+
+        // Prevent negative total
+        if ($totalAmount < 0) {
+            $totalAmount = 0;
+        }
 
         DB::beginTransaction();
         try {
@@ -278,13 +319,21 @@ $BKASH_CHECKOUT_URL_APP_SECRET ='cdjFKfCvfzZxReRTogc60eASv9ZnNDZrtu3K5GzXCUunTyW
                 $invoiceNumber = rand(1000, 9999);
             } while (Order::where('invoice_no', $invoiceNumber)->exists());
 
-
             $order = Order::create([
                 'customer_id'      => $customer->id,
                 'invoice_no'       => $invoiceNumber,
                 'subtotal'         => $cartData['subtotal'],
                 'shipping_cost'    => $request->shipping_cost,
-                'discount'         => $cartData['discount'],
+                
+                // --- COUPON / CUSTOMER DISCOUNT ---
+                'discount'         => $cartData['discount'], 
+                'discount_type'    => $cartData['discount_type'] ?? 'fixed', 
+                'discount_value'   => $cartData['discount_value'] ?? 0,
+                
+                // --- NEW: REWARD POINT DISCOUNT ---
+                'reward_point_discount' => $rewardDiscount,
+                // ----------------------------------
+
                 'total_amount'     => $totalAmount,
                 'status'           => 'pending',
                 'shipping_address' => $shippingAddress->address . ', ' . $shippingAddress->phone,
@@ -296,7 +345,7 @@ $BKASH_CHECKOUT_URL_APP_SECRET ='cdjFKfCvfzZxReRTogc60eASv9ZnNDZrtu3K5GzXCUunTyW
                 'cod'              => $request->payment_method == 'cod' ? $totalAmount : 0,
                 'due'              => $totalAmount,
                 'order_from'       => 'web',
-                   'currency'         => 'BDT',
+                'currency'         => 'BDT',
                 'payment_status'   => 'unpaid',
                 'notes'            => $request->notes,
             ]);
@@ -319,6 +368,27 @@ $BKASH_CHECKOUT_URL_APP_SECRET ='cdjFKfCvfzZxReRTogc60eASv9ZnNDZrtu3K5GzXCUunTyW
                 }
             }
             
+            // --- START: DEDUCT REWARD POINTS ---
+            // If reward points were used, deduct them now and log the transaction
+            $rewardSession = Session::get('reward_point_discount');
+            if ($rewardSession) {
+                $pointsUsed = $rewardSession['points'];
+                $discountAmount = $rewardSession['amount'];
+
+                // 1. Log in reward_points table
+                \App\Models\RewardPoint::create([
+                    'customer_id' => $customer->id,
+                    'order_id'    => $order->id,
+                    'points'      => $pointsUsed,
+                    'type'        => 'redeemed',
+                    'meta'        => 'Redeemed ' . $pointsUsed . ' points for order discount of ৳' . $discountAmount,
+                ]);
+
+                // 2. Clear the session
+                Session::forget('reward_point_discount');
+            }
+            // --- END: DEDUCT REWARD POINTS ---
+
             DB::commit();
 
             // --- Payment Gateway Logic ---
@@ -567,6 +637,86 @@ $BKASH_CHECKOUT_URL_APP_SECRET ='cdjFKfCvfzZxReRTogc60eASv9ZnNDZrtu3K5GzXCUunTyW
             }
         }
         // Log IPN failure if needed
+    }
+
+    // --- NEW: Remove Reward Points ---
+    public function removeRewardPoints()
+    {
+        Session::forget('reward_point_discount');
+        return response()->json(['success' => true, 'message' => 'Reward points removed.']);
+    }
+
+    public function applyRewardPoints(Request $request)
+    {
+        $user = Auth::user();
+        if (!$user || !$user->customer) {
+            return response()->json(['success' => false, 'message' => 'User not found.']);
+        }
+
+        $customer = $user->customer;
+        $settings = RewardPointSetting::first();
+
+        // 1. Check if settings exist and are enabled
+        if (!$settings || !$settings->is_enabled) {
+            return response()->json(['success' => false, 'message' => 'Reward system disabled.']);
+        }
+
+        // 2. Calculate Available Points Dynamically from RewardPoint Table
+        // (This ensures real-time accuracy)
+        $earned = \App\Models\RewardPoint::where('customer_id', $customer->id)->where('type', 'earned')->sum('points');
+        $redeemed = \App\Models\RewardPoint::where('customer_id', $customer->id)->where('type', 'redeemed')->sum('points');
+        $availablePoints = $earned - $redeemed;
+
+        // 3. Get Cart Data to find the payable amount
+        $cartData = $this->getCartData();
+        
+        // We only discount the subtotal after coupon/customer discount has been applied.
+        // Formula: Subtotal - Existing Discount - Previously Applied Reward (if any, though we are recalculating)
+        // Note: getCartData includes reward_discount if session exists, so we ignore it here to calculate fresh.
+        $currentPayable = $cartData['subtotal'] - $cartData['discount']; 
+
+        if ($currentPayable <= 0) {
+            return response()->json(['success' => false, 'message' => 'Cart amount is too low to redeem points.']);
+        }
+
+        // 4. Calculate Maximum Discount Possible with User's Points
+        // Formula: (Available Points / Redeem Points Per Unit) * Redeem Amount Per Unit
+        // Example: (500 points / 100) * 1 Tk = 5 Tk Discount
+        if ($settings->redeem_points_per_unit <= 0) {
+             return response()->json(['success' => false, 'message' => 'Configuration error in reward settings.']);
+        }
+
+        $maxDiscountPossible = floor($availablePoints / $settings->redeem_points_per_unit) * $settings->redeem_per_unit_amount;
+        
+        // 5. Determine Actual Discount
+        // The discount cannot exceed the payable amount.
+        $actualDiscount = min($maxDiscountPossible, $currentPayable);
+        
+        if ($actualDiscount <= 0) {
+            return response()->json(['success' => false, 'message' => 'Not enough points to get a discount.']);
+        }
+
+        // 6. Calculate Points Needed for this specific discount
+        // We need to reverse the formula to find out exactly how many points to deduct
+        $pointsNeeded = ceil(($actualDiscount / $settings->redeem_per_unit_amount) * $settings->redeem_points_per_unit);
+
+        // Double check if user has enough points (Safety check)
+        if ($pointsNeeded > $availablePoints) {
+             return response()->json(['success' => false, 'message' => 'Insufficient points balance.']);
+        }
+
+        // 7. Store in Session
+        Session::put('reward_point_discount', [
+            'points' => $pointsNeeded,
+            'amount' => $actualDiscount
+        ]);
+
+        return response()->json([
+            'success' => true, 
+            'message' => 'Points applied successfully!',
+            'discount_amount' => $actualDiscount,
+            'points_used' => $pointsNeeded
+        ]);
     }
 }
 

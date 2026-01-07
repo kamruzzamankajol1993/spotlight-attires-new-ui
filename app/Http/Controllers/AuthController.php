@@ -363,50 +363,57 @@ $cleanPhoneNumber = trim($phone);
     /**
      * Show the user's dashboard.
      */
-    public function dashboarduser()
-    {
-        // Get the authenticated User model instance
-        $user = Auth::user();
-//dd($user->id);
-        if (!$user) {
-            return redirect()->route('home.index');
-        }
+    // App/Http/Controllers/AuthController.php
 
-        // Get the associated Customer model through the relationship
-        $customer = $user->customer;
+public function dashboarduser()
+{
+    $user = Auth::user();
 
-        if (!$customer) {
-             // Handle cases where a user might exist without a customer profile
-            return redirect()->route('home.index')->with('error', 'Customer profile not found.');
-        }
-
-        Cookie::queue('user_phone_for_login', $user->phone, 120);
-
-        $customer->load([
-            'orders' => function ($query) {
-                $query->withCount('orderDetails')->latest();
-            },
-            'addresses'
-        ]);
-
-        $recentOrders = $customer->orders->where('status', '!=', 'cancel')->take(10);
-        $cancelOrders = $customer->orders->where('status', 'cancel')->take(10);
-
-        $billingAddress = $customer->addresses->where('address_type', 'billing')->where('is_default', 1)->first()
-            ?? $customer->addresses->where('address_type', 'billing')->first();
-
-        $shippingAddress = $customer->addresses->where('address_type', 'shipping')->where('is_default', 1)->first()
-            ?? $customer->addresses->where('address_type', 'shipping')->first();
-
-        // Pass the customer data to the view, aliased as 'user' for consistency
-        return view('front.dashboarduser', [
-            'user' => $customer, 
-            'recentOrders' => $recentOrders, 
-            'cancelOrders' => $cancelOrders, 
-            'billingAddress' => $billingAddress, 
-            'shippingAddress' => $shippingAddress
-        ]);
+    if (!$user) {
+        return redirect()->route('home.index');
     }
+
+    $customer = $user->customer;
+
+    if (!$customer) {
+        return redirect()->route('home.index')->with('error', 'Customer profile not found.');
+    }
+
+    Cookie::queue('user_phone_for_login', $user->phone, 120);
+
+    // Load relationships including rewardPointLogs
+    $customer->load([
+        'orders' => function ($query) {
+            $query->withCount('orderDetails')->latest();
+        },
+        'addresses',
+        'rewardPointLogs' // পয়েন্ট লগ রিলেশনশিপ লোড করা হলো
+    ]);
+
+    // --- NEW: Calculate Reward Points Dynamically ---
+    $totalEarned = $customer->rewardPointLogs->where('type', 'earned')->sum('points');
+    $totalRedeemed = $customer->rewardPointLogs->where('type', 'redeemed')->sum('points');
+    $rewardPoints = $totalEarned - $totalRedeemed;
+    // -----------------------------------------------
+
+    $recentOrders = $customer->orders->where('status', '!=', 'cancel')->take(10);
+    $cancelOrders = $customer->orders->where('status', 'cancel')->take(10);
+
+    $billingAddress = $customer->addresses->where('address_type', 'billing')->where('is_default', 1)->first()
+        ?? $customer->addresses->where('address_type', 'billing')->first();
+
+    $shippingAddress = $customer->addresses->where('address_type', 'shipping')->where('is_default', 1)->first()
+        ?? $customer->addresses->where('address_type', 'shipping')->first();
+
+    return view('front.dashboarduser', [
+        'user' => $customer, 
+        'recentOrders' => $recentOrders, 
+        'cancelOrders' => $cancelOrders, 
+        'billingAddress' => $billingAddress, 
+        'shippingAddress' => $shippingAddress,
+        'rewardPoints' => $rewardPoints // ভিউতে পয়েন্ট পাঠানো হলো
+    ]);
+}
 
 
     // ====================================================================

@@ -42,6 +42,16 @@
                 <a href="{{ $item['url'] ?? '#' }}" class="text-dark text-decoration-none">
                     <h6 class="mb-0">{{ $item['name'] }} - {{ $item['size'] }}</h6>
                 </a>
+                {{-- START: Pre Order Logic --}}
+@php
+    $productCheck = \App\Models\Product::find($item['product_id']);
+@endphp
+@if($productCheck && $productCheck->is_pre_order == 1)
+    <small class="d-block text-danger fw-bold" style="font-size: 0.75rem;">
+        Pre Order: {{ $productCheck->pre_order_msg ?? '' }}
+    </small>
+@endif
+{{-- END: Pre Order Logic --}}
                 <small class="text-muted">Color: {{ $item['color'] }}</small>
                 <div class="d-flex align-items-center mt-2">
 

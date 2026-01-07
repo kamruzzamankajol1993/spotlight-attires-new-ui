@@ -73,6 +73,16 @@
                         <a href="{{ $item['url'] ?? '#' }}" class="text-decoration-none text-dark">
                             <h6 class="mb-0 fw-semibold">{{ $item['name'] }}</h6>
                         </a>
+                        {{-- START: Pre Order Logic --}}
+@php
+    $productCheck = \App\Models\Product::find($item['product_id']);
+@endphp
+@if($productCheck && $productCheck->is_pre_order == 1)
+    <small class="d-block text-danger fw-bold mt-1">
+        Pre Order: {{ $productCheck->pre_order_msg ?? 'Delivery time may vary.' }}
+    </small>
+@endif
+{{-- END: Pre Order Logic --}}
                         <p class="text-muted small mb-0">Size: {{ $item['size'] }}</p>
                         @if(!empty($item['color']) && $item['color'] !== 'N/A')
                             <p class="text-muted small mb-0">Color: {{ $item['color'] }}</p>
