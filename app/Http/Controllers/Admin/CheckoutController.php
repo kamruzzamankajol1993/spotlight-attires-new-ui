@@ -96,6 +96,8 @@ $BKASH_CHECKOUT_URL_APP_SECRET ='cdjFKfCvfzZxReRTogc60eASv9ZnNDZrtu3K5GzXCUunTyW
     }
     // এই ফাংশনটি CheckoutController ক্লাসের ভেতরে পেস্ট করুন এবং গের getCartData রিপ্লেস করুন
 
+// CheckoutController.php এর ভেতরে
+
 private function getCartData()
 {
     $cart = Session::get('cart', []);
@@ -112,7 +114,7 @@ private function getCartData()
     $discountType = 'fixed';
     $discountValue = 0;
 
-    // ১. কুপন থাকলে সেটিই প্রাধান্য পাবে
+    // ১. কুপন থাকলে সেটিই প্রাধান্য পাবে (আগের লজিক অপরিবর্তিত)
     if ($coupon) {
         $eligibleSubtotal = 0;
         $productIdsInCart = collect($cart)->where('is_bundle', false)->pluck('product_id')->unique()->all();
@@ -155,34 +157,61 @@ private function getCartData()
         
         $discount = min($discount, $eligibleSubtotal);
     } 
-    // ২. কুপন না থাকলে কাস্টমার ডিসকাউন্ট চেক করুন
+    // ২. কুপন না থাকলে কাস্টমার ডিসকাউন্ট চেক করুন (এখানে পরিবর্তন করা হয়েছে)
     elseif (Auth::check() && Auth::user()->customer) {
         $customerDiscountPercent = Auth::user()->customer->discount_in_percent ?? 0;
 
         if ($customerDiscountPercent > 0) {
-            $discount = ($subtotal * $customerDiscountPercent) / 100;
+            // --- START UPDATE: Eligible amount calculation for Customer Discount ---
+            $eligibleForCustomerDiscount = 0;
+            
+            // কার্টে থাকা সব প্রোডাক্ট আইডি নিয়ে আসা (বান্ডিল বাদে)
+            $productIdsInCart = collect($cart)->where('is_bundle', false)->pluck('product_id')->unique()->all();
+            
+            // প্রোডাক্ট ডাটাবেজ থেকে চেক করা (ডিসকাউন্ট প্রাইস আছে কিনা দেখার জন্য)
+            $products = \App\Models\Product::whereIn('id', $productIdsInCart)->get()->keyBy('id');
+
+            foreach ($cart as $item) {
+                // ১. যদি বান্ডিল হয়, তাহলে ডিসকাউন্ট পাবে না
+                if (isset($item['is_bundle']) && $item['is_bundle']) {
+                    continue;
+                }
+
+                // ২. যদি প্রোডাক্টের নিজস্ব ডিসকাউন্ট থাকে, তাহলে কাস্টমার ডিসকাউন্ট পাবে না
+                if (isset($products[$item['product_id']])) {
+                    $product = $products[$item['product_id']];
+                    if ($product->discount_price > 0) {
+                        continue; 
+                    }
+                    
+                    // শর্ত পূরণ করলে এই আইটেমটির দাম যোগ হবে
+                    $eligibleForCustomerDiscount += $item['price'] * $item['quantity'];
+                }
+            }
+            
+            // এখন শুধুমাত্র এলিজিবল এমাউন্টের ওপর পার্সেন্টেজ অ্যাপ্লাই হবে
+            $discount = ($eligibleForCustomerDiscount * $customerDiscountPercent) / 100;
+            // --- END UPDATE ---
+
             $discountType = 'percent';
             $discountValue = $customerDiscountPercent;
         }
     }
 
-    // --- START: NEW REWARD POINT LOGIC (Added without changing previous code) ---
+    // --- Reward Point Logic (অপরিবর্তিত) ---
     $rewardSession = Session::get('reward_point_discount');
     $rewardDiscount = 0;
     if ($rewardSession) {
         $rewardDiscount = $rewardSession['amount'];
     }
-    // --- END: NEW REWARD POINT LOGIC ---
     
     return [
         'cart'           => $cart,
         'subtotal'       => $subtotal,
         'discount'       => $discount,
         'coupon'         => $coupon,
-        'discount_type'  => $discountType,  // Return type
-        'discount_value' => $discountValue,  // Return value
-        
-        // New Return Key
+        'discount_type'  => $discountType,  
+        'discount_value' => $discountValue, 
         'reward_discount'=> $rewardDiscount 
     ];
 }
@@ -646,7 +675,7 @@ private function getCartData()
         return response()->json(['success' => true, 'message' => 'Reward points removed.']);
     }
 
-    public function applyRewardPoints(Request $request)
+   public function applyRewardPoints(Request $request)
     {
         $user = Auth::user();
         if (!$user || !$user->customer) {
@@ -662,26 +691,51 @@ private function getCartData()
         }
 
         // 2. Calculate Available Points Dynamically from RewardPoint Table
-        // (This ensures real-time accuracy)
         $earned = \App\Models\RewardPoint::where('customer_id', $customer->id)->where('type', 'earned')->sum('points');
         $redeemed = \App\Models\RewardPoint::where('customer_id', $customer->id)->where('type', 'redeemed')->sum('points');
         $availablePoints = $earned - $redeemed;
 
-        // 3. Get Cart Data to find the payable amount
+        // 3. Get Cart Data
         $cartData = $this->getCartData();
         
-        // We only discount the subtotal after coupon/customer discount has been applied.
-        // Formula: Subtotal - Existing Discount - Previously Applied Reward (if any, though we are recalculating)
-        // Note: getCartData includes reward_discount if session exists, so we ignore it here to calculate fresh.
-        $currentPayable = $cartData['subtotal'] - $cartData['discount']; 
+        // --- START UPDATE: Reward Eligible Amount Calculation ---
+        $rewardEligibleSubtotal = 0;
+        $cart = $cartData['cart'];
+
+        // কার্টে থাকা প্রোডাক্টগুলোর আইডি নিয়ে আসা (বান্ডিল বাদে)
+        $productIdsInCart = collect($cart)->where('is_bundle', false)->pluck('product_id')->unique()->all();
+        
+        // ডাটাবেজ থেকে প্রোডাক্ট চেক করা (ডিসকাউন্ট প্রাইস আছে কিনা)
+        $products = \App\Models\Product::whereIn('id', $productIdsInCart)->get()->keyBy('id');
+
+        foreach ($cart as $item) {
+            // ১. বান্ডিল হলে রিওয়ার্ড পয়েন্ট ডিসকাউন্ট পাবে না
+            if (isset($item['is_bundle']) && $item['is_bundle']) {
+                continue;
+            }
+
+            // ২. প্রোডাক্টের নিজস্ব ডিসকাউন্ট থাকলে রিওয়ার্ড পয়েন্ট ডিসকাউন্ট পাবে না
+            if (isset($products[$item['product_id']])) {
+                $product = $products[$item['product_id']];
+                if ($product->discount_price > 0) {
+                    continue; 
+                }
+                
+                // শর্ত পূরণ করলে এই আইটেমটির দাম রিওয়ার্ড এলিজিবল লিস্টে যোগ হবে
+                $rewardEligibleSubtotal += $item['price'] * $item['quantity'];
+            }
+        }
+
+        // কুপন বা কাস্টমার ডিসকাউন্ট বাদ দেওয়ার পর রিওয়ার্ডের জন্য কত টাকা বাকি থাকে
+        // (এলিজিবল অ্যামাউন্ট - ইতিমধ্যে প্রাপ্ত ডিসকাউন্ট)
+        $currentPayable = max(0, $rewardEligibleSubtotal - $cartData['discount']);
+        // --- END UPDATE ---
 
         if ($currentPayable <= 0) {
-            return response()->json(['success' => false, 'message' => 'Cart amount is too low to redeem points.']);
+            return response()->json(['success' => false, 'message' => 'No eligible items for reward point redemption (Bundles & Discounted products are excluded).']);
         }
 
         // 4. Calculate Maximum Discount Possible with User's Points
-        // Formula: (Available Points / Redeem Points Per Unit) * Redeem Amount Per Unit
-        // Example: (500 points / 100) * 1 Tk = 5 Tk Discount
         if ($settings->redeem_points_per_unit <= 0) {
              return response()->json(['success' => false, 'message' => 'Configuration error in reward settings.']);
         }
@@ -689,7 +743,6 @@ private function getCartData()
         $maxDiscountPossible = floor($availablePoints / $settings->redeem_points_per_unit) * $settings->redeem_per_unit_amount;
         
         // 5. Determine Actual Discount
-        // The discount cannot exceed the payable amount.
         $actualDiscount = min($maxDiscountPossible, $currentPayable);
         
         if ($actualDiscount <= 0) {
@@ -697,10 +750,9 @@ private function getCartData()
         }
 
         // 6. Calculate Points Needed for this specific discount
-        // We need to reverse the formula to find out exactly how many points to deduct
         $pointsNeeded = ceil(($actualDiscount / $settings->redeem_per_unit_amount) * $settings->redeem_points_per_unit);
 
-        // Double check if user has enough points (Safety check)
+        // Double check if user has enough points
         if ($pointsNeeded > $availablePoints) {
              return response()->json(['success' => false, 'message' => 'Insufficient points balance.']);
         }

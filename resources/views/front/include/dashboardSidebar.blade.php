@@ -39,6 +39,11 @@
                                         <li class="list-group-item {{ Route::is('wishlist.index') ? 'active' : '' }}"><a href="{{route('wishlist.index')}}"
                                                 class="text-decoration-none text-dark"><i class="bi bi-heart-fill"></i>
                                                 Wishlist</a></li>
+
+                                        <li class="list-group-item {{ Route::is('user.point.history') ? 'active' : '' }}"><a href="{{route('user.point.history')}}"
+                                                class="text-decoration-none text-dark"><i
+                                                    class="bi bi-gift-fill"></i> Point History</a></li>
+                                                    
                                         <li class="list-group-item {{ Route::is('dashboard.profile.address.update') ? 'active' : '' }}"><a href="{{route('dashboard.profile.address.update')}}"
                                                 class="text-decoration-none text-dark"><i
                                                     class="bi bi-pin-map-fill"></i> Manage Address</a></li>

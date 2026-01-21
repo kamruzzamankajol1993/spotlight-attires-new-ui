@@ -240,7 +240,6 @@ private function getCartData()
     $cart = Session::get('cart', []);
     $subtotal = 0;
     
-    // ১. টোটাল কার্ট সাব-টোটাল বের করি
     foreach ($cart as $item) {
         $subtotal += $item['price'] * $item['quantity'];
     }
@@ -248,13 +247,12 @@ private function getCartData()
     $coupon = Session::get('coupon');
     $discount = 0;
     
-    // ডাটাবেসে সেভ করার জন্য অতিরিক্ত ভেরিয়েবল
     $discountType = 'fixed'; 
     $discountValue = 0; 
     $isCouponApplied = false;
 
     // ==========================================
-    // Priority 1: COUPON DISCOUNT
+    // Priority 1: COUPON DISCOUNT (অপরিবর্তিত)
     // ==========================================
     if ($coupon) {
         $isCouponApplied = true;
@@ -288,7 +286,6 @@ private function getCartData()
             }
         }
         
-        // কুপন ডিসকাউন্ট ক্যালকুলেশন
         if ($coupon->type === 'fixed') {
             $discount = $coupon->value;
             $discountType = 'fixed';
@@ -302,15 +299,42 @@ private function getCartData()
         $discount = min($discount, $eligibleSubtotal);
     } 
     // ==========================================
-    // Priority 2: CUSTOMER DISCOUNT (Only if No Coupon)
+    // Priority 2: CUSTOMER DISCOUNT (এখানে পরিবর্তন করা হয়েছে)
     // ==========================================
     elseif (Auth::check() && Auth::user()->customer) {
-        // কাস্টমার ডিসকাউন্ট সাধারণত পার্সেন্টেজ হয়
         $customerDiscountPercent = Auth::user()->customer->discount_in_percent ?? 0;
 
         if ($customerDiscountPercent > 0) {
-            // পুরো সাবটোটালের উপর ডিসকাউন্ট (অথবা আপনি চাইলে লজিক চেঞ্জ করতে পারেন)
-            $discount = ($subtotal * $customerDiscountPercent) / 100;
+            // --- START UPDATE ---
+            $eligibleForCustomerDiscount = 0;
+            
+            // বান্ডিল বাদে প্রোডাক্ট আইডি
+            $productIdsInCart = collect($cart)->where('is_bundle', false)->pluck('product_id')->unique()->all();
+            
+            // প্রোডাক্ট ডাটা ফেচ
+            $products = \App\Models\Product::whereIn('id', $productIdsInCart)->get()->keyBy('id');
+
+            foreach ($cart as $item) {
+                // ১. বান্ডিল চেক
+                if (isset($item['is_bundle']) && $item['is_bundle']) {
+                    continue;
+                }
+
+                // ২. ডিসকাউন্ট প্রাইস চেক
+                if (isset($products[$item['product_id']])) {
+                    $product = $products[$item['product_id']];
+                    // যদি আগে থেকেই ডিসকাউন্ট থাকে, তাহলে কাস্টমার ডিসকাউন্ট পাবে না
+                    if ($product->discount_price > 0) {
+                        continue;
+                    }
+                    
+                    $eligibleForCustomerDiscount += $item['price'] * $item['quantity'];
+                }
+            }
+            
+            // শুধুমাত্র এলিজিবল এমাউন্টের ওপর ডিসকাউন্ট
+            $discount = ($eligibleForCustomerDiscount * $customerDiscountPercent) / 100;
+            // --- END UPDATE ---
             
             $discountType = 'percent';
             $discountValue = $customerDiscountPercent;
@@ -325,7 +349,6 @@ private function getCartData()
         'discount'       => $discount,
         'total'          => $total,
         'coupon'         => $coupon,
-        // এই নতুন ডাটাগুলো ফ্রন্টএন্ড বা চেকআউটে লাগবে
         'discount_type'  => $discountType,
         'discount_value' => $discountValue,
         'is_coupon'      => $isCouponApplied

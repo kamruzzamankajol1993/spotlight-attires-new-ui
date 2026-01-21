@@ -22,7 +22,25 @@ use Illuminate\Support\Facades\Cookie;
 use Illuminate\Support\Facades\Session;
 class AuthController extends Controller
 {
+public function pointHistory()
+{
+    $user = Auth::user();
 
+    if (!$user || !$user->customer) {
+        return redirect()->route('home.index');
+    }
+
+    $customer = $user->customer;
+
+    // পয়েন্ট লগগুলো পেজিনেশন সহ আনা হচ্ছে
+    $pointLogs = $customer->rewardPointLogs()->latest()->paginate(15);
+
+    // Sidebar এবং অন্য ভিউ লজিক ঠিক রাখতে customer কে 'user' হিসেবে পাস করা হলো (আপনার আগের প্যাটার্ন অনুযায়ী)
+    return view('front.dashboard.user_point_history', [
+        'user' => $customer, 
+        'pointLogs' => $pointLogs
+    ]);
+}
     /**
      * A private helper function to send an OTP via ADN SMS Gateway.
      */

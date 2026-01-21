@@ -48,13 +48,19 @@
                             <div class="col-lg-9 col-md-8">
                                 <div class="spotlight_user_profile_main-content">
                                     <div class="spotlight_user_profile_profile-header">
-    <div class="d-flex align-items-center gap-3">
-            <h4 class="m-0">View Profile</h4>
-            <div class="badge bg-warning text-dark d-flex align-items-center px-3 py-2" style="font-size: 0.9rem; border-radius: 20px;">
-                <i class="bi bi-star-fill me-2"></i> 
-                <span>Points: <strong>{{ $rewardPoints ?? 0 }}</strong></span>
-            </div>
-        </div>
+    <div class="d-flex align-items-center gap-3 flex-wrap">
+    <h4 class="m-0">View Profile</h4>
+    
+    <div class="badge bg-warning text-dark d-flex align-items-center px-3 py-2" style="font-size: 0.9rem; border-radius: 20px;">
+        <i class="bi bi-star-fill me-2"></i> 
+        <span>Points: <strong>{{ $rewardPoints ?? 0 }}</strong></span>
+    </div>
+
+    <div class="badge bg-info text-dark d-flex align-items-center px-3 py-2" style="font-size: 0.9rem; border-radius: 20px;">
+        <i class="bi bi-person-badge-fill me-2"></i>
+        <span>Type: <strong>{{ ucfirst($user->type ?? 'Normal') }}</strong></span>
+    </div>
+</div>
     <button class="btn spotlight_user_profile_update-btn" id="update-profile-info-btn">Update Profile</button>
 </div>
 

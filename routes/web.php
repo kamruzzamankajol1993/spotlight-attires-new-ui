@@ -78,6 +78,8 @@ Route::middleware('auth')->group(function () {
     });
 
     Route::controller(AuthController::class)->group(function () {
+
+    Route::get('/user-point-history', 'pointHistory')->name('user.point.history');
  Route::get('/dashboard-user', 'dashboarduser')->name('dashboard.user');
   Route::post('/dashboard-picture-update', 'updateProfilePicture')->name('dashboard.picture.update');
 
