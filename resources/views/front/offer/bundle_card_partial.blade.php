@@ -13,8 +13,8 @@
                     }
                 }
                 
-                $image = ($displayProduct && is_array($displayProduct->main_image) && count($displayProduct->main_image) > 0)
-                            ?   $front_ins_url . 'public/uploads/' . $displayProduct->main_image[0]
+                $image = ($deal)
+                            ?   $front_ins_url . $deal->image
                             : 'https://placehold.co/400x400';
 
                 // --- 2. Calculate Total Base Price ---

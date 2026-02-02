@@ -1310,7 +1310,7 @@
 @if(isset($firstProduct))
 <a href="{{ route('offerProduct.show', $deal->id) }}">
             <div class="product-card-offer card">
-                <img src="{{ $front_ins_url . 'public/uploads/' .$firstProduct->main_image[0] }}" class="card-img-left" alt="{{ $deal->title }}">
+                <img src="{{ $front_ins_url .$deal->image }}" class="card-img-left" alt="{{ $deal->title }}">
                 <div class="product-details-offer">
                     <h5 class="product-title-offer">{{ Str::limit($deal->title, 10) }}</h5>
                     <p class="item-price-offer mb-0">
