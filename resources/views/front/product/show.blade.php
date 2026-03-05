@@ -247,7 +247,30 @@
                             </div>
                         </div>
                         @endif
+{{-- Customization Option: Name & Number --}}
+@if($product->is_custom)
+<div class="mb-4 p-3 border rounded-3 bg-light">
+    <label class="fw-semibold mb-2 d-block">Do you want to add Custom Name & Number?</label>
+    <select id="customization-toggle" class="form-select mb-3" style="max-width: 200px;">
+        <option value="no" selected>No</option>
+        <option value="yes">Yes (+ Customization)</option>
+    </select>
 
+    <div id="custom-fields" style="display: none;">
+        <div class="row g-2">
+            <div class="col-md-6">
+                <label class="small fw-bold text-muted">Custom Name</label>
+                <input type="text" id="input-custom-name" class="form-control" placeholder="Ex: RAHIM">
+            </div>
+            <div class="col-md-6">
+                <label class="small fw-bold text-muted">Custom Number</label>
+                <input type="text" id="input-custom-number" class="form-control" placeholder="Ex: 10">
+            </div>
+        </div>
+        <small class="text-info d-block mt-2"><i class="bi bi-info-circle me-1"></i> Double check the spellings before ordering.</small>
+    </div>
+</div>
+@endif
                             <div class="d-flex flex-wrap align-items-center gap-4 mb-4">
                             <div class="d-flex align-items-center border rounded-3 overflow-hidden">
                                 <button class="btn btn-light rounded-0" id="quantity-minus">-</button>
@@ -781,14 +804,17 @@ $(document).ready(function() {
             });
             return;
         }
-        
+        const customData = getCustomizationData();
         const $button = $(this);
         const cartData = {
             productId: {{ $product->id }},
             variantId: selectedVariantId,
             size: selectedSize,
             quantity: parseInt($('#quantity-value').text()),
-            _token: "{{ csrf_token() }}" 
+            _token: "{{ csrf_token() }}" ,
+            is_custom_selected: customData.is_custom, 
+    custom_name: customData.custom_name,
+    custom_number: customData.custom_number
         };
 
         // AJAX call to add the product to the cart
@@ -804,7 +830,7 @@ $(document).ready(function() {
                 if (response.success) {
                     // Update the cart display everywhere
                     updateCartOffcanvas();
-                    
+                    fb_track_add_to_cart("{{ $product->id }}", "{{ $product->name }}", "{{ $product->base_price }}");
                     // Automatically open the cart offcanvas to show the user their new item
                     const cartOffcanvas = new bootstrap.Offcanvas(document.getElementById('cartOffcanvas'));
                     cartOffcanvas.show();
@@ -833,7 +859,32 @@ $(document).ready(function() {
             }
         });
     });
+// ১. কাস্টমাইজেশন ফিল্ড শো/হাইড লজিক
+$('#customization-toggle').on('change', function() {
+    if ($(this).val() === 'yes') {
+        $('#custom-fields').slideDown();
+    } else {
+        $('#custom-fields').slideUp();
+        $('#input-custom-name').val(''); // রিসেট
+        $('#input-custom-number').val(''); // রিসেট
+    }
+});
 
+// ২. কার্টে পাঠানোর সময় ডেটা সংগ্রহ করা (Add To Cart & Buy Now উভয়ের জন্য)
+function getCustomizationData() {
+    let data = {
+        is_custom: false,
+        custom_name: null,
+        custom_number: null
+    };
+
+    if ($('#customization-toggle').val() === 'yes') {
+        data.is_custom = true;
+        data.custom_name = $('#input-custom-name').val();
+        data.custom_number = $('#input-custom-number').val();
+    }
+    return data;
+}
      // --- NEW SEPARATE "Buy Now" Handler ---
     // --- NEW SEPARATE "Buy Now" Handler ---
     $('#buy-now').on('click', function() {
@@ -845,14 +896,17 @@ $(document).ready(function() {
             Swal.fire({ icon: 'warning', title: 'Almost there!', text: 'Please select a size.' });
             return;
         }
-
+const customData = getCustomizationData();
         const $button = $(this);
         const cartData = {
             productId: {{ $product->id }},
             variantId: selectedVariantId,
             size: selectedSize,
             quantity: parseInt($('#quantity-value').text()),
-            _token: "{{ csrf_token() }}"
+            _token: "{{ csrf_token() }}",
+            is_custom_selected: customData.is_custom, 
+    custom_name: customData.custom_name,
+    custom_number: customData.custom_number
         };
 
         $.ajax({
@@ -865,7 +919,7 @@ $(document).ready(function() {
             success: function(response) {
                 if (response.success) {
                     updateCartOffcanvas();
-                    
+                      fb_track_add_to_cart("{{ $product->id }}", "{{ $product->name }}", "{{ $product->base_price }}");
                     // MODIFIED: Redirect everyone (Guest or Auth) to the cart page immediately
                     window.location.href = "{{ route('cart.show') }}";
                     

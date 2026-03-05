@@ -38,6 +38,7 @@ class Product extends Model
         'is_free_delivery',
          'is_pre_order', // নতুন
     'pre_order_msg', // নতুন
+     'is_custom',
     ];
 
 

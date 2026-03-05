@@ -29,12 +29,15 @@ class Order extends Model
         'payment_status',
         'payment_term',
         'order_from',
+         'is_tracked',
         'trxID',
         'reward_point_discount',
         'statusMessage',
         'notes',
          'discount_type',  // নতুন
     'discount_value', // নতুন
+    'custom_name',   // নতুন যুক্ত করা হয়েছে
+    'custom_number', // নতুন যুক্ত করা হয়েছে
     ];
 
     /**

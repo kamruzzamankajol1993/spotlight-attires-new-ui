@@ -19,6 +19,9 @@ return new class extends Migration
             $table->decimal('discount', 10, 2)->default(0);
             $table->decimal('after_discount_price', 10, 2)->default(0);
             // Replaced product_variant_id with color and size
+            $table->boolean('is_custom')->default(false)->after('delivery_status');
+    $table->string('custom_name')->nullable()->after('is_custom');
+    $table->string('custom_number')->nullable()->after('custom_name');
             $table->string('color')->nullable();
             $table->string('size')->nullable();
             $table->integer('quantity');

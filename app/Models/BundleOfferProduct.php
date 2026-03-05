@@ -25,6 +25,7 @@ class BundleOfferProduct extends Model
         'bundle_offer_id',
         'title',
         'product_id',
+        'is_custom',
         'discount_price',
         'buy_quantity',
         'get_quantity',

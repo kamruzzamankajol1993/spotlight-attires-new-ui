@@ -171,15 +171,30 @@
                                         <tbody>
                                             @foreach($cartItems as $item)
                                             <tr>
-                                                <td>{{ Str::limit($item['name'], 25) }} &times; {{ $item['quantity'] }}</td>
+                                                <td>{{ Str::limit($item['name'], 25) }} &times; {{ $item['quantity'] }} <div class="flex-grow-1">
+    {{-- আপনা বিদ্যমান পরোডাক্ট না এবং Qty এর নিচে এটি বসান --}}
+    
+    @if(isset($item['is_custom']) && $item['is_custom'])
+        <div class="p-1 mt-1 border-start border-primary border-2 ps-2" style="background-color: #f9f9f9;">
+            <span class="d-block text-primary fw-bold" style="font-size: 10px; text-transform: uppercase;">
+                Customization Details:
+            </span>
+            <span class="small text-dark" style="font-size: 11px;">
+                Name: {{ $item['custom_name'] }} | Number: {{ $item['custom_number'] }}
+            </span>
+        </div>
+    @endif
+</div></td>
                                                 <td class="text-end fw-bold">৳{{ number_format($item['price'] * $item['quantity'], 2) }}</td>
                                             </tr>
                                             @endforeach
                                         </tbody>
                                     </table>
                                 </div>
+{{-- checkout.blade.php --}}
 
-                                <div class="spotlight_checkout_subtotal"><span>Subtotal</span><span>৳{{ number_format($subtotal, 2) }}</span></div>
+
+                                <div class="spotlight_checkout_subtotal"><span>Subtotal</span><span>{{ number_format($subtotal, 2) }}</span></div>
                                 
                                 {{-- DISCOUNT DISPLAY --}}
                                 @if($discount > 0)
@@ -249,6 +264,54 @@
 @endsection
 
 @section('script')
+<script>
+    $(document).ready(function() {
+        try {
+            // ১. ডাটা প্রিপারেশন (কন্ট্রোলার থেকে আসা $cartItems ব্যবহার করে)
+            var checkoutProducts = [
+                @if(isset($cartItems) && count($cartItems) > 0)
+                    @foreach($cartItems as $item)
+                    {
+                        'item_id': '{{ $item['product_id'] ?? ($item['id'] ?? '') }}',
+                        'item_name': '{{ addslashes($item['name'] ?? 'Product') }}',
+                        'price': parseFloat("{{ $item['price'] ?? 0 }}") || 0,
+                        'quantity': parseInt("{{ $item['quantity'] ?? 1 }}") || 1
+                    }{{ !$loop->last ? ',' : '' }}
+                    @endforeach
+                @endif
+            ];
+            
+            // সাবটোটাল বা টোটাল ভ্যালু
+            var totalValue = parseFloat("{{ $subtotal ?? 0 }}") || 0;
+
+            // ২. Meta Pixel (InitiateCheckout)
+            if (typeof fbq === 'function') {
+                fbq('track', 'InitiateCheckout', {
+                    content_ids: checkoutProducts.map(function(item) { return item.item_id; }),
+                    content_type: 'product',
+                    value: totalValue,
+                    currency: 'BDT'
+                });
+                console.log("Meta Pixel: InitiateCheckout tracked successfully.");
+            }
+
+            // ৩. Google Tag Manager (begin_checkout)
+            window.dataLayer = window.dataLayer || [];
+            window.dataLayer.push({
+                'event': 'begin_checkout',
+                'ecommerce': {
+                    'currency': 'BDT',
+                    'value': totalValue,
+                    'items': checkoutProducts
+                }
+            });
+            console.log("GTM: begin_checkout event pushed.");
+
+        } catch (e) {
+            console.warn("Checkout Tracking Error:", e);
+        }
+    });
+</script>
 <script>
 $(document).ready(function() {
     // Initial base amount from server-side calculation

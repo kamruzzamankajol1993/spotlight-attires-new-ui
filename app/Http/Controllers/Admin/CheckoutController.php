@@ -347,13 +347,23 @@ private function getCartData()
              do {
                 $invoiceNumber = rand(1000, 9999);
             } while (Order::where('invoice_no', $invoiceNumber)->exists());
+$customName = null;
+$customNumber = null;
 
+foreach ($cartData['cart'] as $item) {
+    if (isset($item['is_custom']) && $item['is_custom'] == true) {
+        $customName = $item['custom_name'];
+        $customNumber = $item['custom_number'];
+        break; // একটি পাওয়া গেলেই সেটি মেইন অর্ডারের জন্য সেট হবে
+    }
+}
             $order = Order::create([
                 'customer_id'      => $customer->id,
                 'invoice_no'       => $invoiceNumber,
                 'subtotal'         => $cartData['subtotal'],
                 'shipping_cost'    => $request->shipping_cost,
-                
+                'custom_name'           => $customName,
+    'custom_number'         => $customNumber,
                 // --- COUPON / CUSTOMER DISCOUNT ---
                 'discount'         => $cartData['discount'], 
                 'discount_type'    => $cartData['discount_type'] ?? 'fixed', 
@@ -383,6 +393,9 @@ private function getCartData()
                  if (isset($item['is_bundle']) && $item['is_bundle']) {
                     foreach ($item['selected_products'] as $bundleProduct) {
                         OrderDetail::create([
+                            'is_custom'            => isset($item['is_custom']) ? $item['is_custom'] : false,
+        'custom_name'          => $item['custom_name'] ?? null,
+        'custom_number'        => $item['custom_number'] ?? null,
                             'order_id' => $order->id, 'product_id' => $bundleProduct['product_id'], 'product_variant_id' => $bundleProduct['variant_id'],
                             'color' => $bundleProduct['color'], 'size' => $bundleProduct['size'], 'quantity' => $item['quantity'],
                             'unit_price' => $bundleProduct['price'], 'subtotal' => $bundleProduct['price'] * $item['quantity'],
@@ -390,6 +403,9 @@ private function getCartData()
                     }
                 } else {
                     OrderDetail::create([
+                        'is_custom'            => isset($item['is_custom']) ? $item['is_custom'] : false,
+        'custom_name'          => $item['custom_name'] ?? null,
+        'custom_number'        => $item['custom_number'] ?? null,
                         'order_id' => $order->id, 'product_id' => $item['product_id'], 'product_variant_id' => $item['variant_id'],
                         'color' => $item['color'], 'size' => $item['size'], 'quantity' => $item['quantity'],
                         'unit_price' => $item['price'], 'subtotal' => $item['price'] * $item['quantity'],
@@ -547,32 +563,66 @@ private function getCartData()
 
 
     public function orderSuccess($orderId)
-    {
-
-
-      
-           // Retrieve the cookie value from the request
-    $phone = Cookie::get('user_phone_for_login');
-
+{
+    // ১. অটো-লগইন লজিক (বিদ্যমান)
+    $phone = \Illuminate\Support\Facades\Cookie::get('user_phone_for_login');
     if ($phone) {
-        // Now you can use the phone number
-        // For example: find the user and log them in
-        $user = User::where('phone', $phone)->first();
+        $user = \App\Models\User::where('phone', $phone)->first();
         if ($user) {
-            Auth::login($user);
+            \Illuminate\Support\Facades\Auth::login($user);
         }
     }
+    \Illuminate\Support\Facades\Cookie::queue(\Illuminate\Support\Facades\Cookie::forget('user_phone_for_login'));
 
-            // Delete the cookie immediately after use for security
-            Cookie::queue(Cookie::forget('user_phone_for_login'));
-        
-        $order = Order::with('customer', 'orderDetails.product')
-                      ->where('id', $orderId)
-                      ->where('customer_id', Auth::user()->customer->id)
-                      ->firstOrFail();
+    // ২. অর্ডারের বিস্তারিত তথ্য লোড করা
+    $order = \App\Models\Order::with(['customer', 'orderDetails.product'])
+                  ->where('id', $orderId)
+                  ->where('customer_id', \Illuminate\Support\Facades\Auth::user()->customer->id)
+                  ->firstOrFail();
 
-        return view('front.checkout.order_success', compact('order'));
+    $wasTracked = $order->is_tracked; 
+
+    // ৩. প্রথমবার ভিজিটের সময় ফেসবুক CAPI এবং ডাটাবেজ আপডেট করা
+    if (!$wasTracked) {
+        // ফেসবুকের প্রয়োজনীয় ক্রিডেনশিয়াল (.env থেকে নেওয়া ভালো)
+        $pixelId = '1204087944905871';
+        $accessToken = 'EAAOnrRl7JYsBQ5Rf8DarnVwZCKyKWkcM6QY5pcxMS22juIe27R5G60Uk1hZCpk4DpAdlza5TZBtLAxuUEJ9K2g1HwVcB9ZCTHNeccGChI1gkN6avqukBgu9u9Gn6d6QSHZAbmLyKxldXZCr3PVr7ZCMKpZB2WWXV3VnePaMTdrZABfWpFY5VvPm2RPkqf6BWdZBgZDZD';
+
+        if ($pixelId && $accessToken) {
+            try {
+                \Illuminate\Support\Facades\Http::post("https://graph.facebook.com/v18.0/{$pixelId}/events?access_token={$accessToken}", [
+                    'data' => [
+                        [
+                            'event_name' => 'Purchase',
+                            'event_time' => time(),
+                            'event_id' => 'order_' . $order->id, // ডিডুপ্লিকেশন আইডি
+                            'action_source' => 'website',
+                            'user_data' => [
+                                'em' => [hash('sha256', strtolower($order->customer->email ?? $order->email))], // ইমেইল হ্যাশ করা
+                                'ph' => [hash('sha256', $order->customer->phone ?? '')],
+                                'client_ip_address' => request()->ip(),
+                                'client_user_agent' => request()->userAgent(),
+                            ],
+                            'custom_data' => [
+                                'currency' => 'BDT',
+                                'value' => (float) $order->total_amount,
+                                'content_ids' => $order->orderDetails->pluck('product_id')->map(fn($id) => (string)$id)->toArray(),
+                                'content_type' => 'product',
+                            ],
+                        ],
+                    ],
+                ]);
+            } catch (\Exception $e) {
+                \Log::error('FB CAPI Error: ' . $e->getMessage());
+            }
+        }
+
+        // ডাটাবেজে ১ করে দিন যাতে পুনরায় ট্র্যাকিং না হয়
+        $order->update(['is_tracked' => 1]);
     }
+
+    return view('front.checkout.order_success', compact('order', 'wasTracked'));
+}
 
 
 

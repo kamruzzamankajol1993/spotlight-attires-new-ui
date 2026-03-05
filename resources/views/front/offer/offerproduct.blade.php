@@ -196,7 +196,32 @@
                                 <i class="bi bi-check-circle-fill text-success fs-5 me-2"></i>
                                 <span class="fw-semibold">Please select a product for all items.</span>
                             </div>
+{{-- ডিল কাস্টমাইজেশন অপশন --}}
+@if($bundleDeal->is_custom)
+<div class="mb-4 p-3 border rounded-3 bg-white shadow-sm">
+    <label class="fw-bold mb-2 d-block text-dark">Do you want to add Custom Name & Number?</label>
+    <select id="bundle-customization-toggle" class="form-select mb-3" style="max-width: 200px; border: 1px solid #ddd;">
+        <option value="no" selected>No</option>
+        <option value="yes">Yes (+ Customization)</option>
+    </select>
 
+    <div id="bundle-custom-fields" style="display: none;">
+        <div class="row g-2">
+            <div class="col-md-6">
+                <label class="small fw-bold text-muted">Custom Name</label>
+                <input type="text" id="bundle-custom-name" class="form-control" placeholder="Ex: RAHIM" style="text-transform: uppercase;">
+            </div>
+            <div class="col-md-6">
+                <label class="small fw-bold text-muted">Custom Number</label>
+                <input type="text" id="bundle-custom-number" class="form-control" placeholder="Ex: 10">
+            </div>
+        </div>
+        <small class="text-danger d-block mt-2" style="font-size: 12px;">
+            <i class="bi bi-exclamation-triangle-fill me-1"></i> Please verify the name and number before adding to cart.
+        </small>
+    </div>
+</div>
+@endif
                             <!-- Quantity and Buttons -->
                             <div class="d-flex flex-column flex-sm-row align-items-center gap-4 mb-4">
                                 <div class="d-flex align-items-center border rounded-3 overflow-hidden quantity-selector">
@@ -458,6 +483,27 @@
 <script>
     
     $(document).ready(function(){
+
+        // কাস্টমাইজেশন টগল লজিক
+// কাস্টমাইজেশন ফিল্ড শো/হাইড লজিক
+$(document).on('change', '#bundle-customization-toggle', function() {
+    if ($(this).val() === 'yes') {
+        $('#bundle-custom-fields').slideDown();
+    } else {
+        $('#bundle-custom-fields').slideUp();
+        $('#bundle-custom-name').val('');
+        $('#bundle-custom-number').val('');
+    }
+});
+
+// কাস্টমাইজেশন ডাটা সংগ্রহের ফাংশন
+function getBundleCustomData() {
+    return {
+        is_custom_selected: $('#bundle-customization-toggle').val() === 'yes',
+        custom_name: $('#bundle-custom-name').val(),
+        custom_number: $('#bundle-custom-number').val()
+    };
+}
 
         // --- Real Image Modal Slider Initialization ---
 const realImageModal = document.getElementById('realImageModal');
@@ -721,11 +767,16 @@ if (watchingContainer.length && watchingCountElement.length) {
 
             // 2. Prepare Payload
             const selectedProductsArray = Object.values(selectedProducts);
+            const customData = getBundleCustomData();
             const payload = {
                 _token: '{{ csrf_token() }}',
                 bundleId: {{ $bundleDeal->id }},
                 quantity: parseInt($('.quantity-input').text()),
-                selectedProducts: selectedProductsArray
+                selectedProducts: selectedProductsArray,
+                // --- নতুন ৩টি ফিল্ড ইনজেক্ট করা হলো ---
+    is_custom_selected: customData.is_custom_selected,
+    custom_name: customData.custom_name,
+    custom_number: customData.custom_number
             };
 
             // 3. AJAX Request
@@ -799,11 +850,16 @@ if (watchingContainer.length && watchingCountElement.length) {
 
             // 2. Prepare Payload
             const selectedProductsArray = Object.values(selectedProducts);
+            const customData = getBundleCustomData();
             const payload = {
                 _token: '{{ csrf_token() }}',
                 bundleId: {{ $bundleDeal->id }},
                 quantity: parseInt($('.quantity-input').text()),
-                selectedProducts: selectedProductsArray
+                selectedProducts: selectedProductsArray,
+                // --- নতুন ৩টি ফিল্ড ইনজেক্ট করা হলো ---
+    is_custom_selected: customData.is_custom_selected,
+    custom_name: customData.custom_name,
+    custom_number: customData.custom_number
             };
 
             // 3. AJAX Request

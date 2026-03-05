@@ -29,3 +29,47 @@
 </main>
 @endsection
 
+
+@section('script')
+{{-- ডুপ্লিকেট ট্র্যাকিং রোধ করতে কন্ডিশন: কন্ট্রোলার থেকে আসা wasTracked যদি ০ হয় তবেই চলবে --}}
+@if(isset($wasTracked) && $wasTracked == 0)
+<script>
+    // ১. গুগল ট্যাগ ম্যানেজার (GTM) পারচেজ ইভেন্ট
+    window.dataLayer = window.dataLayer || [];
+    window.dataLayer.push({
+        'event': 'purchase',
+        'ecommerce': {
+            'transaction_id': '{{ $order->invoice_no }}', {{-- আপনার মডেলে থাকা ইউনিক ইনভয়েস নম্বর --}}
+            'affiliation': 'Online Store',
+            'value': {{ number_format($order->total_amount, 2, '.', '') }},
+            'tax': 0,
+            'shipping': {{ number_format($order->shipping_cost, 2, '.', '') }},
+            'currency': 'BDT',
+            'items': [
+                @foreach($order->orderDetails as $item)
+                {
+                    'item_id': '{{ $item->product_id }}',
+                    'item_name': '{{ $item->product->name ?? "Product" }}',
+                    'item_category': '{{ $item->product->category->name ?? "General" }}',
+                    'price': {{ number_format($item->unit_price, 2, '.', '') }},
+                    'quantity': {{ $item->quantity }}
+                }{{ !$loop->last ? ',' : '' }}
+                @endforeach
+            ]
+        }
+    });
+
+    // ২. ফেসবুক পিক্সেল (Meta Pixel) পারচেজ ইভেন্ট
+    if (typeof fbq !== 'undefined') {
+        fbq('track', 'Purchase', {
+            content_ids: [@foreach($order->orderDetails as $item)'{{ $item->product_id }}'{{ !$loop->last ? ',' : '' }}@endforeach],
+            content_type: 'product',
+            value: {{ number_format($order->total_amount, 2, '.', '') }},
+            currency: 'BDT'
+        }, {eventID: 'order_{{ $order->id }}'}); {{-- Deduplication এর জন্য eventID --}}
+    }
+
+    console.log("Tracking events fired: GTM & Facebook Pixel");
+</script>
+@endif
+@endsection

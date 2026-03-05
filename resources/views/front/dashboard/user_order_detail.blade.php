@@ -66,6 +66,25 @@
                                                     <p class="m-0 text-muted" style="font-size: 0.9em;">
                                                         ৳ {{ number_format($detail->unit_price, 2) }} &times; {{ $detail->quantity }}
                                                     </p>
+                                                    {{-- user_order_detail.blade.php এর প্রোডাক্ট লুপের ভেতরে --}}
+
+<div class="product-info">
+    {{-- আপনার বিদ্যমান কোড (যেমন নাম, সাইজ, কালার) এখানে আছে --}}
+    
+    {{-- --- নতুন কাস্টম সেকশন শুরু --- --}}
+    @if(isset($detail->is_custom) && $detail->is_custom)
+        <div class="mt-2 p-2 border-start border-3 border-primary" style="background-color: #f8f9fa;">
+            <p class="mb-0 text-dark fw-bold" style="font-size: 13px;">
+                <i class="bi bi-person-check-fill me-1"></i> Customization Info:
+            </p>
+            <div class="ps-3 mt-1">
+                <span class="d-block small text-muted">Name: <b class="text-dark">{{ $detail->custom_name ?? 'N/A' }}</b></span>
+                <span class="d-block small text-muted">Number: <b class="text-dark">{{ $detail->custom_number ?? 'N/A' }}</b></span>
+            </div>
+        </div>
+    @endif
+    {{-- --- নতুন কাস্টম সেকশন শেষ --- --}}
+</div>
                                                 </div>
                                             </div>
                                             <div>

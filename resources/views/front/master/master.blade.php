@@ -2,6 +2,13 @@
 <html lang="en">
 
 <head>
+    <!-- Google Tag Manager -->
+<script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+})(window,document,'script','dataLayer','GTM-M9XNZMSC');</script>
+<!-- End Google Tag Manager -->
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
    <title>@yield('title')</title>
@@ -51,6 +58,10 @@ src="https://www.facebook.com/tr?id=1204087944905871&ev=PageView&noscript=1"
 </head>
 
 <body>
+    <!-- Google Tag Manager (noscript) -->
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-M9XNZMSC"
+height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+<!-- End Google Tag Manager (noscript) -->
     @include('front.include.header')
 
     @yield('body')
@@ -295,7 +306,7 @@ src="https://www.facebook.com/tr?id=1204087944905871&ev=PageView&noscript=1"
                 success: function(response) {
                     // The 'update' route also returns the full cart content
                     $('.cart-products').html(response.html);
-                    $('#cart-subtotal').text('৳ ' + response.subtotal);
+                    $('#cart-subtotal').text(' ' + response.subtotal);
                     $('#mobile-cart-count').text(response.count);
                     $('#desktop-cart-count').text(response.count);
 
@@ -381,6 +392,68 @@ $(document).ready(function() {
             $('.search-results-popup').hide();
         }
     });
+});
+</script>
+<script>
+// ১. গ্লোবাল ট্র্যাকিং ফাংশন (FB & GTM)
+function fb_track_add_to_cart(id, name, price) {
+    try {
+        var cleanPrice = parseFloat(price) || 0;
+        var pId = id ? id.toString() : '';
+
+        // --- Meta Pixel (Facebook) ---
+        if (typeof fbq === 'function') {
+            fbq('track', 'AddToCart', {
+                content_ids: [pId],
+                content_name: name,
+                content_type: 'product',
+                value: cleanPrice,
+                currency: 'BDT'
+            });
+        }
+
+        // --- Google Tag Manager (DataLayer) ---
+        window.dataLayer = window.dataLayer || [];
+        window.dataLayer.push({
+            'event': 'add_to_cart',
+            'ecommerce': {
+                'currency': 'BDT',
+                'value': cleanPrice,
+                'items': [{
+                    'item_id': pId,
+                    'item_name': name,
+                    'price': cleanPrice,
+                    'quantity': 1
+                }]
+            }
+        });
+
+        console.log("Tracking Success (FB & GTM): " + name);
+    } catch (e) {
+        console.error("Tracking Error:", e);
+    }
+}
+
+// ২. গ্লোবাল ক্লিক হ্যান্ডলার (সব পেজের বাটনের জন্য)
+$(document).on('click', '.btn-add-cart', function(e) {
+    e.preventDefault(); // পেজ যেন উপরে লাফ না দেয়
+
+    // closest ব্যবহার করা হয়েছে যাতে ভেতরের আইকনে ক্লিক করলেও মেইন বাটন থেকে ডাটা পায়
+    var btn = $(this).closest('.btn-add-cart');
+    
+    var id = btn.attr('data-product-id') || btn.data('product-id');
+    var name = btn.attr('data-product-name') || btn.data('product-name');
+    var price = btn.attr('data-product-price') || btn.data('product-price');
+
+    console.log(id);
+    console.log(name);
+    console.log(price);
+
+    if (id) {
+        fb_track_add_to_cart(id, name, price);
+    } else {
+        console.error("Tracking failed: Data attributes not found on the clicked element.");
+    }
 });
 </script>
 </body>

@@ -12,6 +12,16 @@
                             <h6 class="mb-0 fw-semibold">{{ $item['name'] }}</h6>
                         </a>
                         <p class="text-muted small mb-0">Combo Bundle</p>
+                        @if(isset($item['is_custom']) && $item['is_custom'])
+                            <div class="mt-2 p-2" style="background: #f0f7ff; border-radius: 5px; border-left: 3px solid #007bff;">
+                                <p class="mb-0 text-dark" style="font-size: 12px; font-weight: 600;">
+                                    <i class="bi bi-person-badge me-1"></i> Custom Name: <span class="text-primary">{{ $item['custom_name'] ?? 'N/A' }}</span>
+                                </p>
+                                <p class="mb-0 text-dark" style="font-size: 12px; font-weight: 600;">
+                                    <i class="bi bi-hash me-1"></i> Custom Number: <span class="text-primary">{{ $item['custom_number'] ?? 'N/A' }}</span>
+                                </p>
+                            </div>
+                        @endif
                     </div>
                 </div>
             </td>
@@ -86,6 +96,16 @@
                         <p class="text-muted small mb-0">Size: {{ $item['size'] }}</p>
                         @if(!empty($item['color']) && $item['color'] !== 'N/A')
                             <p class="text-muted small mb-0">Color: {{ $item['color'] }}</p>
+                        @endif
+                        @if(isset($item['is_custom']) && $item['is_custom'])
+                            <div class="mt-2 p-2" style="background: #f0f7ff; border-radius: 5px; border-left: 3px solid #007bff;">
+                                <p class="mb-0 text-dark" style="font-size: 12px; font-weight: 600;">
+                                    <i class="bi bi-person-badge me-1"></i> Custom Name: <span class="text-primary">{{ $item['custom_name'] ?? 'N/A' }}</span>
+                                </p>
+                                <p class="mb-0 text-dark" style="font-size: 12px; font-weight: 600;">
+                                    <i class="bi bi-hash me-1"></i> Custom Number: <span class="text-primary">{{ $item['custom_number'] ?? 'N/A' }}</span>
+                                </p>
+                            </div>
                         @endif
                     </div>
                 </div>

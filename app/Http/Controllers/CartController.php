@@ -66,6 +66,11 @@ class CartController extends Controller
                 'url'               => route('offerProduct.show', $bundle->id), // Link back to the offer page
                 'is_bundle'         => true,
                 'selected_products' => $selectedProductsDetails,
+                // --- নতুন ইনজেক্ট করা কোড শুরু ---
+    'is_custom'         => $request->is_custom_selected == 'true' || $request->is_custom_selected == 1 ? true : false,
+    'custom_name'       => $request->custom_name,
+    'custom_number'     => $request->custom_number,
+    // --- নতুন ইনজেক্ট করা কোড শেষ ---
             ];
         }
 
@@ -147,7 +152,10 @@ class CartController extends Controller
                 'image' => $image,
                 'slug' => $product->slug,
                 'is_bundle'  => false,
-                'url'        => route('product.show', $product->slug)
+                'url'        => route('product.show', $product->slug),
+                'is_custom'     => $request->is_custom_selected == 'true' || $request->is_custom_selected == 1 ? true : false,
+    'custom_name'   => $request->custom_name,
+    'custom_number' => $request->custom_number,
             ];
         }
         Session::put('cart', $cart);

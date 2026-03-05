@@ -94,16 +94,16 @@
                     @endif
                 </p>
                 <div class="product-actions">
-        <a href="#" class="product-action-btn btn-add-cart" data-product-id="{{ $product->id }}" data-bs-toggle="tooltip" title="Quick View">
+        <a href="#" class="product-action-btn btn-add-cart" data-product-name="{{ $product->name }}" data-product-price="{{ $product->base_price }}" data-product-id="{{ $product->id }}" data-bs-toggle="tooltip" title="Quick View">
             <i class="bi bi-eye"></i>
         </a>
-        <a href="#" class="product-action-btn btn-add-cart" data-product-id="{{ $product->id }}" data-bs-toggle="tooltip" title="Add to Cart">
+        <a href="#" class="product-action-btn btn-add-cart" data-product-name="{{ $product->name }}" data-product-price="{{ $product->base_price }}"  data-product-id="{{ $product->id }}" data-bs-toggle="tooltip" title="Add to Cart">
             <i class="bi bi-cart-plus"></i>
         </a>
-        <a href="#" class="product-action-btn btn-add-cart" data-product-id="{{ $product->id }}" data-bs-toggle="tooltip" title="Add to Wishlist">
+        <a href="#" class="product-action-btn btn-add-cart" data-product-name="{{ $product->name }}" data-product-price="{{ $product->base_price }}" data-product-id="{{ $product->id }}" data-bs-toggle="tooltip" title="Add to Wishlist">
             <i class="bi bi-heart"></i>
         </a>
-        <a href="#" class="product-action-btn btn-add-cart" data-product-id="{{ $product->id }}" data-bs-toggle="tooltip" title="Add to Compare">
+        <a href="#" class="product-action-btn btn-add-cart" data-product-name="{{ $product->name }}" data-product-price="{{ $product->base_price }}" data-product-id="{{ $product->id }}" data-bs-toggle="tooltip" title="Add to Compare">
             <i class="bi bi-arrow-left-right"></i>
         </a>
     </div>
