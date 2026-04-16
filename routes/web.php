@@ -18,7 +18,7 @@ Route::get('/clear', function() {
     \Illuminate\Support\Facades\Artisan::call('route:clear');
     return redirect()->back();
 });
-
+Route::post('/product-get-variant-images', [App\Http\Controllers\FrontController::class, 'getVariantImages'])->name('product.get_variant_images');
 Route::controller(CheckoutController::class)->group(function () {
 
     // --- NEW: Reward Point Routes ---
@@ -130,7 +130,7 @@ Route::controller(FrontController::class)->group(function () {
     Route::get('/bundle-view-count/{id}', [FrontController::class, 'getBundleViewCount'])->name('bundle.view_count');
 Route::get('/product-view-count/{id}', 'getProductViewCount')->name('product.view_count');
      Route::get('/products/ajax-search-filter', 'ajaxSearchFilter')->name('products.ajax_search_filter');
-
+Route::get('/facebook-catalog/feed.xml', 'facebookCatalogFeed')->name('facebook.catalog.feed');
     Route::get('/products/ajax-search', 'ajaxSearch')->name('products.ajax_search');
     Route::get('/product-search', 'productSearch')->name('products.search');
 

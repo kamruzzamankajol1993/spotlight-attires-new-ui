@@ -329,53 +329,70 @@ $(document).ready(function() {
         $('#place-order-btn').prop('disabled', false);
     }
 
-    function getShippingCharge(addressId) {
-        if (!addressId) {
-            $('#shipping-charge-text').text('Select an address');
-            $('#place-order-btn').prop('disabled', true);
-            return;
-        }
+    // এই অংশটি আপনার existing scripts এর ভেতর আপডেট করুন
 
-        // --- EXPRESS DELIVERY LOGIC ---
-        const expressOption = $('#express-delivery-option');
-        const expressInput = $('#express-delivery-input');
-        const regularInput = $('input[name="delivery_type"][value="regular"]');
-        
-        const selectedRadio = $(`.shipping-address-radio[value="${addressId}"]`);
-        const addressText = selectedRadio.closest('.form-check').find('small').first().text();
-        const isDhaka = addressText.toLowerCase().includes('dhaka');
-
-        if (isDhaka) {
-            expressOption.removeClass('disabled-option');
-            expressInput.prop('disabled', false);
-        } else {
-            expressOption.addClass('disabled-option');
-            expressInput.prop('disabled', true);
-            if (expressInput.is(':checked')) {
-                regularInput.prop('checked', true).trigger('change');
-            }
-        }
-        // --- END EXPRESS DELIVERY LOGIC ---
-
-        $('#shipping-charge-text').html('<span class="spinner-border spinner-border-sm"></span>');
+function getShippingCharge(addressId) {
+    if (!addressId) {
+        $('#shipping-charge-text').text('Select an address');
         $('#place-order-btn').prop('disabled', true);
+        return;
+    }
 
-        $.ajax({
-            url: '{{ route("get.shipping.charge") }}',
-            method: 'POST',
-            data: { _token: '{{ csrf_token() }}', address_id: addressId },
-            success: function(response) {
-                if(response.success) {
-                    shippingCharge = parseFloat(response.shipping_charge);
-                    updateTotals();
-                }
-            },
-            error: function(xhr) {
-                shippingCharge = 130; // Fallback
+    // ডেলিভারি টাইপ ভ্যালু গেট করা
+    const deliveryType = $('input[name="delivery_type"]:checked').val();
+
+    // --- EXPRESS DELIVERY UI LOGIC ---
+    const expressOption = $('#express-delivery-option');
+    const expressInput = $('#express-delivery-input');
+    const regularInput = $('input[name="delivery_type"][value="regular"]');
+    
+    const selectedRadio = $(`.shipping-address-radio[value="${addressId}"]`);
+    const addressText = selectedRadio.closest('.form-check').find('small').first().text();
+    const isDhaka = addressText.toLowerCase().includes('dhaka');
+
+    if (isDhaka) {
+        expressOption.removeClass('disabled-option');
+        expressInput.prop('disabled', false);
+    } else {
+        expressOption.addClass('disabled-option');
+        expressInput.prop('disabled', true);
+        if (expressInput.is(':checked')) {
+            regularInput.prop('checked', true).parent().addClass('selected');
+            expressInput.parent().removeClass('selected');
+        }
+    }
+
+    $('#shipping-charge-text').html('<span class="spinner-border spinner-border-sm"></span>');
+    $('#place-order-btn').prop('disabled', true);
+
+    $.ajax({
+        url: '{{ route("get.shipping.charge") }}',
+        method: 'POST',
+        data: { 
+            _token: '{{ csrf_token() }}', 
+            address_id: addressId,
+            delivery_type: deliveryType // নতুন ডাটা পাঠানো হচ্ছে
+        },
+        success: function(response) {
+            if(response.success) {
+                shippingCharge = parseFloat(response.shipping_charge);
                 updateTotals();
             }
-        });
+        },
+        error: function(xhr) {
+            shippingCharge = 130; 
+            updateTotals();
+        }
+    });
+}
+
+// নতুন ইভেন্ট লিসেনার: ডেলিভারি টাইপ চেঞ্জ হলে চার্জ আপডেট হবে
+$('input[name="delivery_type"]').on('change', function() {
+    const addressId = $('.shipping-address-radio:checked').val();
+    if (addressId) {
+        getShippingCharge(addressId);
     }
+});
 
     // --- REWARD POINTS TOGGLE HANDLER ---
     $('#redeemPointsCheckbox').on('change', function() {

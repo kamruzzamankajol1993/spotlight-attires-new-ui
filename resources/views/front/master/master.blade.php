@@ -48,13 +48,44 @@ n.queue=[];t=b.createElement(e);t.async=!0;
 t.src=v;s=b.getElementsByTagName(e)[0];
 s.parentNode.insertBefore(t,s)}(window, document,'script',
 'https://connect.facebook.net/en_US/fbevents.js');
-fbq('init', '1204087944905871');
+
+fbq('init', '1204087944905871'); 
 fbq('track', 'PageView');
 </script>
 <noscript><img height="1" width="1" style="display:none"
 src="https://www.facebook.com/tr?id=1204087944905871&ev=PageView&noscript=1"
 /></noscript>
 <!-- End Meta Pixel Code -->
+<style>
+    /* মোডাল ওপেন থাকলেও বডি ডানে সরবে না */
+    body.modal-open {
+        padding-right: 0 !important;
+        overflow: hidden;
+    }
+
+    /* হেডার যদি ফিক্সড থাকে তবে সেটির পজিশন ঠিক রাখা */
+    body.modal-open .header, 
+    body.modal-open .fixed-top,
+    body.modal-open header {
+        padding-right: 0 !important;
+    }
+
+    /* মোবাইলে মোডালের মার্জিন ঠিক করা */
+    @media (max-width: 576px) {
+        .modal-dialog {
+            margin: 10px auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: calc(100% - 20px);
+        }
+        
+        #eidNoticeModal .modal-content {
+            width: 90%; /* স্ক্রিনের দুই পাশে সামান্য গ্যাপ রাখবে */
+            border-radius: 15px;
+        }
+    }
+</style>
 </head>
 
 <body>
@@ -69,6 +100,31 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     @include('front.include.footer')
 
     <!-- Vendor JS Files -->
+  <div class="modal fade" id="eidNoticeModal" tabindex="-1" aria-labelledby="eidNoticeModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" style="max-width: 600px;"> 
+        <div class="modal-content border-0 shadow-lg overflow-hidden">
+            <button type="button" class="btn-close position-absolute top-0 end-0 m-2 bg-white rounded-circle p-2 shadow-sm" data-bs-dismiss="modal" aria-label="Close" style="z-index: 10;"></button>
+            
+            <div class="modal-body p-0 text-center">
+                <div id="imageLoading" class="w-100 d-flex flex-column justify-content-center align-items-center bg-white p-4" style="min-height: 300px;">
+                    <div class="spinner-border text-dark mb-4" role="status">
+                      <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <h4 class="fw-bold text-dark mb-3">শুভ নববর্ষ!</h4>
+                    <p class="text-dark" style="font-size: 18px;">পহেলা বৈশাখ উপলক্ষে ১৪% বিশেষ ছাড়!</p>
+                </div>
+                
+                <img id="noticeImage" src="{{asset('/')}}public/coupon.jpeg" alt="Boishakh Offer" class="img-fluid w-100 d-block d-none">
+            </div>
+            
+            <div class="modal-footer justify-content-center border-0 pb-3 pt-0 bg-white">
+                <a href="https://spotlightattires.com/shop" class="btn btn-dark px-5 py-2 rounded-pill" data-bs-dismiss="modal">শপিং চালিয়ে যান</a>
+            </div>
+        </div>
+    </div>
+</div>
+    
+
     
     <script src="{{asset('/')}}public/front/assets/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
     <script src="{{asset('/')}}public/front/assets/vendor/aos/aos.js"></script>
@@ -77,7 +133,40 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     <!-- Main JS File -->
     <script src="{{asset('/')}}public/front/assets/js/main.js"></script>
     @yield('script')
+ <script>
+    $(document).ready(function() {
+        // একব দেখালে এই সশনে আর দেখাে না
+        if (!sessionStorage.getItem('eidNoticeShown')) {
+            
+            // পেজ লোড হওার ১ সেকেন্ র মোডাল ওপে হবে
+            setTimeout(function() {
+                $('#eidNoticeModal').modal('show');
+                
+                var $img = $('#noticeImage');
+                var $loading = $('#imageLoading');
 
+                // ব্রউজারে আগ থকেই ইমেজ ক্াশ করা থাকল
+                if ($img[0].complete && $img[0].naturalWidth > 0) {
+                    $loading.addClass('d-none');
+                    $img.removeClass('d-none');
+                } 
+                // ইমেজ লোড হওয়ার অপেক্ষায় থাকল
+                else {
+                    $img.on('load', function() {
+                        $loading.addClass('d-none');
+                        $img.removeClass('d-none');
+                    }).on('error', function() {
+                        // কোনো কারণ ইেজ লোড না হল লোডারটি হাড হয়ে শুধু টেক্সটটিই থেে যাবে
+                        $loading.find('.spinner-border').addClass('d-none');
+                    });
+                }
+                
+                sessionStorage.setItem('eidNoticeShown', 'true');
+            }, 100); 
+            
+        }
+    });
+ </script>
     <script>
     $(document).ready(function() {
         $('.main-slider').slick({
@@ -364,7 +453,7 @@ $(document).ready(function() {
                         resultsContainer.html('');
                         if (products && products.length > 0) {
                             products.forEach(function(product) {
-                                let priceHtml = product.discount_price > 0 ? `<span class="fw-bold text-dark">৳ ${product.discount_price}</span> <del class="text-muted small ms-2">৳ ${product.base_price}</del>` : `<span class="fw-bold text-dark">৳ ${product.base_price}</span>`;
+                                let priceHtml = product.discount_price > 0 ? `<span class="fw-bold text-dark">৳ ${product.discount_price}</span> <del class="text-muted small ms-2"> ${product.base_price}</del>` : `<span class="fw-bold text-dark">৳ ${product.base_price}</span>`;
                                 const productHtml = `<a href="${product.url}" class="search-result-item"><img src="${product.image_url}" alt="${product.name}"><div class="search-result-info"><div class="fw-bold">${product.name}</div><div class="price">${priceHtml}</div></div></a>`;
                                 resultsContainer.append(productHtml);
                             });
@@ -395,7 +484,7 @@ $(document).ready(function() {
 });
 </script>
 <script>
-// ১. গ্লোবাল ট্র্যাকিং ফাংশন (FB & GTM)
+// ১. গ্লোবাল ্র্াকিং ফাশন (FB & GTM)
 function fb_track_add_to_cart(id, name, price) {
     try {
         var cleanPrice = parseFloat(price) || 0;
@@ -434,11 +523,11 @@ function fb_track_add_to_cart(id, name, price) {
     }
 }
 
-// ২. গ্লোবাল ক্লিক হ্যান্ডলার (সব পেজের বাটনের জন্য)
+// ২. গ্োবাল ্লিক ্যান্ডলার (ব পেজর াটের জন্য)
 $(document).on('click', '.btn-add-cart', function(e) {
-    e.preventDefault(); // পেজ যেন উপরে লাফ না দেয়
+    e.preventDefault(); // পেজ ন পরে লাফ না দেয়
 
-    // closest ব্যবহার করা হয়েছে যাতে ভেতরের আইকনে ক্লিক করলেও মেইন বাটন থেকে ডাটা পায়
+    // closest বহার করা হয়ে যাতে ভেতে আইকনে ক্িক করলেও মেন বাটন েকে ডাটা পা
     var btn = $(this).closest('.btn-add-cart');
     
     var id = btn.attr('data-product-id') || btn.data('product-id');

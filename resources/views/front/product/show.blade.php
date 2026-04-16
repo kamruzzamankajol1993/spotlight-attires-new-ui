@@ -196,18 +196,65 @@
                         <div class="mb-4">
                             <h2 class="h5 fw-semibold mb-2">Color: <span id="selected-color-name">{{ $product->variants->first()->color->name }}</span></h2>
                             <div class="d-flex gap-2">
-                                @foreach($product->variants as $variant)
-                                    <div class="color-option {{ $loop->first ? 'active' : '' }}"
-                                         style="background-color: {{ $variant->color->code }};"
-                                         data-variant-id="{{ $variant->id }}"
-                                         data-variant-sku="{{ $variant->variant_sku }}"
-                                         data-color-name="{{ $variant->color->name }}"
-                                         data-additional-price="{{ $variant->additional_price }}"
-                                         data-sizes="{{ json_encode($variant->detailed_sizes) }}"
-                                         data-main-images="{{ json_encode(array_merge($product->main_image ?? [], $variant->main_image ?? [])) }}"
-                                         data-thumb-images="{{ json_encode(array_merge($product->thumbnail_image ?? [], $variant->variant_image ?? [])) }}">
-                                    </div>
-                                @endforeach
+                     @foreach($product->variants as $variant)
+    @php
+        // ১. ডাটাবেজ থেকে সরাসরি (Raw) ডাটা নিয়ে আসছি
+        $rawMain = $variant->getRawOriginal('main_image');
+        $rawThumb = $variant->getRawOriginal('variant_image');
+
+        $parsedMain = [];
+        if (!empty($rawMain)) {
+            $decoded = is_string($rawMain) ? json_decode($rawMain, true) : $rawMain;
+            $parsedMain = is_array($decoded) ? $decoded : [$rawMain];
+        }
+
+        $parsedThumb = [];
+        if (!empty($rawThumb)) {
+            $decoded = is_string($rawThumb) ? json_decode($rawThumb, true) : $rawThumb;
+            $parsedThumb = is_array($decoded) ? $decoded : [$rawThumb];
+        }
+
+        // ২. ভেরিয়েন্ট ইমেজ এবং প্রোডাক্টের অরিজিনাল ইমেজগুলো একসাথে মার্জ করছি
+        $productMain = is_array($product->main_image) ? $product->main_image : [];
+        $productThumb = is_array($product->thumbnail_image) ? $product->thumbnail_image : [];
+
+        $mergedMain = array_merge($parsedMain, $productMain);
+        $mergedThumb = array_merge($parsedThumb, $productThumb);
+
+        // ডুপ্লিকেট ইমেজ থাকলে রিমুভ করছি (যাতে একই ছবি বারবার না আসে)
+        $mergedMain = array_values(array_unique($mergedMain));
+        $mergedThumb = array_values(array_unique($mergedThumb));
+
+        // ৩. স্লাইডার সুন্দর দেখানোর জন্য যদি ছবি ৪টার কম হয়, তবে রিপিট করা
+        $mainCount = count($mergedMain);
+        if ($mainCount > 0 && $mainCount < 4) {
+            $needed = 4 - $mainCount;
+            for ($i = 0; $i < $needed; $i++) {
+                $mergedMain[] = $mergedMain[$i % $mainCount];
+            }
+        }
+
+        $thumbCount = count($mergedThumb);
+        if ($thumbCount > 0 && $thumbCount < 4) {
+            $needed = 4 - $thumbCount;
+            for ($i = 0; $i < $needed; $i++) {
+                $mergedThumb[] = $mergedThumb[$i % $thumbCount];
+            }
+        }
+    @endphp
+
+    {{-- এখন $mergedMain এবং $mergedThumb ভেরিয়েবল ডাটা অ্যাট্রিবিউটে পাস করছি --}}
+    <div class="color-option {{ $loop->first ? 'active' : '' }}"
+         style="background-color: {{ $variant->color->code }};"
+         data-variant-id="{{ $variant->id }}"
+         data-variant-sku="{{ $variant->variant_sku }}"
+         data-color-name="{{ $variant->color->name }}"
+         data-additional-price="{{ $variant->additional_price }}"
+         data-sizes='{{ json_encode($variant->detailed_sizes) }}'
+         data-main-images='{{ json_encode($mergedMain) }}'
+         data-thumb-images='{{ json_encode($mergedThumb) }}'>
+    </div>
+@endforeach
                             </div>
                         </div>
                         @endif
@@ -687,34 +734,38 @@ $(document).ready(function() {
 
     // UPDATED: This function now updates the main slider AND the new modal slider
     function updateImages(mainImages, thumbImages) {
-        const mainSlider = $('#main-product-slider');
-        const thumbSlider = $('#thumbnail-nav-slider');
-        const modalSlider = $('#main-image-modal-slider'); // NEW: Get the modal slider
+    // ডেটা না থাকলে যাতে এরর না দেয়
+    mainImages = mainImages || [];
+    thumbImages = thumbImages || [];
 
-        // NEW: Destroy the modal slider so it can be rebuilt
-        if (modalSlider.hasClass('slick-initialized')) {
-            modalSlider.slick('unslick');
-        }
-        
-        mainSlider.empty();
-        thumbSlider.empty();
-        modalSlider.empty(); // NEW: Empty the modal slider too
+    const mainSlider = $('#main-product-slider');
+    const thumbSlider = $('#thumbnail-nav-slider');
+    const modalSlider = $('#main-image-modal-slider');
 
-        mainImages.forEach(img => {
-            const mainSlideHTML = `<div><img src="${IMAGE_BASE_URL}${img}" class="img-fluid "></div>`;
-            const modalSlideHTML = `<div><img src="${IMAGE_BASE_URL}${img}" alt="{{ $product->name }}"></div>`;
+    // DOM Empty করার আগেই সব স্লাইডার unslick (destroy) করতে হবে
+    if (mainSlider.hasClass('slick-initialized')) mainSlider.slick('unslick');
+    if (thumbSlider.hasClass('slick-initialized')) thumbSlider.slick('unslick');
+    if (modalSlider.hasClass('slick-initialized')) modalSlider.slick('unslick');
 
-            mainSlider.append(mainSlideHTML);
-            modalSlider.append(modalSlideHTML); // NEW: Add image to modal slider
-        });
+    mainSlider.empty();
+    thumbSlider.empty();
+    modalSlider.empty();
 
-        thumbImages.forEach(img => {
-            thumbSlider.append(`<div><img src="${IMAGE_BASE_URL}${img}" class="img-fluid thumbnail-image"></div>`);
-        });
+    // নতুন ইমেজ যোগ করা
+    mainImages.forEach(img => {
+        mainSlider.append(`<div><img src="${IMAGE_BASE_URL}${img}" class="img-fluid "></div>`);
+        modalSlider.append(`<div><img src="${IMAGE_BASE_URL}${img}" alt="{{ $product->name }}"></div>`);
+    });
 
-        initializeSlick(); // This re-initializes the *page* sliders
-        // The modal slider will be initialized if/when it is opened
-    }
+    thumbImages.forEach(img => {
+        thumbSlider.append(`<div><img src="${IMAGE_BASE_URL}${img}" class="img-fluid thumbnail-image"></div>`);
+    });
+
+    // স্লাইডার আবার চালু করা
+    initializeSlick();
+}
+
+
     
     function updatePrice(additionalPrice) {
         const finalPrice = BASE_PRODUCT_PRICE + parseFloat(additionalPrice || 0);
@@ -722,25 +773,28 @@ $(document).ready(function() {
     }
 
     // --- Event Handlers ---
-    $('.color-option').on('click', function() {
-        const $this = $(this);
+   // --- Event Handlers ---
+$('.color-option').on('click', function() {
+    const $this = $(this);
 
-        // Update active state
-        $('.color-option').removeClass('active');
-        $this.addClass('active');
+    // Update active state
+    $('.color-option').removeClass('active');
+    $this.addClass('active');
 
-        // Extract data
-        const variantData = $this.data();
-        selectedVariantId = variantData.variantId;
-        
-        // Update UI
-        $('#selected-color-name').text(variantData.colorName);
-        $('#product-sku').text(variantData.variantSku || '{{ $product->product_code }}');
-        updateSizes(variantData.sizes);
-        updatePrice(variantData.additionalPrice);
-        updateImages(variantData.mainImages, variantData.thumbImages);
-        $('#quantity-value').text(1);
-    });
+    // Extract all data attributes
+    const variantData = $this.data();
+    selectedVariantId = variantData.variantId;
+    
+    // Update basic UI
+    $('#selected-color-name').text(variantData.colorName);
+    $('#product-sku').text(variantData.variantSku || '{{ $product->product_code }}');
+    updateSizes(variantData.sizes);
+    updatePrice(variantData.additionalPrice);
+    $('#quantity-value').text(1);
+
+    // AJAX এর বদলে সরাসরি HTML এর data অ্যাট্রিবিউট থেকে ইমেজগুলো পাঠিয়ে দিচ্ছি
+    updateImages(variantData.mainImages, variantData.thumbImages);
+});
 
     $('#size-options-container').on('click', '.size-option:not(:disabled)', function() {
         const $this = $(this);

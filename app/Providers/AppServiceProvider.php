@@ -60,6 +60,7 @@ class AppServiceProvider extends ServiceProvider
                 ;
                 $front_ins_name = $frontEndData->ins_name;
                 $front_ins_url = $frontEndData->main_url;
+                $front_ins_front_url =$frontEndData->front_url;
                 $front_ins_add = $frontEndData->address;
                 
                 $front_ins_email = $frontEndData->email;
@@ -83,7 +84,7 @@ class AppServiceProvider extends ServiceProvider
                 $front_ins_add = '';
                $front_ins_url = '';
                 $front_ins_email = '';
-
+$front_ins_front_url ="";
                 $front_ins_phone = '';
                 $front_ins_k = '';
                 $front_ins_d = '';
@@ -94,6 +95,7 @@ class AppServiceProvider extends ServiceProvider
 
               view()->share('front_icon_name', $front_icon_name);
               view()->share('front_ins_url', $front_ins_url);
+                view()->share('front_ins_front_url', $front_ins_front_url);
               view()->share('front_logo_name', $front_logo_name);
               view()->share('front_mobile_version_logo', $front_mobile_version_logo);
               view()->share('front_ins_name', $front_ins_name);

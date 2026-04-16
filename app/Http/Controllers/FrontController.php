@@ -22,8 +22,53 @@ use App\Models\HeroRightSlider;
 use App\Models\FooterBanner;
 use App\Models\ExtraCategory;
 use App\Models\AreaWisePrice; 
+use App\Models\ProductVariant;
 class FrontController extends Controller
 {
+
+
+/**
+     * Generate Facebook Catalog XML Feed
+     */
+    public function facebookCatalogFeed()
+    {
+        // শুধুমাত্র একটিভ প্রোডাক্টগুলো ব্র্যান্ডের ডেটাসহ ফেচ করা হলো
+        $products = Product::where('status', 1)->with('brand')->get();
+
+        return response()->view('front.feed.facebook_catalog', compact('products'))
+                         ->header('Content-Type', 'text/xml');
+    }
+
+
+public function getVariantImages(Request $request)
+{
+    $variant = \App\Models\ProductVariant::find($request->variant_id);
+    $product = \App\Models\Product::find($request->product_id);
+
+    if ($variant && $product) {
+        // Raw ডাটা তুলে নিয়ে আসবো
+        $rawMainImage = $variant->getRawOriginal('main_image');
+        $rawThumbImage = $variant->getRawOriginal('variant_image');
+
+        // যদি ডাটা ভ্যালিড JSON না হয়, তবে সেটাকে জোর করে Array বানিয়ে দিবো
+        $vMainImg = json_decode($rawMainImage, true) ?? ($rawMainImage ? [$rawMainImage] : []);
+        $vThumbImg = json_decode($rawThumbImage, true) ?? ($rawThumbImage ? [$rawThumbImage] : []);
+
+        // যদি ভেরিয়েন্টের ইমেজ ফাঁকা থাকে, তাহলে প্রোডাক্টের ডিফল্ট ইমেজ নিবে
+        $mainImages = !empty($vMainImg) ? $vMainImg : ($product->main_image ?? []);
+        $thumbImages = !empty($vThumbImg) ? $vThumbImg : ($product->thumbnail_image ?? []);
+
+        //dd($mainImages);
+
+        return response()->json([
+            'success' => true,
+            'main_images' => $mainImages,
+            'thumb_images' => $thumbImages
+        ]);
+    }
+
+    return response()->json(['success' => false]);
+}
   
   public function privacy_policy(){
     

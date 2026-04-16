@@ -236,78 +236,67 @@ private function getCartData()
     }
 
     public function getShippingCharge(Request $request)
-    {
-        $validator = Validator::make($request->all(), [
-            'address_id' => 'required|exists:customer_addresses,id'
-        ]);
+{
+    $validator = Validator::make($request->all(), [
+        'address_id' => 'required|exists:customer_addresses,id',
+        'delivery_type' => 'nullable|string|in:regular,express' // ডেলিভারি টাইপ ইনপুট হিসেবে নিবে
+    ]);
 
-        if ($validator->fails()) {
-            return response()->json(['success' => false, 'message' => 'Please select a valid address.'], 422);
-        }
-
-        // --- START: NEW FREE SHIPPING LOGIC ---
-        $cart = Session::get('cart', []);
-        $productIds = [];
-        $bundleOfferProductIds = []; // This will hold the BundleOfferProduct IDs from the cart
-
-        foreach ($cart as $item) {
-            if (isset($item['is_bundle']) && $item['is_bundle']) {
-                // 'id' in a bundle item is the BundleOfferProduct ID
-                $bundleOfferProductIds[] = $item['id']; 
-            } else {
-                $productIds[] = $item['product_id'];
-            }
-        }
-
-        // Check 1: Do any of the regular products have free delivery?
-        if (count($productIds) > 0) {
-            $hasFreeShippingProduct = Product::whereIn('id', $productIds)
-                                              ->where('is_free_delivery', true)
-                                              ->exists();
-            if ($hasFreeShippingProduct) {
-                // Found a free shipping product, so the charge is 0.
-                return response()->json(['success' => true, 'shipping_charge' => 0]);
-            }
-        }
-        
-        // Check 2: Do any of the bundles have free delivery?
-        if (count($bundleOfferProductIds) > 0) {
-            // We check if any BundleOfferProduct in the cart belongs to a BundleOffer that has free delivery.
-            $hasFreeShippingBundle = BundleOfferProduct::whereIn('id', $bundleOfferProductIds)
-                ->whereHas('bundleOffer', function ($query) {
-                    $query->where('is_free_delivery', true);
-                })
-                ->exists();
-
-            if ($hasFreeShippingBundle) {
-                // Found a free shipping bundle, so the charge is 0.
-                return response()->json(['success' => true, 'shipping_charge' => 0]);
-            }
-        }
-        // --- END: NEW FREE SHIPPING LOGIC ---
-
-        // If we're still here, no free shipping was found. Proceed with normal calculation.
-        $customer = Auth::user()->customer;
-        $address = $customer->addresses()->findOrFail($request->address_id);
-        
-        $addressParts = explode(',', $address->address);
-        
-        if (count($addressParts) < 3) {
-            return response()->json(['success' => false, 'message' => 'Address format is incorrect. Please edit the address.'], 400);
-        }
-
-        $upazila = trim($addressParts[count($addressParts) - 2]);
-        $district = trim($addressParts[count($addressParts) - 1]);
-
-        $area = RedexArea::where('District', $district)->where('Upazila_Thana', $upazila)->first();
-
-        $shippingCharge = $area ? $area->Delivery_Charge : 70; // Default if not found
-
-        return response()->json([
-            'success' => true,
-            'shipping_charge' => $shippingCharge
-        ]);
+    if ($validator->fails()) {
+        return response()->json(['success' => false, 'message' => 'Please select a valid address.'], 422);
     }
+
+    // --- বিদ্যমান ফ্রি শিপিং লজিক শুরু (অপরিবর্তিত) ---
+    $cart = Session::get('cart', []);
+    $productIds = [];
+    $bundleOfferProductIds = [];
+    foreach ($cart as $item) {
+        if (isset($item['is_bundle']) && $item['is_bundle']) { $bundleOfferProductIds[] = $item['id']; } 
+        else { $productIds[] = $item['product_id']; }
+    }
+
+    if (count($productIds) > 0) {
+        if (Product::whereIn('id', $productIds)->where('is_free_delivery', true)->exists()) {
+            return response()->json(['success' => true, 'shipping_charge' => 0]);
+        }
+    }
+    
+    if (count($bundleOfferProductIds) > 0) {
+        if (BundleOfferProduct::whereIn('id', $bundleOfferProductIds)->whereHas('bundleOffer', function ($query) {
+            $query->where('is_free_delivery', true);
+        })->exists()) {
+            return response()->json(['success' => true, 'shipping_charge' => 0]);
+        }
+    }
+    // --- বিদ্যমান ফ্রি শিপিং লজিক শেষ ---
+
+    $customer = Auth::user()->customer;
+    $address = $customer->addresses()->findOrFail($request->address_id);
+    $addressText = strtolower($address->address);
+    $isDhaka = str_contains($addressText, 'dhaka');
+
+    // --- নতুন আপডেট: এক্সপ্রেস ডেলিভারি লজিক ---
+    if ($isDhaka && $request->delivery_type === 'express') {
+        return response()->json(['success' => true, 'shipping_charge' => 120]);
+    }
+
+    // রেগুলার বা নন-ঢাকা এরিয়ার জন্য এরিয়া অনুযায়ী চার্জ
+    $addressParts = explode(',', $address->address);
+    if (count($addressParts) < 3) {
+        return response()->json(['success' => false, 'message' => 'Address format incorrect.'], 400);
+    }
+
+    $upazila = trim($addressParts[count($addressParts) - 2]);
+    $district = trim($addressParts[count($addressParts) - 1]);
+    $area = RedexArea::where('District', $district)->where('Upazila_Thana', $upazila)->first();
+
+    $shippingCharge = $area ? $area->Delivery_Charge : 70;
+
+    return response()->json([
+        'success' => true,
+        'shipping_charge' => $shippingCharge
+    ]);
+}
     
      public function placeOrder(Request $request)
     {
@@ -564,29 +553,28 @@ foreach ($cartData['cart'] as $item) {
 
     public function orderSuccess($orderId)
 {
-    // ১. অটো-লগইন লজিক (বিদ্যমান)
+    // ১. অটো-লগইন লজিক
     $phone = \Illuminate\Support\Facades\Cookie::get('user_phone_for_login');
     if ($phone) {
         $user = \App\Models\User::where('phone', $phone)->first();
-        if ($user) {
-            \Illuminate\Support\Facades\Auth::login($user);
-        }
+        if ($user) { \Illuminate\Support\Facades\Auth::login($user); }
     }
     \Illuminate\Support\Facades\Cookie::queue(\Illuminate\Support\Facades\Cookie::forget('user_phone_for_login'));
 
-    // ২. অর্ডারের বিস্তারিত তথ্য লোড করা
+    // ২. অর্ডার লোড করা
     $order = \App\Models\Order::with(['customer', 'orderDetails.product'])
                   ->where('id', $orderId)
                   ->where('customer_id', \Illuminate\Support\Facades\Auth::user()->customer->id)
                   ->firstOrFail();
 
-    $wasTracked = $order->is_tracked; 
+    // ৩. ট্র্যাকিং ফায়ার হবে কি না তার কন্ডিশন
+    $alreadyTracked = ($order->is_tracked === '1' || $order->is_tracked === 1 || $order->is_tracked == 1);
+    $fireTracking = !$alreadyTracked;
 
-    // ৩. প্রথমবার ভিজিটের সময় ফেসবুক CAPI এবং ডাটাবেজ আপডেট করা
-    if (!$wasTracked) {
-        // ফেসবুকের প্রয়োজনীয় ক্রিডেনশিয়াল (.env থেকে নেওয়া ভালো)
-        $pixelId = '1204087944905871';
-        $accessToken = 'EAAOnrRl7JYsBQ5Rf8DarnVwZCKyKWkcM6QY5pcxMS22juIe27R5G60Uk1hZCpk4DpAdlza5TZBtLAxuUEJ9K2g1HwVcB9ZCTHNeccGChI1gkN6avqukBgu9u9Gn6d6QSHZAbmLyKxldXZCr3PVr7ZCMKpZB2WWXV3VnePaMTdrZABfWpFY5VvPm2RPkqf6BWdZBgZDZD';
+    // ৪. CAPI ফায়ার করা (শুধুমাত্র প্রথমবার)
+    if ($fireTracking) {
+        $pixelId = '1204087944905871'; // আপনার পিক্সেল আইডি
+        $accessToken = 'EAAOnrRl7JYsBQ5Rf8DarnVwZCKyKWkcM6QY5pcxMS22juIe27R5G60Uk1hZCpk4DpAdlza5TZBtLAxuUEJ9K2g1HwVcB9ZCTHNeccGChI1gkN6avqukBgu9u9Gn6d6QSHZAbmLyKxldXZCr3PVr7ZCMKpZB2WWXV3VnePaMTdrZABfWpFY5VvPm2RPkqf6BWdZBgZDZD'; // আপনার টোকেন
 
         if ($pixelId && $accessToken) {
             try {
@@ -595,10 +583,10 @@ foreach ($cartData['cart'] as $item) {
                         [
                             'event_name' => 'Purchase',
                             'event_time' => time(),
-                            'event_id' => 'order_' . $order->id, // ডিডুপ্লিকেশন আইডি
+                            'event_id' => 'order_' . $order->id, // ডিডুপ্লিকেশনের জন্য গোল্ডেন আইডি
                             'action_source' => 'website',
                             'user_data' => [
-                                'em' => [hash('sha256', strtolower($order->customer->email ?? $order->email))], // ইমেইল হ্যাশ করা
+                                'em' => [hash('sha256', strtolower($order->customer->email ?? $order->email ?? ''))],
                                 'ph' => [hash('sha256', $order->customer->phone ?? '')],
                                 'client_ip_address' => request()->ip(),
                                 'client_user_agent' => request()->userAgent(),
@@ -617,11 +605,12 @@ foreach ($cartData['cart'] as $item) {
             }
         }
 
-        // ডাটাবেজে ১ করে দিন যাতে পুনরায় ট্র্যাকিং না হয়
-        $order->update(['is_tracked' => 1]);
+        // ডাটাবেজে আপডেট
+        $order->is_tracked = '1';
+        $order->save();
     }
 
-    return view('front.checkout.order_success', compact('order', 'wasTracked'));
+    return view('front.checkout.order_success', compact('order', 'fireTracking'));
 }
 
 
