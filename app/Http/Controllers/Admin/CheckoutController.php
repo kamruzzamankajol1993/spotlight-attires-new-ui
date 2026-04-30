@@ -35,7 +35,7 @@ class CheckoutController extends Controller
         // Sandbox
         $this->base_url = 'https://tokenized.sandbox.bka.sh/v1.2.0-beta';
         // Live
-    $this->base_url = 'https://tokenized.pay.bka.sh/v1.2.0-beta'; 
+    $this->base_url = 'https://tokenized.pay.bka.sh/v1.2.0-beta';
 $BKASH_CHECKOUT_URL_USER_NAME ='01965665880';
 $BKASH_CHECKOUT_URL_PASSWORD = 'iRI:SK7tWbz';
 $BKASH_CHECKOUT_URL_APP_KEY = 'JTKshr429pkbVxT6sJYjUrDPtc';
@@ -52,8 +52,8 @@ $BKASH_CHECKOUT_URL_APP_SECRET ='cdjFKfCvfzZxReRTogc60eASv9ZnNDZrtu3K5GzXCUunTyW
         $this->app_secret = $BKASH_CHECKOUT_URL_APP_SECRET;
         $this->username = $BKASH_CHECKOUT_URL_USER_NAME;
         $this->password = $BKASH_CHECKOUT_URL_PASSWORD;
-        
-        
+
+
     }
 
     // BKASH HELPER: Get bKash auth token
@@ -102,14 +102,14 @@ private function getCartData()
 {
     $cart = Session::get('cart', []);
     $subtotal = 0;
-    
+
     foreach ($cart as $item) {
         $subtotal += $item['price'] * $item['quantity'];
     }
 
     $coupon = Session::get('coupon');
     $discount = 0;
-    
+
     // Default values
     $discountType = 'fixed';
     $discountValue = 0;
@@ -118,10 +118,10 @@ private function getCartData()
     if ($coupon) {
         $eligibleSubtotal = 0;
         $productIdsInCart = collect($cart)->where('is_bundle', false)->pluck('product_id')->unique()->all();
-        
+
         if(!empty($productIdsInCart)){
             $products = Product::whereIn('id', $productIdsInCart)->get()->keyBy('id');
-            
+
             $couponProductIds = is_array($coupon->product_ids) ? $coupon->product_ids : json_decode($coupon->product_ids, true);
             $couponCategoryIds = is_array($coupon->category_ids) ? $coupon->category_ids : json_decode($coupon->category_ids, true);
 
@@ -138,13 +138,13 @@ private function getCartData()
                 $isCouponForAll = empty($couponProductIds) && empty($couponCategoryIds);
                 $isProductEligible = !empty($couponProductIds) && in_array($product->id, $couponProductIds);
                 $isCategoryEligible = !empty($couponCategoryIds) && in_array($product->category_id, $couponCategoryIds);
-                
+
                 if ($isCouponForAll || $isProductEligible || $isCategoryEligible) {
                     $eligibleSubtotal += $item['price'] * $item['quantity'];
                 }
             }
         }
-        
+
         if ($coupon->type === 'fixed') {
             $discount = $coupon->value;
             $discountType = 'fixed';
@@ -154,9 +154,9 @@ private function getCartData()
             $discountType = 'percent';
             $discountValue = $coupon->value;
         }
-        
+
         $discount = min($discount, $eligibleSubtotal);
-    } 
+    }
     // ২. কুপন না থাকলে কাস্টমার ডিসকাউন্ট চেক করুন (এখানে পরিবর্তন করা হয়েছে)
     elseif (Auth::check() && Auth::user()->customer) {
         $customerDiscountPercent = Auth::user()->customer->discount_in_percent ?? 0;
@@ -164,10 +164,10 @@ private function getCartData()
         if ($customerDiscountPercent > 0) {
             // --- START UPDATE: Eligible amount calculation for Customer Discount ---
             $eligibleForCustomerDiscount = 0;
-            
+
             // কার্টে থাকা সব প্রোডাক্ট আইডি নিয়ে আসা (বান্ডিল বাদে)
             $productIdsInCart = collect($cart)->where('is_bundle', false)->pluck('product_id')->unique()->all();
-            
+
             // প্রোডাক্ট ডাটাবেজ থেকে চেক করা (ডিসকাউন্ট প্রাইস আছে কিনা দেখার জন্য)
             $products = \App\Models\Product::whereIn('id', $productIdsInCart)->get()->keyBy('id');
 
@@ -181,14 +181,14 @@ private function getCartData()
                 if (isset($products[$item['product_id']])) {
                     $product = $products[$item['product_id']];
                     if ($product->discount_price > 0) {
-                        continue; 
+                        continue;
                     }
-                    
+
                     // শর্ত পূরণ করলে এই আইটেমটির দাম যোগ হবে
                     $eligibleForCustomerDiscount += $item['price'] * $item['quantity'];
                 }
             }
-            
+
             // এখন শুধুমাত্র এলিজিবল এমাউন্টের ওপর পার্সেন্টেজ অ্যাপ্লাই হবে
             $discount = ($eligibleForCustomerDiscount * $customerDiscountPercent) / 100;
             // --- END UPDATE ---
@@ -204,15 +204,15 @@ private function getCartData()
     if ($rewardSession) {
         $rewardDiscount = $rewardSession['amount'];
     }
-    
+
     return [
         'cart'           => $cart,
         'subtotal'       => $subtotal,
         'discount'       => $discount,
         'coupon'         => $coupon,
-        'discount_type'  => $discountType,  
-        'discount_value' => $discountValue, 
-        'reward_discount'=> $rewardDiscount 
+        'discount_type'  => $discountType,
+        'discount_value' => $discountValue,
+        'reward_discount'=> $rewardDiscount
     ];
 }
 
@@ -251,7 +251,7 @@ private function getCartData()
     $productIds = [];
     $bundleOfferProductIds = [];
     foreach ($cart as $item) {
-        if (isset($item['is_bundle']) && $item['is_bundle']) { $bundleOfferProductIds[] = $item['id']; } 
+        if (isset($item['is_bundle']) && $item['is_bundle']) { $bundleOfferProductIds[] = $item['id']; }
         else { $productIds[] = $item['product_id']; }
     }
 
@@ -260,7 +260,7 @@ private function getCartData()
             return response()->json(['success' => true, 'shipping_charge' => 0]);
         }
     }
-    
+
     if (count($bundleOfferProductIds) > 0) {
         if (BundleOfferProduct::whereIn('id', $bundleOfferProductIds)->whereHas('bundleOffer', function ($query) {
             $query->where('is_free_delivery', true);
@@ -297,7 +297,7 @@ private function getCartData()
         'shipping_charge' => $shippingCharge
     ]);
 }
-    
+
      public function placeOrder(Request $request)
     {
         // Use request->validate() which handles redirects automatically on failure
@@ -310,7 +310,7 @@ private function getCartData()
         ]);
 
         // Get cart data with the updated logic (Coupon vs Customer Discount + Reward Discount)
-        $cartData = $this->getCartData(); 
+        $cartData = $this->getCartData();
 
         if (count($cartData['cart']) == 0) {
             return redirect()->route('cart.show')->with('error', 'Your cart is empty.');
@@ -329,6 +329,12 @@ private function getCartData()
         if ($totalAmount < 0) {
             $totalAmount = 0;
         }
+
+        $coupon = Session::get('coupon');
+if ($coupon) {
+    // সরাসরি ডাটাবেস থেকে কুপনটি খুঁজে বের করে ১ বৃদ্ধি করুন
+    \App\Models\Coupon::where('id', $coupon->id)->increment('times_used');
+}
 
         DB::beginTransaction();
         try {
@@ -354,10 +360,10 @@ foreach ($cartData['cart'] as $item) {
                 'custom_name'           => $customName,
     'custom_number'         => $customNumber,
                 // --- COUPON / CUSTOMER DISCOUNT ---
-                'discount'         => $cartData['discount'], 
-                'discount_type'    => $cartData['discount_type'] ?? 'fixed', 
+                'discount'         => $cartData['discount'],
+                'discount_type'    => $cartData['discount_type'] ?? 'fixed',
                 'discount_value'   => $cartData['discount_value'] ?? 0,
-                
+
                 // --- NEW: REWARD POINT DISCOUNT ---
                 'reward_point_discount' => $rewardDiscount,
                 // ----------------------------------
@@ -401,7 +407,7 @@ foreach ($cartData['cart'] as $item) {
                     ]);
                 }
             }
-            
+
             // --- START: DEDUCT REWARD POINTS ---
             // If reward points were used, deduct them now and log the transaction
             $rewardSession = Session::get('reward_point_discount');
@@ -440,7 +446,7 @@ foreach ($cartData['cart'] as $item) {
                 $post_data['cus_postcode'] = "1200";
                 $post_data['cus_country'] = "Bangladesh";
                 $post_data['cus_phone'] = $user->phone;
-                
+
                 $post_data['shipping_method'] = "NO";
                 $post_data['product_name'] = "E-commerce Product";
                 $post_data['product_category'] = "General";
@@ -482,7 +488,7 @@ foreach ($cartData['cart'] as $item) {
                     $order->save();
                     return redirect($response['bkashURL']);
                 }
-                
+
                 return redirect()->back()->with('error', $response['statusMessage'] ?? 'bKash payment creation failed.');
             } else { // COD
                 Session::forget('cart');
@@ -497,8 +503,8 @@ foreach ($cartData['cart'] as $item) {
             return redirect()->back()->with('error', 'Could not place order. Please try again.');
         }
     }
-    
-  
+
+
     // NEW BKASH CALLBACK METHOD
     public function bkashCallback(Request $request)
     {
@@ -546,7 +552,7 @@ foreach ($cartData['cart'] as $item) {
 
             return redirect()->route('order.success', ['orderId' => $order->id])->with('success', 'Payment successful!');
         }
-        
+
         return redirect()->route('cart.show')->with('error', $response['statusMessage'] ?? 'bKash payment execution failed.');
     }
 
@@ -621,13 +627,13 @@ foreach ($cartData['cart'] as $item) {
     public function sslSuccess(Request $request)
     {
 
-        
 
-       
+
+
         $tran_id = $request->input('tran_id');
         $order = Order::where('invoice_no', $tran_id)->first();
 //dd($tran_id);
-       
+
 
         if ($order) {
             $sslc = new SslCommerzNotification();
@@ -641,7 +647,7 @@ foreach ($cartData['cart'] as $item) {
                     'due' => 0,
                     'cod' => 0
                 ]);
-  
+
                 Session::forget('cart');
                 Session::forget('coupon');
 
@@ -736,14 +742,14 @@ foreach ($cartData['cart'] as $item) {
 
         // 3. Get Cart Data
         $cartData = $this->getCartData();
-        
+
         // --- START UPDATE: Reward Eligible Amount Calculation ---
         $rewardEligibleSubtotal = 0;
         $cart = $cartData['cart'];
 
         // কার্টে থাকা প্রোডাক্টগুলোর আইডি নিয়ে আসা (বান্ডিল বাদে)
         $productIdsInCart = collect($cart)->where('is_bundle', false)->pluck('product_id')->unique()->all();
-        
+
         // ডাটাবেজ থেকে প্রোডাক্ট চেক করা (ডিসকাউন্ট প্রাইস আছে কিনা)
         $products = \App\Models\Product::whereIn('id', $productIdsInCart)->get()->keyBy('id');
 
@@ -757,9 +763,9 @@ foreach ($cartData['cart'] as $item) {
             if (isset($products[$item['product_id']])) {
                 $product = $products[$item['product_id']];
                 if ($product->discount_price > 0) {
-                    continue; 
+                    continue;
                 }
-                
+
                 // শর্ত পূরণ করলে এই আইটেমটির দাম রিওয়ার্ড এলিজিবল লিস্টে যোগ হবে
                 $rewardEligibleSubtotal += $item['price'] * $item['quantity'];
             }
@@ -780,10 +786,10 @@ foreach ($cartData['cart'] as $item) {
         }
 
         $maxDiscountPossible = floor($availablePoints / $settings->redeem_points_per_unit) * $settings->redeem_per_unit_amount;
-        
+
         // 5. Determine Actual Discount
         $actualDiscount = min($maxDiscountPossible, $currentPayable);
-        
+
         if ($actualDiscount <= 0) {
             return response()->json(['success' => false, 'message' => 'Not enough points to get a discount.']);
         }
@@ -803,7 +809,7 @@ foreach ($cartData['cart'] as $item) {
         ]);
 
         return response()->json([
-            'success' => true, 
+            'success' => true,
             'message' => 'Points applied successfully!',
             'discount_amount' => $actualDiscount,
             'points_used' => $pointsNeeded
